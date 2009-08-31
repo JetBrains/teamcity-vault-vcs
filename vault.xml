@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="vault" default="all">
+  
+  
+  <property file="vault.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/.pyc/**"/>
+    <exclude name="**/.pyo/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.sbas/**"/>
+    <exclude name="**/.IJI.*/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+    <include name="**/?*.jsp"/>
+  </patternset>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.jdom.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/jdom.jar"/>
+  </path>
+  
+  <path id="library.junit.classpath">
+    <pathelement location="${basedir}/vault-tests/lib/junit-4.5.jar"/>
+  </path>
+  
+  <path id="library.log4j.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/log4j-1.2.12.jar"/>
+  </path>
+  
+  <path id="library.patch-testing.classpath">
+    <pathelement location="${basedir}/vault-tests/lib/patches-tests.jar"/>
+  </path>
+  
+  <path id="library.teamcity-openapi.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/devPackage/common-api.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/devPackage/server-api.jar"/>
+  </path>
+  
+  <path id="library.teamcity-utils.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/annotations.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/openapi.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/util.jar"/>
+  </path>
+  
+  <path id="library.teamcity.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/buildAgent/lib/trove4j.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/patches-impl.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/server.jar"/>
+  </path>
+  
+  <path id="library.testng.classpath">
+    <pathelement location="${basedir}/vault-tests/lib/testng-5.9-jdk15.jar"/>
+  </path>
+  
+  <path id="library.web.classpath">
+    <pathelement location="${path.variable.teamcitydistribution}/lib/servlet-api.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/spring-webmvc.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/spring.jar"/>
+  </path>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module vault-server -->
+  
+  <dirname property="module.vault-server.basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args.vault-server" value="${compiler.args}"/>
+  
+  <property name="vault-server.output.dir" value="${module.vault-server.basedir}/out/production/vault-server"/>
+  <property name="vault-server.testoutput.dir" value="${module.vault-server.basedir}/out/test/vault-server"/>
+  
+  <path id="vault-server.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="vault-server.module.classpath">
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
+  </path>
+  
+  <path id="vault-server.runtime.module.classpath">
+    <pathelement location="${vault-server.output.dir}"/>
+    <pathelement location="${vault-server.testoutput.dir}"/>
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.vault-server">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.vault-server">
+    <patternset refid="excluded.from.module.vault-server"/>
+  </patternset>
+  
+  <path id="vault-server.module.sourcepath">
+    <dirset dir="${module.vault-server.basedir}/vault-server">
+      <include name="resource"/>
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.vault-server" depends="compile.module.vault-server.production,compile.module.vault-server.tests" description="Compile module vault-server"/>
+  
+  <target name="compile.module.vault-server.production" description="Compile module vault-server; production classes">
+    <mkdir dir="${vault-server.output.dir}"/>
+    <javac destdir="${vault-server.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.vault-server}"/>
+      <bootclasspath refid="vault-server.module.bootclasspath"/>
+      <classpath refid="vault-server.module.classpath"/>
+      <src refid="vault-server.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.vault-server"/>
+    </javac>
+    
+    <copy todir="${vault-server.output.dir}">
+      <fileset dir="${module.vault-server.basedir}/vault-server/resource">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.vault-server.basedir}/vault-server/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.vault-server.tests" depends="compile.module.vault-server.production" description="compile module vault-server; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.vault-server" description="cleanup module">
+    <delete dir="${vault-server.output.dir}"/>
+    <delete dir="${vault-server.testoutput.dir}"/>
+  </target>
+  
+  
+  <!-- Module vault-tests -->
+  
+  <dirname property="module.vault-tests.basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args.vault-tests" value="${compiler.args}"/>
+  
+  <property name="vault-tests.output.dir" value="${module.vault-tests.basedir}/out/production/vault-tests"/>
+  <property name="vault-tests.testoutput.dir" value="${module.vault-tests.basedir}/out/test/vault-tests"/>
+  
+  <path id="vault-tests.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="vault-tests.module.classpath">
+    <path refid="library.patch-testing.classpath"/>
+    <path refid="library.testng.classpath"/>
+    <path refid="library.teamcity.classpath"/>
+    <pathelement location="${vault-server.output.dir}"/>
+    <pathelement location="${vault-server.testoutput.dir}"/>
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.junit.classpath"/>
+  </path>
+  
+  <path id="vault-tests.runtime.module.classpath">
+    <pathelement location="${vault-tests.output.dir}"/>
+    <pathelement location="${vault-tests.testoutput.dir}"/>
+    <path refid="library.patch-testing.classpath"/>
+    <path refid="library.testng.classpath"/>
+    <path refid="library.teamcity.classpath"/>
+    <path refid="vault-server.runtime.module.classpath"/>
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.junit.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.vault-tests">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.vault-tests">
+    <patternset refid="excluded.from.module.vault-tests"/>
+  </patternset>
+  
+  <path id="vault-tests.module.sourcepath">
+    <dirset dir="${module.vault-tests.basedir}/vault-tests">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.vault-tests" depends="compile.module.vault-tests.production,compile.module.vault-tests.tests" description="Compile module vault-tests"/>
+  
+  <target name="compile.module.vault-tests.production" depends="compile.module.vault-server" description="Compile module vault-tests; production classes">
+    <mkdir dir="${vault-tests.output.dir}"/>
+    <javac destdir="${vault-tests.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.vault-tests}"/>
+      <bootclasspath refid="vault-tests.module.bootclasspath"/>
+      <classpath refid="vault-tests.module.classpath"/>
+      <src refid="vault-tests.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.vault-tests"/>
+    </javac>
+    
+    <copy todir="${vault-tests.output.dir}">
+      <fileset dir="${module.vault-tests.basedir}/vault-tests/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.vault-tests.tests" depends="compile.module.vault-tests.production" description="compile module vault-tests; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.vault-tests" description="cleanup module">
+    <delete dir="${vault-tests.output.dir}"/>
+    <delete dir="${vault-tests.testoutput.dir}"/>
+  </target>
+  
+  
+  <!-- Module vault -->
+  
+  <dirname property="module.vault.basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args.vault" value="${compiler.args}"/>
+  
+  <property name="vault.output.dir" value="${module.vault.basedir}/out/production/vault"/>
+  <property name="vault.testoutput.dir" value="${module.vault.basedir}/out/test/vault"/>
+  
+  <path id="vault.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="vault.module.classpath">
+    <pathelement location="${vault-server.output.dir}"/>
+    <pathelement location="${vault-server.testoutput.dir}"/>
+    <pathelement location="${vault-tests.output.dir}"/>
+    <pathelement location="${vault-tests.testoutput.dir}"/>
+  </path>
+  
+  <path id="vault.runtime.module.classpath">
+    <pathelement location="${vault.output.dir}"/>
+    <pathelement location="${vault.testoutput.dir}"/>
+    <path refid="vault-server.runtime.module.classpath"/>
+    <path refid="vault-tests.runtime.module.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.vault">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.vault">
+    <patternset refid="excluded.from.module.vault"/>
+  </patternset>
+  
+  
+  <target name="compile.module.vault" depends="compile.module.vault.production,compile.module.vault.tests" description="Compile module vault"/>
+  
+  <target name="compile.module.vault.production" depends="compile.module.vault-server,compile.module.vault-tests" description="Compile module vault; production classes"/>
+  
+  <target name="compile.module.vault.tests" depends="compile.module.vault.production" description="compile module vault; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.vault" description="cleanup module">
+    <delete dir="${vault.output.dir}"/>
+    <delete dir="${vault.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.vault-server, clean.module.vault-tests, clean.module.vault" description="cleanup all"/>
+  
+  <target name="all" depends="init, clean, compile.module.vault-server, compile.module.vault-tests, compile.module.vault" description="build all"/>
+</project>
