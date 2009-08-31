@@ -39,7 +39,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   private final VaultFileContentProvider myFileContentProvider;
 
   public VaultVcsSupport() {
-    LOG.debug("Vault is present");
+    LOG.debug("Vault plugin is working");
     myFileContentProvider = new VaultFileContentProvider();
   }
 
@@ -176,7 +176,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
     String prop = properties.get("vault.path");
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client"));
+      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g c:\\Vault\\vaultJavaCLC\\vault.cmd)"));
     }
     prop = properties.get("vault.server");
     if ((prop == null) || ("".equals(prop))) {

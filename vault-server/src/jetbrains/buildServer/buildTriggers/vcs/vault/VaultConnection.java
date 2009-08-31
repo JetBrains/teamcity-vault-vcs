@@ -23,8 +23,6 @@ import jetbrains.buildServer.vcs.TestConnectionSupport;
 import jetbrains.buildServer.buildTriggers.vcs.vault.process.VaultProcessExecutor;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil;
 import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.serverSide.ServerPaths;
-import org.apache.log4j.Logger;
 import org.xml.sax.XMLReader;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -34,8 +32,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * User: vbedrosova
@@ -71,7 +67,7 @@ public final class VaultConnection implements TestConnectionSupport {
       inputStream.close();
 
       if (handler != null) {
-        final XMLReader reader = VaultUtil.createReader(handler);
+        final XMLReader reader = VaultUtil.createXmlReader(handler);
 //      reader.parse(new InputSource(inputStream));
         reader.parse(new InputSource(new BufferedReader(new FileReader(f))));
       }

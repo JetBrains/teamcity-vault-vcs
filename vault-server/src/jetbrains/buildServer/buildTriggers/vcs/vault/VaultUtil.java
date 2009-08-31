@@ -31,7 +31,7 @@ import java.util.Date;
  * Time: 19:32:05
  */
 public final class VaultUtil {
-  public static XMLReader createReader(@NotNull ContentHandler contentHandler) throws VcsException {
+  public static XMLReader createXmlReader(@NotNull ContentHandler contentHandler) throws VcsException {
     final XMLReader xmlReader;
     try {
       xmlReader = XMLReaderFactory.createXMLReader();

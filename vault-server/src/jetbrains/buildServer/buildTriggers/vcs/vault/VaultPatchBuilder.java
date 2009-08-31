@@ -112,13 +112,6 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
           }
         }
       }
-//      Collections.sort(changes, new Comparator<VcsChange>() {
-//        public int compare(VcsChange c1, VcsChange c2) {
-//          if (c1.) {
-//
-//          }
-//        }
-//      });
     }
     LOG.debug("Finish building patch");
   }
