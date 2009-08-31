@@ -48,7 +48,7 @@
           </td>
         </tr>
         <tr>
-            <th><label for="vault.user">User name: </label>
+            <th><label for="vault.user">User name:  <l:star/></label>
             </th>
             <td><props:textProperty name="vault.user" className="longField"/>
                 <span class="error" id="error_vault.user"></span></td>

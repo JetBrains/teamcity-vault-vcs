@@ -176,7 +176,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
     String prop = properties.get("vault.path");
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g c:\\Vault\\vaultJavaCLC\\vault.cmd)"));
+      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g. c:\\Vault\\vaultJavaCLC\\vault.cmd)"));
     }
     prop = properties.get("vault.server");
     if ((prop == null) || ("".equals(prop))) {
@@ -186,11 +186,12 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     if ((prop == null) || ("".equals(prop))) {
       invalids.add(new InvalidProperty("vault.repo", "Repository name must not be empty"));
     }
+    prop = properties.get("vault.user");
+    if ((prop == null) || ("".equals(prop))) {
+      invalids.add(new InvalidProperty("vault.user", "User must not be empty"));
+    }
     if (invalids.size() > 0) {
       return invalids;
-    }
-    if (properties.get("vault.user") == null) {
-      properties.put("vault.user", "");  
     }
     if (properties.get("secure:vault.password") == null) {
       properties.put("secure:vault.password", "");  
@@ -198,8 +199,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     try {
       VaultConnection.getConnection().testConnection(properties);
     } catch (VcsException e) {
-      invalids.add(new InvalidProperty("vault.user", e.getMessage()));
-      invalids.add(new InvalidProperty("secure:vault.password", e.getMessage()));
+      invalids.add(new InvalidProperty("vault.path", e.getMessage()));
     }
     return invalids;
   }
