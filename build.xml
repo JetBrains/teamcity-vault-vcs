@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="vault-custom" basedir="." default="all">
+
+    <property file="build.properties"/>
+    <import file="${basedir}/vault.xml"/>
+
+    <property name="plugin.name" value="vault"/>
+
+    <import file="${basedir}/teamcity-common.xml"/>
+
+    <property environment="env"/>
+    <property name="build.number" value="${env.BUILD_NUMBER}"/>
+
+    <target name="all" depends="check.teamcitydistribution, vault.all"/>
+
+    <target name="dist" depends="all">
+        <!--<antcall target="update.version.in.plugin.descriptor"/>-->
+        <package.teamcity.plugin name="${plugin.name}"
+                                 server.output="${vault-server.output.dir}"
+                                 out="dist"
+                />
+    </target>
+
+    <target name="update.version.in.plugin.descriptor">
+        <xslt in="teamcity-plugin.xml" out="teamcity-plugin_new.xml" style="teamcity-plugin.xsl">
+            <param name="version" expression="${build.number}"/>
+        </xslt>
+
+        <move file="teamcity-plugin_new.xml" tofile="teamcity-plugin.xml"/>
+    </target>
+
+    <target name="deploy" depends="dist" description="deploy plugin to TeamCity">
+        <deploy.teamcity.plugin name="${plugin.name}"/>
+    </target>
+
+    <taskdef resource="testngtasks">
+        <classpath>
+            <path refid="library.testng.classpath"/>
+        </classpath>
+    </taskdef>
+
+    <target name="test" depends="all, test-nofail, check_failures"/>
+
+    <target name="test-nofail">
+        <delete dir="test-reports" quiet="true"/>
+        <mkdir dir="test-reports"/>
+        <testng >
+            <classpath>
+                <path refid="vault-tests.runtime.module.classpath"/>                
+            </classpath>
+            <classfileset dir="${vault-tests.output.dir}">
+                <include name="**/*Test.class"/>
+            </classfileset>
+        </testng>
+
+    </target>
+
+    <target name="check_failures" if="failure_found">
+        <fail message="Failures found"/>
+    </target>
+
+</project>
