@@ -176,7 +176,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
     String prop = properties.get("vault.path");
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g. c:\\Vault\\vaultJavaCLC\\vault.cmd)"));
+      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g. c:\\Vault\\VaultClientAPI_5_0_1_18729\\vault.exe)"));
     }
     prop = properties.get("vault.server");
     if ((prop == null) || ("".equals(prop))) {
@@ -188,7 +188,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     }
     prop = properties.get("vault.user");
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.user", "User must not be empty"));
+      invalids.add(new InvalidProperty("vault.user", "Username must not be empty"));
     }
     if (invalids.size() > 0) {
       return invalids;

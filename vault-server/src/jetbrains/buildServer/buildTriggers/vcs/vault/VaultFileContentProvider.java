@@ -23,8 +23,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
 
@@ -63,8 +61,22 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
   }
 
   public File getFile(@NotNull String filePath, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
-    LOG.debug("Getting file content " + filePath + " at root " + root + " at version " + version);
+    final File filePathFile = new File(filePath);
+    final String parentPath = filePathFile.getParent();
+    final File parentDir = new File(myTmpDir.getAbsolutePath() + File.separator + version, parentPath == null ? "" : parentPath);
+    final File file = new File(parentDir.getAbsolutePath(), filePathFile.getName());
+//    final String separatorStartedFilePath = File.separator + filePath;
+//    final String separatorStartedParentPath = separatorStartedFilePath.substring(0, separatorStartedFilePath.lastIndexOf(File.separator));
+//    final File parentDir = new File(myTmpDir.getAbsolutePath() + File.separator + version + separatorStartedParentPath);
+//    final File file = new File(parentDir, filePath.substring(filePath.lastIndexOf(File.separator) + 1));
 
+    LOG.debug("Getting file content for " + filePath + " at root " + root + " at version " + version);
+    FileUtil.delete(myTmpDir);
+    if (!myTmpDir.mkdirs()) {
+      LOG.debug("Unable to create tmp directory " + myTmpDir.getAbsolutePath());
+    }
+
+    VaultConnection.getConnection().setWorkingFolder(root, myTmpDir.getAbsolutePath() + File.separator + version);
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(root.getProperty("vault.path"));
     cl.addParameter("getversion");
@@ -81,14 +93,22 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
 
     cl.addParameter(version);
 
-    cl.addParameter("$/" + filePath.replace(File.separator, "/"));
+    cl.addParameter("$" + ((filePath.length() == 0) ? "" : "/") + filePath.replace(File.separator, "/"));
 
-    cl.addParameter(myTmpDir.getAbsolutePath());
+//    cl.addParameter(parentDir.getAbsolutePath());
 
     VaultConnection.getConnection().runCommand(cl, null);
 
-    final String path = myTmpDir.getAbsolutePath() + File.separator + filePath;
-    final File dir = new File(path.substring(0, path.lastIndexOf(File.separator)));
-    return new File(dir, path.substring(path.lastIndexOf(File.separator) + 1));
+    if (!file.exists() && (filePath.length() != 0)) {
+      return getFileFromParent(filePath, root, version);
+    }
+    return file;
+  }
+
+  public File getFileFromParent(@NotNull String filePath, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
+    final File filePathFile = new File(filePath);
+    final String parentPath = filePathFile.getParent(); 
+    final File rootFile = getFile(parentPath == null ? "" : parentPath, root, version);
+    return new File(rootFile, filePathFile.getName());
   }
 }

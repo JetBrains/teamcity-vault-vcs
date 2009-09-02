@@ -55,11 +55,11 @@ public final class VaultUtil {
     return DateFormat.getDateTimeInstance().format(date);
   }
 
-//  public static int parseInt(@NotNull String num) throws VcsException {
-//    try {
-//      return Integer.parseInt(num);
-//    } catch (NumberFormatException e) {
-//      throw new VcsException(e);
-//    }
-//  }
+  public static int parseInt(@NotNull String num) throws VcsException {
+    try {
+      return Integer.parseInt(num);
+    } catch (NumberFormatException e) {
+      throw new VcsException(e);
+    }
+  }
 }

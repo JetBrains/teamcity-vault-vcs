@@ -73,7 +73,7 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
       cl.addParameter("-setfiletime");
       cl.addParameter("modification");
 
-      cl.addParameter(VaultConnection.getConnection().getVersionByDate(myRoot, myToVersion));
+      cl.addParameter(VaultConnection.getConnection().getVersionStringByDate(myRoot, myToVersion));
       cl.addParameter("$");
       cl.addParameter(myTmpDir.getAbsolutePath());
 
@@ -96,14 +96,15 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
               builder.changeOrCreateBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
             case ADDED:
-              if (f.isFile()) {
                 builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
-              } else if (f.isDirectory()) {
+            case DIRECTORY_ADDED:
                 builder.createDirectory(relativeFile);
-              }
               break;
             case REMOVED:
               builder.deleteFile(relativeFile, false);
+              break;
+            case DIRECTORY_REMOVED:
+              builder.deleteDirectory(relativeFile, false);
               break;
             case NOT_CHANGED:
 //            case DIRECTORY_CHANGED:

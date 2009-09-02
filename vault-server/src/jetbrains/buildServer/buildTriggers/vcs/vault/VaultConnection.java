@@ -80,6 +80,25 @@ public final class VaultConnection implements TestConnectionSupport {
     }
   }
 
+  public void setWorkingFolder(@NotNull VcsRoot root, @NotNull String path) throws VcsException {
+    final GeneralCommandLine cl = new GeneralCommandLine();
+    cl.setExePath(root.getProperty("vault.path"));
+    cl.addParameter("setworkingfolder");
+    cl.addParameter("-server");
+    cl.addParameter(root.getProperty("vault.server"));
+    cl.addParameter("-user");
+    cl.addParameter(root.getProperty("vault.user"));
+    cl.addParameter("-password");
+    cl.addParameter(root.getProperty("secure:vault.password"));
+    cl.addParameter("-repository");
+    cl.addParameter(root.getProperty("vault.repo"));
+
+    cl.addParameter("$");
+    cl.addParameter(path);
+
+    runCommand(cl, null);  
+  }
+
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
     testConnection(vcsRoot.getProperties());
     return null;
@@ -173,7 +192,11 @@ public final class VaultConnection implements TestConnectionSupport {
     return getCurrentDate(root.getProperties());
   }
 
-  public String getVersionByDate(VcsRoot root, final String dateString) throws VcsException {
+  public int getVersionByDate(VcsRoot root, final String dateString) throws VcsException {
+    return VaultUtil.parseInt(getVersionStringByDate(root, dateString));
+  }
+
+  public String getVersionStringByDate(VcsRoot root, final String dateString) throws VcsException {
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(root.getProperty("vault.path"));
     cl.addParameter("versionhistory");

@@ -36,6 +36,20 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
 
+  private static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
+  static {
+    NOT_CHANGED_CHANGE_TYPES.add("Added");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Label");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Obliterated");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Pinned");
+    NOT_CHANGED_CHANGE_TYPES.add("UnPinned");
+
+    NOT_CHANGED_CHANGE_TYPES.add("PropertyChange");
+  }
+
   private static final Set<String> ADDED_CHANGE_TYPES = new HashSet<String>();
   static {
     ADDED_CHANGE_TYPES.add("Created");
@@ -45,7 +59,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     ADDED_CHANGE_TYPES.add("BranchedFromShare");
     ADDED_CHANGE_TYPES.add("BranchedFromShareItem");
 
-    ADDED_CHANGE_TYPES.add("MovedTo");
+    ADDED_CHANGE_TYPES.add("MovedFrom");
 
     ADDED_CHANGE_TYPES.add("SharedTo");
 
@@ -66,7 +80,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Set<String> REMOVED_CHANGE_TYPES = new HashSet<String>();
   static {
     REMOVED_CHANGE_TYPES.add("Deleted");
-    REMOVED_CHANGE_TYPES.add("MovedFrom");
+    REMOVED_CHANGE_TYPES.add("MovedTo");
   }
 
   private final VcsRoot myRoot;
@@ -84,14 +98,14 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
-    LOG.debug("Start collecting changes");
+    LOG.debug("Start collecting changes for rule " + includeRule.toDescriptiveString());
     final List<ModificationData> modifications = new ArrayList<ModificationData>();
     
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo info : map.keySet()) {
       modifications.add(new ModificationData(info.getDate(), map.get(info), info.getComment(), info.getUser(), myRoot, info.getVersion(), info.getDate().toString()));
     }
-    LOG.debug("Finish collecting changes");
+    LOG.debug("Finish collecting changes for rule " + includeRule.toDescriptiveString());
     return modifications;
   }
 
@@ -112,9 +126,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     cl.addParameter(myRoot.getProperty("vault.repo"));
 
     cl.addParameter("-begindate");
-    cl.addParameter(getNextObjectVersion("$", myFromVersion));
+    cl.addParameter(getNextRootVersion(myFromVersion));
     cl.addParameter("-enddate");
-    cl.addParameter(getNextObjectVersion("$", myCurrentVersion));
+    cl.addParameter(getNextRootVersion(myCurrentVersion));
 
 //      -excludeactions action,action,...
 //
@@ -123,7 +137,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 //      add, branch, checkin, create, delete, label, move, obliterate, pin,
 //      propertychange, rename, rollback, share, snapshot, undelete.
 
+// TODO: add this
 //    cl.addParameter("-excludeactions");
+//    cl.addParameter("label,obliterate,pin,propertychange");
 //    cl.addParameter("add,branch,label,obliterate,pin,propertychange,snapshot");
 
     cl.addParameter("$");
@@ -132,19 +148,17 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return handler.getModifications();
   }
 
-  private String getPreviousObjectVersion(@NotNull String name, @NotNull String version) throws VcsException {
-    LOG.debug("Getting previous version for " + name);
+  private String getPreviousRootVersion(@NotNull String version) throws VcsException {
     final String defaultResult = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() - 1000));
-    return getObjectVersion(new PreviousVersionHandler(version, defaultResult));
+    return getRootVersion(new PreviousVersionHandler(version, defaultResult));
   }
 
-  private String getNextObjectVersion(@NotNull String name, @NotNull String version) throws VcsException {
-    LOG.debug("Getting next version for " + name);
+  private String getNextRootVersion(@NotNull String version) throws VcsException {
     final String defaultResult = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() + 1000));
-    return getObjectVersion(new NextVersionHandler(version, defaultResult));
+    return getRootVersion(new NextVersionHandler(version, defaultResult));
   }
 
-  private String getObjectVersion(@NotNull VersionHandler handler)
+  private String getRootVersion(@NotNull VersionHandler handler)
     throws VcsException {
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(myRoot.getProperty("vault.path"));
@@ -263,6 +277,10 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     throws SAXException
     {
       if ("item".equals(localName)) {
+        final String typeName = attributes.getValue("typeName");
+        if (NOT_CHANGED_CHANGE_TYPES.contains(typeName)) {
+          return;          
+        }
         final String dateString = attributes.getValue("date"); 
         final Date date;
         try {
@@ -282,8 +300,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           changes = myModifications.get(modificationInfo);
         }
 
-        final String repoPath = attributes.getValue("name"); 
-        String relativePath = repoPath;
+        final String actionString = attributes.getValue("actionString");
+        String relativePath = attributes.getValue("name");
+        if (typeName.equals("Deleted")) {
+          relativePath += getDeletedFileName(actionString);              
+        }
         if (relativePath.startsWith("$")) {
           relativePath = relativePath.substring(1);
         } else {
@@ -298,14 +319,19 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         }
 //        String prevVersion;
 //        try {
-//          prevVersion = getPreviousObjectVersion(repoPath, dateString);
+//          prevVersion = getPreviousRootVersion(repoPath, dateString);
 //        } catch (VcsException e) {
 //          throw new SAXException(e);
 //        }
         final String name = relativePath.substring(relativePath.lastIndexOf(File.separator) + 1);
         final String version = attributes.getValue("version");
-        changes.add(new VcsChange(getType(attributes.getValue("typeName")), attributes.getValue("actionString"),
-          name, relativePath, "" + (Integer.parseInt(version) - 1), version));
+        final String prevVersion = "" + (Integer.parseInt(version) - 1); 
+        try {
+          changes.add(new VcsChange(getType(relativePath, typeName, version, dateString), actionString,
+            name, relativePath, "" + prevVersion, version));
+        } catch (VcsException e) {
+          throw new SAXException(e);
+        }
 //        changes.add(new VcsChange(getType(attributes.getValue("typeName")), attributes.getValue("actionString"),
 //          name, relativePath, prevVersion, dateString));
 
@@ -313,19 +339,39 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       }
     }
 
-    private VcsChangeInfo.Type getType(@NotNull String typeName) {
-      if (ADDED_CHANGE_TYPES.contains(typeName)) {
-        return VcsChangeInfo.Type.ADDED;
-      } else if (CHANGED_CHANGE_TYPES.contains(typeName)) {
-        return VcsChangeInfo.Type.CHANGED;
-      } else if (REMOVED_CHANGE_TYPES.contains(typeName)) {
-        return VcsChangeInfo.Type.REMOVED;
-      } else {
-        LOG.debug("Missing change typeName: " + typeName);
-        return VcsChangeInfo.Type.NOT_CHANGED;
-      }     
+    private String getDeletedFileName(@NotNull String actionString) {
+      // actionString is "Deleted file.txt"
+      //TODO: move to constants?
+      final String prefix = "Deleted "; 
+      return File.separator + actionString.substring(actionString.indexOf(prefix) + prefix.length());
     }
 
+    private VcsChangeInfo.Type getType(@NotNull String repoPath, @NotNull String typeName, @NotNull String objectVersion, @NotNull String repoVersion) throws VcsException {
+      if (ADDED_CHANGE_TYPES.contains(typeName)) {
+        final File f = new VaultFileContentProvider().getFile(repoPath, myRoot, objectVersion);
+        if (f.isFile()) {
+          return VcsChangeInfo.Type.ADDED;
+        } else if (f.isDirectory()) {
+          return VcsChangeInfo.Type.DIRECTORY_ADDED;          
+        }
+      } else if (CHANGED_CHANGE_TYPES.contains(typeName)) {
+        final File f = new VaultFileContentProvider().getFile(repoPath, myRoot, objectVersion);
+        if (f.isFile()) {
+          return VcsChangeInfo.Type.CHANGED;
+        } else if (f.isDirectory()) {
+          return VcsChangeInfo.Type.DIRECTORY_CHANGED;          
+        }
+      } else if (REMOVED_CHANGE_TYPES.contains(typeName)) {
+        final File f = new VaultFileContentProvider().getFileFromParent(repoPath, myRoot, "" + (VaultConnection.getConnection().getVersionByDate(myRoot, repoVersion) - 1));
+        if (f.isFile()) {
+          return VcsChangeInfo.Type.REMOVED;
+        } else if (f.isDirectory()) {
+          return VcsChangeInfo.Type.DIRECTORY_REMOVED;          
+        }
+      }
+      LOG.debug("Couldn't map change type: " + typeName);
+      return VcsChangeInfo.Type.NOT_CHANGED;
+    }
   }
 
   public static final class ModificationInfo {
