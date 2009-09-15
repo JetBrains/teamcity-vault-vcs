@@ -31,7 +31,6 @@ import jetbrains.buildServer.vcs.VcsException;
  */
 public final class VaultProcessExecutor {
   public static InputStream runProcess(@NotNull GeneralCommandLine cl) throws VcsException {
-//    cl.setExePath("c:\\vbedrosova\\work\\Vault\\vaultJavaCLC\\vault.cmd");
     final Process p;
     try {
       p = cl.createProcess();

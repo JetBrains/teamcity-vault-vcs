@@ -46,7 +46,7 @@ As for now the versions are:
  */
 
 public class VaultPatchBuilderTest extends PatchTestCase {
-  private static final String PATH = "C:/vbedrosova/work/Vault/vaultJavaCLC/vault.cmd";
+  private static final String PATH = "c:\\vbedrosova\\work\\Vault\\VaultClientAPI_5_0_1_18729\\vault.exe";
   private static final String SERVER = "ruspd-pc02.swiftteams.local:8888";
   private static final String USER = "admin";
   private static final String PASWORD = "password";
@@ -78,7 +78,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(root, fromVersion, toVersion);
+    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnection(FileUtil.getTempDirectory()), root, fromVersion, toVersion);
 
     try {
       vaultPatchBuilder.buildPatch(patchBuilder, IncludeRule.createDefaultInstance());

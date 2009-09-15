@@ -40,13 +40,17 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 public class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private static final Logger LOG = Logger.getLogger(VaultPatchBuilder.class);  
 
+  private final VaultConnection myConnection;
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private final String myToVersion;
 
-  private File myTmpDir;
+  public VaultPatchBuilder(@NotNull VaultConnection connection,
+                           @NotNull VcsRoot root,
+                           @Nullable String fromVersion,
+                           @NotNull String toVersion) {
 
-  public VaultPatchBuilder(@NotNull VcsRoot root, @Nullable String fromVersion, @NotNull String toVersion) {
+    myConnection = connection;
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
@@ -54,51 +58,31 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
     LOG.debug("Start building patch");
-    myTmpDir = FileUtil.createTempDirectory("vault", "");
-    final VaultFileContentProvider provider = new VaultFileContentProvider();
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch");
-
-      final GeneralCommandLine cl = new GeneralCommandLine();
-      cl.setExePath(myRoot.getProperty("vault.path"));
-      cl.addParameter("getversion");
-      cl.addParameter("-server");
-      cl.addParameter(myRoot.getProperty("vault.server"));
-      cl.addParameter("-user");
-      cl.addParameter(myRoot.getProperty("vault.user"));
-      cl.addParameter("-password");
-      cl.addParameter(myRoot.getProperty("secure:vault.password"));
-      cl.addParameter("-repository");
-      cl.addParameter(myRoot.getProperty("vault.repo"));
-      cl.addParameter("-setfiletime");
-      cl.addParameter("modification");
-
-      cl.addParameter(VaultConnection.getConnection().getVersionStringByDate(myRoot, myToVersion));
-      cl.addParameter("$");
-      cl.addParameter(myTmpDir.getAbsolutePath());
-
-      VaultConnection.getConnection().runCommand(cl, null);
-
-      VcsSupportUtil.exportFilesFromDisk(builder, myTmpDir);
-      System.out.println(myTmpDir.getAbsolutePath());
+      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getCache(myRoot, "", myToVersion));
     } else {
       LOG.debug("Perform incremental patch");
-
-//      final List<VcsChange> changes = new ArrayList<VcsChange>();
-      final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
+      final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myConnection, myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
       for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
-//        changes.addAll(modifications.get(m));
         for (final VcsChange c : modifications.get(m)) {
-          final File f = provider.getFile(c.getRelativeFileName(), myRoot, c.getAfterChangeRevisionNumber());
+//          final File f = provider.getFile(c.getRelativeFileName(), myRoot, c.getAfterChangeRevisionNumber());
           final File relativeFile = new File(c.getRelativeFileName());
+          File f;
           switch (c.getType()) {
             case CHANGED:
+              f = myConnection.getCache(myRoot, c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
               builder.changeOrCreateBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
+            case DIRECTORY_CHANGED:
+              builder.createDirectory(relativeFile);
+              break;
             case ADDED:
-                builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
+              f = myConnection.getCache(myRoot, c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
+              builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
+              break;
             case DIRECTORY_ADDED:
-                builder.createDirectory(relativeFile);
+              builder.createDirectory(relativeFile);
               break;
             case REMOVED:
               builder.deleteFile(relativeFile, false);
@@ -107,9 +91,6 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
               builder.deleteDirectory(relativeFile, false);
               break;
             case NOT_CHANGED:
-//            case DIRECTORY_CHANGED:
-//            case DIRECTORY_ADDED:
-//            case DIRECTORY_REMOVED:
           }
         }
       }

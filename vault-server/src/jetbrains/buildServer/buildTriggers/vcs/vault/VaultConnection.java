@@ -29,6 +29,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.DefaultHandler;
 import org.jetbrains.annotations.NotNull;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Map;
@@ -39,18 +40,23 @@ import java.util.Map;
  * Time: 18:41:12
  */
 public final class VaultConnection implements TestConnectionSupport {
-  private static VaultConnection outInstance = new VaultConnection();
-
-  public static VaultConnection getConnection() {
-    return outInstance;
-  }
-
+  private static final Logger LOG = Logger.getLogger(VaultConnection.class);
   public static final SAXException SUCCESS = new SAXException("Success");
+
   public static abstract class Handler extends DefaultHandler {};
 
-  private VaultConnection() {}
+  private final String myCachesPath;
 
-  public void runCommand(GeneralCommandLine cl, Handler handler) throws VcsException {
+  public VaultConnection(@NotNull String cachesPath) {
+    myCachesPath = cachesPath;
+    final File caches = new File(myCachesPath);
+    FileUtil.delete(caches);
+    if (!caches.mkdir()) {
+      LOG.warn("Unable to create caches dir: " + caches.getAbsolutePath());
+    }
+  }
+
+  public void runCommand(@NotNull GeneralCommandLine cl, Handler handler) throws VcsException {
     try {
       final InputStream inputStream = VaultProcessExecutor.runProcess(cl);
       
@@ -94,7 +100,7 @@ public final class VaultConnection implements TestConnectionSupport {
     cl.addParameter(root.getProperty("vault.repo"));
 
     cl.addParameter("$");
-    cl.addParameter(path);
+    cl.addParameter("\"" + path + '\"');
 
     runCommand(cl, null);  
   }
@@ -181,6 +187,7 @@ public final class VaultConnection implements TestConnectionSupport {
       {
         if ("item".equals(localName)) {
           myResult = attributes.getValue("date");
+          throw SUCCESS;
         }
       }
     };
@@ -219,10 +226,54 @@ public final class VaultConnection implements TestConnectionSupport {
       {
         if ("item".equals(localName) && dateString.equals(attributes.getValue("date"))) {
           myResult = attributes.getValue("version");
+          throw SUCCESS;
         }
       }
     };
     runCommand(cl, handler);
     return handler.getResult();
+  }
+
+  private static String versionToFolderName(@NotNull String version) {
+    return version.replace(":", ".");
+  }
+
+  private boolean hasCache(@NotNull String folderName) {
+    return new File(myCachesPath, folderName).isDirectory();
+  }
+
+  public File getCache(@NotNull VcsRoot root, @NotNull String path, @NotNull String version) throws VcsException {
+    String folderName = versionToFolderName(version);
+    if (!hasCache(folderName)) {
+      buildCache(root, version, myCachesPath + File.separator + folderName);
+    }
+    File cachedFile = new File(myCachesPath + File.separator + folderName, path);
+    if (!cachedFile.exists()) {
+      buildCache(root, version, myCachesPath + File.separator + folderName);
+    }
+    return cachedFile;
+  }
+
+  private void buildCache(@NotNull VcsRoot root, @NotNull String version, @NotNull String destDir) throws VcsException {
+//    setWorkingFolder(root, destDir);
+    final GeneralCommandLine cl = new GeneralCommandLine();
+    cl.setExePath(root.getProperty("vault.path"));
+    cl.addParameter("getversion");
+    cl.addParameter("-server");
+    cl.addParameter(root.getProperty("vault.server"));
+    cl.addParameter("-user");
+    cl.addParameter(root.getProperty("vault.user"));
+    cl.addParameter("-password");
+    cl.addParameter(root.getProperty("secure:vault.password"));
+    cl.addParameter("-repository");
+    cl.addParameter(root.getProperty("vault.repo"));
+    cl.addParameter("-setfiletime");
+    cl.addParameter("modification");
+
+    cl.addParameter(getVersionStringByDate(root, version));
+    cl.addParameter("$");
+    cl.addParameter(destDir);
+
+    runCommand(cl, null);
   }
 }

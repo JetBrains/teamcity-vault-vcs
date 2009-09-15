@@ -40,13 +40,13 @@
             <td><props:textProperty name="vault.repo" className="longField"/>
                 <span class="error" id="error_vault.repo"></span></td>
         </tr>
-        <tr>
-          <th><label for="vault.enable.ssl">Enable SSL:</label></th>
-          <td>
-            <props:checkboxProperty name="vault.enable.ssl" disabled="true"/>
+        <%--<tr>--%>
+          <%--<th><label for="vault.enable.ssl">Enable SSL:</label></th>--%>
+          <%--<td>--%>
+            <%--<props:checkboxProperty name="vault.enable.ssl" disabled="true"/>--%>
               <%--<span class="error" id="error_vault.enable.ssl"></span></td>--%>
-          </td>
-        </tr>
+          <%--</td>--%>
+        <%--</tr>--%>
         <tr>
             <th><label for="vault.user">User name:  <l:star/></label>
             </th>

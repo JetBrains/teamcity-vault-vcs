@@ -19,11 +19,13 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.InvalidProperty;
+import jetbrains.buildServer.serverSide.ServerPaths;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.io.File;
 
 import org.apache.log4j.Logger;
 
@@ -37,10 +39,12 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
 
   private final VaultFileContentProvider myFileContentProvider;
+  private final VaultConnection myConnection;
 
-  public VaultVcsSupport() {
+  public VaultVcsSupport(@NotNull ServerPaths serverPaths) {
     LOG.debug("Vault plugin is working");
-    myFileContentProvider = new VaultFileContentProvider();
+    myConnection = new VaultConnection(serverPaths.getCachesDir() + File.separator + "vault");
+    myFileContentProvider = new VaultFileContentProvider(myConnection);
   }
 
 
@@ -64,7 +68,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @Nullable
   public TestConnectionSupport getTestConnectionSupport() {
-    return VaultConnection.getConnection();
+    return myConnection;
   }
 
 //  VcsSupportCore 	getCore(); default this
@@ -81,7 +85,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
-    return VaultConnection.getConnection().getCurrentDate(root);
+    return myConnection.getCurrentDate(root);
   }
 
   public boolean sourcesUpdatePossibleIfChangesNotFound(@NotNull VcsRoot root) {
@@ -151,7 +155,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   public IncludeRuleChangeCollector getChangeCollector(@NotNull VcsRoot root,
                                                        @NotNull String fromVersion,
                                                        @Nullable String currentVersion) throws VcsException {
-    return new VaultChangeCollector(root, fromVersion, currentVersion);
+    return new VaultChangeCollector(myConnection, root, fromVersion, currentVersion);
   }
 
   // end from CollectChangesByIncludeRules
@@ -163,7 +167,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public IncludeRulePatchBuilder getPatchBuilder(@NotNull VcsRoot root, @Nullable String fromVersion, @NotNull String toVersion) {
-    return new VaultPatchBuilder(root, fromVersion, toVersion);
+    return new VaultPatchBuilder(myConnection, root, fromVersion, toVersion);
   }
 
   // end from BuildPatchByIncludeRules
@@ -197,7 +201,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       properties.put("secure:vault.password", "");  
     }
     try {
-      VaultConnection.getConnection().testConnection(properties);
+      myConnection.testConnection(properties);
     } catch (VcsException e) {
       invalids.add(new InvalidProperty("vault.path", e.getMessage()));
     }

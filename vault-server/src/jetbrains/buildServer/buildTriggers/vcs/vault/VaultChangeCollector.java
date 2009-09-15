@@ -17,7 +17,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.vcs.*;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.apache.log4j.Logger;
@@ -36,61 +36,17 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
 
-  private static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
-  static {
-    NOT_CHANGED_CHANGE_TYPES.add("Added");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Label");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Obliterated");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Pinned");
-    NOT_CHANGED_CHANGE_TYPES.add("UnPinned");
-
-    NOT_CHANGED_CHANGE_TYPES.add("PropertyChange");
-  }
-
-  private static final Set<String> ADDED_CHANGE_TYPES = new HashSet<String>();
-  static {
-    ADDED_CHANGE_TYPES.add("Created");
-
-    ADDED_CHANGE_TYPES.add("BranchedFrom");
-    ADDED_CHANGE_TYPES.add("BranchedFromItem");
-    ADDED_CHANGE_TYPES.add("BranchedFromShare");
-    ADDED_CHANGE_TYPES.add("BranchedFromShareItem");
-
-    ADDED_CHANGE_TYPES.add("MovedFrom");
-
-    ADDED_CHANGE_TYPES.add("SharedTo");
-
-    ADDED_CHANGE_TYPES.add("Snapshot");
-    ADDED_CHANGE_TYPES.add("SnapshotFrom");
-    ADDED_CHANGE_TYPES.add("SnapshotItem");
-
-    ADDED_CHANGE_TYPES.add("Undeleted");
-  }
-
-  private static final Set<String> CHANGED_CHANGE_TYPES = new HashSet<String>();
-  static {
-    CHANGED_CHANGE_TYPES.add("CheckIn");
-    CHANGED_CHANGE_TYPES.add("Renamed");
-    CHANGED_CHANGE_TYPES.add("RenamedItem");
-  }
-
-  private static final Set<String> REMOVED_CHANGE_TYPES = new HashSet<String>();
-  static {
-    REMOVED_CHANGE_TYPES.add("Deleted");
-    REMOVED_CHANGE_TYPES.add("MovedTo");
-  }
-
+  private final VaultConnection myConnection;
   private final VcsRoot myRoot;
   private final String myFromVersion;
-  private final String myCurrentVersion; 
+  private final String myCurrentVersion;
 
 
-  public VaultChangeCollector(@NotNull VcsRoot root,
+  public VaultChangeCollector(@NotNull VaultConnection connection,
+                              @NotNull VcsRoot root,
                               @NotNull String fromVersion,
                               @Nullable String currentVersion) {
+    myConnection = connection;
     myRoot = root;
     myFromVersion = fromVersion;
     myCurrentVersion = currentVersion;
@@ -100,7 +56,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
     LOG.debug("Start collecting changes for rule " + includeRule.toDescriptiveString());
     final List<ModificationData> modifications = new ArrayList<ModificationData>();
-    
+
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo info : map.keySet()) {
       modifications.add(new ModificationData(info.getDate(), map.get(info), info.getComment(), info.getUser(), myRoot, info.getVersion(), info.getDate().toString()));
@@ -144,7 +100,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
     cl.addParameter("$");
     final HistoryHandler handler = new HistoryHandler();
-    VaultConnection.getConnection().runCommand(cl, handler);
+    myConnection.runCommand(cl, handler);
     return handler.getModifications();
   }
 
@@ -173,8 +129,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     cl.addParameter(myRoot.getProperty("vault.repo"));
 
     cl.addParameter("$");
-    VaultConnection.getConnection().runCommand(cl, handler);
-    
+    myConnection.runCommand(cl, handler);
+
     return handler.getDesiredVersion();
   }
 
@@ -199,12 +155,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       super(version, defaultResult);
     }
 
-    public void startElement (String uri, String localName,
-                  String qName, Attributes attributes)
-    throws SAXException
-    {
+    public void startElement(String uri, String localName,
+                             String qName, Attributes attributes)
+      throws SAXException {
       if ("item".equals(localName)) {
-        final String date = attributes.getValue("date"); 
+        final String date = attributes.getValue("date");
         if (myCameAcrossCurrentVersion && !date.equals(myVersion)) {
           myDesiredVersion = date;
           throw VaultConnection.SUCCESS;
@@ -223,10 +178,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       myCurrentVersion = defaultResult;
     }
 
-    public void startElement (String uri, String localName,
-                  String qName, Attributes attributes)
-    throws SAXException
-    {
+    public void startElement(String uri, String localName,
+                             String qName, Attributes attributes)
+      throws SAXException {
       if ("item".equals(localName)) {
         final String version = attributes.getValue("date");
         if (myVersion.equals(version)) {
@@ -266,111 +220,183 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 //        public static final byte Rollback = -26;
 
     private final Map<ModificationInfo, List<VcsChange>> myModifications
-              = new HashMap<ModificationInfo, List<VcsChange>>();
+      = new HashMap<ModificationInfo, List<VcsChange>>();
 
     public Map<ModificationInfo, List<VcsChange>> getModifications() {
       return myModifications;
     }
 
-    public void startElement (String uri, String localName,
-                  String qName, Attributes attributes)
-    throws SAXException
-    {
+    public void startElement(String uri, String localName,
+                             String qName, Attributes attributes)
+      throws SAXException {
       if ("item".equals(localName)) {
         final String typeName = attributes.getValue("typeName");
         if (NOT_CHANGED_CHANGE_TYPES.contains(typeName)) {
-          return;          
+          return;
         }
-        final String dateString = attributes.getValue("date"); 
+        final String version = attributes.getValue("date");
         final Date date;
         try {
-          date = VaultUtil.getDate(dateString);
+          date = VaultUtil.getDate(version);
         } catch (VcsException e) {
           throw new SAXException(e);
         }
         String comment = attributes.getValue("comment");
         if (comment == null) {
-          comment = "No comment";          
+          comment = "No comment";
         }
-        final ModificationInfo modificationInfo = new ModificationInfo(dateString, attributes.getValue("user"), comment, date);
-        final  List<VcsChange> changes;
+        final ModificationInfo modificationInfo = new ModificationInfo(version, attributes.getValue("user"), comment, date);
+        final List<VcsChange> changes;
         if (!myModifications.containsKey(modificationInfo)) {
-          changes = new ArrayList<VcsChange>();          
+          changes = new ArrayList<VcsChange>();
         } else {
           changes = myModifications.get(modificationInfo);
         }
-
         final String actionString = attributes.getValue("actionString");
-        String relativePath = attributes.getValue("name");
-        if (typeName.equals("Deleted")) {
-          relativePath += getDeletedFileName(actionString);              
+        String relativeRepoPath = attributes.getValue("name");
+        if ("Deleted".equals(typeName)) {
+          relativeRepoPath += getDeletedName(actionString);
+        } else if ("MovedTo".equals(typeName)) {
+          relativeRepoPath = getMovedToName(actionString);
+        } else if ("MovedFrom".equals(typeName)) {
+          relativeRepoPath = getMovedFromName(actionString);
+        } else if ("SharedTo".equals(typeName)) {
+          relativeRepoPath = getSharedToName(actionString);
         }
-        if (relativePath.startsWith("$")) {
-          relativePath = relativePath.substring(1);
-        } else {
-          LOG.debug("Root in repository doesn't start with $: " + relativePath);
-        }
+        String relativePath = getPathFromRepoPath(relativeRepoPath);
         if (relativePath.length() == 0) {
-          return;                                  
+          return;
         }
-        relativePath = relativePath.replace("/", File.separator).replace("\\", File.separator);
-        if (relativePath.startsWith(File.separator)) {
-          relativePath = relativePath.substring(1);
-        }
-//        String prevVersion;
-//        try {
-//          prevVersion = getPreviousRootVersion(repoPath, dateString);
-//        } catch (VcsException e) {
-//          throw new SAXException(e);
-//        }
         final String name = relativePath.substring(relativePath.lastIndexOf(File.separator) + 1);
-        final String version = attributes.getValue("version");
-        final String prevVersion = "" + (Integer.parseInt(version) - 1); 
         try {
-          changes.add(new VcsChange(getType(relativePath, typeName, version, dateString), actionString,
-            name, relativePath, "" + prevVersion, version));
+          final String prevVersion = getPreviousRootVersion(version);
+          if ("Renamed".equals(typeName)) {
+            renameFolderContent(relativeRepoPath, relativeRepoPath.replace(name, getRenamedFromName(actionString)), version, prevVersion, actionString, changes);
+          } else if ("SharedTo".equals(typeName)) {
+            addFolderContent(relativeRepoPath, version, prevVersion, actionString, changes);
+          } else {
+            final VcsChangeInfo.Type type = getType(relativePath, typeName, version, prevVersion);
+            changes.add(new VcsChange(type, actionString, relativePath, relativePath, prevVersion, version));
+          }
         } catch (VcsException e) {
           throw new SAXException(e);
         }
-//        changes.add(new VcsChange(getType(attributes.getValue("typeName")), attributes.getValue("actionString"),
-//          name, relativePath, prevVersion, dateString));
-
-        myModifications.put(modificationInfo, changes);        
+        myModifications.put(modificationInfo, changes);
       }
     }
 
-    private String getDeletedFileName(@NotNull String actionString) {
-      // actionString is "Deleted file.txt"
-      //TODO: move to constants?
-      final String prefix = "Deleted "; 
-      return File.separator + actionString.substring(actionString.indexOf(prefix) + prefix.length());
+    private String getPathFromRepoPath(@NotNull String relativeRepoPath) {
+      String relativePath = relativeRepoPath;
+      if (relativePath.startsWith("$")) {
+        relativePath = relativePath.substring(1);
+      }
+      relativePath = relativePath.replace("/", File.separator).replace("\\", File.separator);
+      if (relativePath.startsWith(File.separator)) {
+        relativePath = relativePath.substring(1);
+      }
+      return relativePath;
     }
 
-    private VcsChangeInfo.Type getType(@NotNull String repoPath, @NotNull String typeName, @NotNull String objectVersion, @NotNull String repoVersion) throws VcsException {
+    private VcsChangeInfo.Type getType(@NotNull String repoPath, @NotNull String typeName, @NotNull String version, @NotNull String prevVersion) throws VcsException {
       if (ADDED_CHANGE_TYPES.contains(typeName)) {
-        final File f = new VaultFileContentProvider().getFile(repoPath, myRoot, objectVersion);
+        final File f = myConnection.getCache(myRoot, repoPath, version);
         if (f.isFile()) {
           return VcsChangeInfo.Type.ADDED;
         } else if (f.isDirectory()) {
-          return VcsChangeInfo.Type.DIRECTORY_ADDED;          
+          return VcsChangeInfo.Type.DIRECTORY_ADDED;
         }
       } else if (CHANGED_CHANGE_TYPES.contains(typeName)) {
-        final File f = new VaultFileContentProvider().getFile(repoPath, myRoot, objectVersion);
+        final File f = myConnection.getCache(myRoot, repoPath, version);
         if (f.isFile()) {
           return VcsChangeInfo.Type.CHANGED;
         } else if (f.isDirectory()) {
-          return VcsChangeInfo.Type.DIRECTORY_CHANGED;          
+          return VcsChangeInfo.Type.DIRECTORY_CHANGED;
         }
       } else if (REMOVED_CHANGE_TYPES.contains(typeName)) {
-        final File f = new VaultFileContentProvider().getFileFromParent(repoPath, myRoot, "" + (VaultConnection.getConnection().getVersionByDate(myRoot, repoVersion) - 1));
+        final File f = myConnection.getCache(myRoot, repoPath, prevVersion);
         if (f.isFile()) {
           return VcsChangeInfo.Type.REMOVED;
         } else if (f.isDirectory()) {
-          return VcsChangeInfo.Type.DIRECTORY_REMOVED;          
+          return VcsChangeInfo.Type.DIRECTORY_REMOVED;
         }
       }
-      LOG.debug("Couldn't map change type: " + typeName);
       return VcsChangeInfo.Type.NOT_CHANGED;
+    }
+
+    private void renameFolderContent(@NotNull final String path, @NotNull final String oldPath,
+                                     @NotNull final String version, @NotNull final String prevVersion,
+                                     @NotNull final String actionString,
+                                     @NotNull final List<VcsChange> changes) throws VcsException {
+      final GeneralCommandLine cl = createListFolderCommandLine(path);
+
+      myConnection.runCommand(cl, new VaultConnection.Handler() {
+        private String myCurrentFolder;
+
+        public void startElement (String uri, String localName,
+                      String qName, Attributes attributes)
+        throws SAXException {
+          if ("error".equals(localName)) {
+            changes.add(new VcsChange(VcsChangeInfo.Type.ADDED, actionString, getPathFromRepoPath(path), getPathFromRepoPath(path), prevVersion, version));
+            changes.add(new VcsChange(VcsChange.Type.REMOVED, actionString, getPathFromRepoPath(oldPath), getPathFromRepoPath(oldPath), prevVersion, version));
+            throw VaultConnection.SUCCESS;
+          } else if ("folder".equals(localName)) {
+            final String newSubfolderPath = attributes.getValue("name");
+            final String oldSubfolderPath = newSubfolderPath.replace(path, oldPath);
+            changes.add(new VcsChange(VcsChangeInfo.Type.DIRECTORY_ADDED, actionString, getPathFromRepoPath(newSubfolderPath), getPathFromRepoPath(newSubfolderPath), prevVersion, version));
+            changes.add(new VcsChange(VcsChange.Type.DIRECTORY_REMOVED, actionString, getPathFromRepoPath(oldSubfolderPath), getPathFromRepoPath(oldSubfolderPath), prevVersion, version));
+            myCurrentFolder = newSubfolderPath;
+          } else if ("file".equals(localName)) {
+            final String newFileName = myCurrentFolder + "/" + attributes.getValue("name");
+            final String oldFileName = newFileName.replace(path, oldPath);
+            changes.add(new VcsChange(VcsChangeInfo.Type.ADDED, actionString, getPathFromRepoPath(newFileName), getPathFromRepoPath(newFileName), prevVersion, version));
+            changes.add(new VcsChange(VcsChange.Type.REMOVED, actionString, getPathFromRepoPath(oldFileName), getPathFromRepoPath(oldFileName), prevVersion, version));
+          }
+        }
+      });
+    }
+
+    private GeneralCommandLine createListFolderCommandLine(String path) {
+      final GeneralCommandLine cl = new GeneralCommandLine();
+      cl.setExePath(myRoot.getProperty("vault.path"));
+      cl.addParameter("listfolder");
+      cl.addParameter("-server");
+      cl.addParameter(myRoot.getProperty("vault.server"));
+      cl.addParameter("-user");
+      cl.addParameter(myRoot.getProperty("vault.user"));
+      cl.addParameter("-password");
+      cl.addParameter(myRoot.getProperty("secure:vault.password"));
+      cl.addParameter("-repository");
+      cl.addParameter(myRoot.getProperty("vault.repo"));
+
+      cl.addParameter(path);
+      return cl;
+    }
+
+    private void addFolderContent(@NotNull final String path,
+                                  @NotNull final String version, @NotNull final String prevVersion,
+                                  @NotNull final String actionString,
+                                  @NotNull final List<VcsChange> changes) throws VcsException {
+      final GeneralCommandLine cl = createListFolderCommandLine(path);
+
+      myConnection.runCommand(cl, new VaultConnection.Handler() {
+        private String myCurrentFolder;
+
+        public void startElement (String uri, String localName,
+                      String qName, Attributes attributes)
+        throws SAXException {
+          if ("error".equals(localName)) {
+            changes.add(new VcsChange(VcsChangeInfo.Type.ADDED, actionString, getPathFromRepoPath(path), getPathFromRepoPath(path), prevVersion, version));
+            throw VaultConnection.SUCCESS;
+          } else if ("folder".equals(localName)) {
+            final String newSubfolderPath = attributes.getValue("name");
+            changes.add(new VcsChange(VcsChangeInfo.Type.DIRECTORY_ADDED, actionString, getPathFromRepoPath(newSubfolderPath), getPathFromRepoPath(newSubfolderPath), prevVersion, version));
+            myCurrentFolder = newSubfolderPath;
+          } else if ("file".equals(localName)) {
+            final String newFileName = myCurrentFolder + "/" + attributes.getValue("name");
+            changes.add(new VcsChange(VcsChangeInfo.Type.ADDED, actionString, getPathFromRepoPath(newFileName), getPathFromRepoPath(newFileName), prevVersion, version));
+          }
+        }
+      });
     }
   }
 
