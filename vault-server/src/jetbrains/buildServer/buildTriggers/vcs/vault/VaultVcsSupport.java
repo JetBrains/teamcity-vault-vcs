@@ -93,8 +93,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
 //  boolean isCurrentVersionExpensive(); default false
-  //TODO: disable source cashing?
-//  boolean allowSourceCaching(); default true 
+  public boolean allowSourceCaching() {
+    return false; 
+  }
 
   // end from VcsSupportCore
   //--------------------------------------------------------------------------------
