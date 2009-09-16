@@ -16,17 +16,18 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import org.xml.sax.*;
-import org.xml.sax.helpers.XMLReaderFactory;
-import org.jetbrains.annotations.NotNull;
 import jetbrains.buildServer.vcs.VcsException;
+import org.jetbrains.annotations.NotNull;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Set;
 import java.util.HashSet;
-import java.io.File;
+import java.util.Set;
 
 /**
  * User: vbedrosova
@@ -35,6 +36,7 @@ import java.io.File;
  */
 public final class VaultUtil {
   public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
+
   static {
     NOT_CHANGED_CHANGE_TYPES.add("Added");
 
@@ -51,6 +53,7 @@ public final class VaultUtil {
   }
 
   public static final Set<String> ADDED_CHANGE_TYPES = new HashSet<String>();
+
   static {
     ADDED_CHANGE_TYPES.add("Created");
 
@@ -71,12 +74,14 @@ public final class VaultUtil {
   }
 
   public static final Set<String> CHANGED_CHANGE_TYPES = new HashSet<String>();
+
   static {
     CHANGED_CHANGE_TYPES.add("CheckIn");
     CHANGED_CHANGE_TYPES.add("Renamed");
   }
 
   public static final Set<String> REMOVED_CHANGE_TYPES = new HashSet<String>();
+
   static {
     REMOVED_CHANGE_TYPES.add("Deleted");
     REMOVED_CHANGE_TYPES.add("MovedFrom");
@@ -112,7 +117,7 @@ public final class VaultUtil {
     final String suffix = " to ";
     return actionString.substring(actionString.indexOf(prefix) + prefix.length(), actionString.indexOf(suffix));
   }
-  
+
   public static String getRenamedToName(@NotNull String actionString) {
     // actionString is "Renamed from file.txt to file3.txt"
     //TODO: move to constants?
@@ -135,7 +140,7 @@ public final class VaultUtil {
       xmlReader.setFeature("http://xml.org/sax/features/validation", false);
       return xmlReader;
     } catch (SAXException e) {
-      throw  new VcsException(e);
+      throw new VcsException(e);
     }
   }
 

@@ -16,13 +16,11 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault.process;
 
-import org.jetbrains.annotations.NotNull;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.ExecutionException;
+import jetbrains.buildServer.vcs.VcsException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
-
-import jetbrains.buildServer.vcs.VcsException;
 
 /**
  * User: vbedrosova
@@ -34,7 +32,7 @@ public final class VaultProcessExecutor {
     final Process p;
     try {
       p = cl.createProcess();
-      //TODO: wait or not wait
+//      TODO: wait or not wait
 //      p.waitFor();
       return p.getInputStream();
     } catch (Exception e) {

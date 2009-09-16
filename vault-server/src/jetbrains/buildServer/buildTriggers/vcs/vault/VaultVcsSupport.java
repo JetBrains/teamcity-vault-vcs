@@ -16,18 +16,17 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import jetbrains.buildServer.vcs.*;
-import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.InvalidProperty;
+import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
+import jetbrains.buildServer.vcs.*;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.text.SimpleDateFormat;
 import java.io.File;
-
-import org.apache.log4j.Logger;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 /**
@@ -92,9 +91,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return false; //TODO: false for now till labeling not supported
   }
 
-//  boolean isCurrentVersionExpensive(); default false
+  //  boolean isCurrentVersionExpensive(); default false
   public boolean allowSourceCaching() {
-    return false; 
+    return false;
   }
 
   // end from VcsSupportCore
@@ -151,7 +150,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   //-------------------------------------------------------------------------------
   // from CollectChangesByIncludeRules
-  
+
   @NotNull
   public IncludeRuleChangeCollector getChangeCollector(@NotNull VcsRoot root,
                                                        @NotNull String fromVersion,
@@ -199,7 +198,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       return invalids;
     }
     if (properties.get("secure:vault.password") == null) {
-      properties.put("secure:vault.password", "");  
+      properties.put("secure:vault.password", "");
     }
     try {
       myConnection.testConnection(properties);
