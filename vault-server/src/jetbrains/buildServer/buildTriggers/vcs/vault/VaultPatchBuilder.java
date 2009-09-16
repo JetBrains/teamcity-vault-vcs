@@ -45,6 +45,8 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private final String myFromVersion;
   private final String myToVersion;
 
+  private boolean myAlreadyCollected;
+
   public VaultPatchBuilder(@NotNull VaultConnection connection,
                            @NotNull VcsRoot root,
                            @Nullable String fromVersion,
@@ -54,9 +56,13 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
+    myAlreadyCollected = false;
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
+    if (myAlreadyCollected) {
+      return;      
+    }
     LOG.debug("Start building patch");
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch");
@@ -95,6 +101,7 @@ public class VaultPatchBuilder implements IncludeRulePatchBuilder {
         }
       }
     }
+    myAlreadyCollected = true;
     LOG.debug("Finish building patch");
   }
 

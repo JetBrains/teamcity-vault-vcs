@@ -41,6 +41,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private final String myFromVersion;
   private final String myCurrentVersion;
 
+  private final Map<String, String> myPreviousRootVersions;
+  private final Map<String, String> myNextRootVersions;
+
+  private boolean myAlreadyCollected;
+
 
   public VaultChangeCollector(@NotNull VaultConnection connection,
                               @NotNull VcsRoot root,
@@ -50,17 +55,28 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     myRoot = root;
     myFromVersion = fromVersion;
     myCurrentVersion = currentVersion;
+
+    myPreviousRootVersions = new HashMap<String, String>();
+    myNextRootVersions = new HashMap<String, String>();
+
+    myAlreadyCollected = false;
   }
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
+    if (myAlreadyCollected) {
+      return Collections.emptyList();     
+    }
     LOG.debug("Start collecting changes for rule " + includeRule.toDescriptiveString());
+    
     final List<ModificationData> modifications = new ArrayList<ModificationData>();
 
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo info : map.keySet()) {
       modifications.add(new ModificationData(info.getDate(), map.get(info), info.getComment(), info.getUser(), myRoot, info.getVersion(), info.getDate().toString()));
     }
+    
+    myAlreadyCollected = true;
     LOG.debug("Finish collecting changes for rule " + includeRule.toDescriptiveString());
     return modifications;
   }
@@ -86,32 +102,45 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     cl.addParameter("-enddate");
     cl.addParameter(getNextRootVersion(myCurrentVersion));
 
-//      -excludeactions action,action,...
+//    TODO: add this
+//    -excludeactions action,action,...
 //
-//      A comma-separated list of actions that will be excluded from
-//      the history query. Valid actions to exclude are:
-//      add, branch, checkin, create, delete, label, move, obliterate, pin,
-//      propertychange, rename, rollback, share, snapshot, undelete.
+//    A comma-separated list of actions that will be excluded from
+//    the history query. Valid actions to exclude are:
+//    add, branch, checkin, create, delete, label, move, obliterate, pin,
+//    propertychange, rename, rollback, share, snapshot, undelete.
 
-// TODO: add this
 //    cl.addParameter("-excludeactions");
 //    cl.addParameter("label,obliterate,pin,propertychange");
-//    cl.addParameter("add,branch,label,obliterate,pin,propertychange,snapshot");
 
     cl.addParameter("$");
+
     final HistoryHandler handler = new HistoryHandler();
     myConnection.runCommand(cl, handler);
+
     return handler.getModifications();
   }
 
   private String getPreviousRootVersion(@NotNull String version) throws VcsException {
-    final String defaultResult = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() - 1000));
-    return getRootVersion(new PreviousVersionHandler(version, defaultResult));
+    String prevVersion = myPreviousRootVersions.get(version);
+    if (prevVersion != null) {
+      return prevVersion;
+    }
+    prevVersion = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() - 1000)); // default result
+    prevVersion = getRootVersion(new PreviousVersionHandler(version, prevVersion));
+    myPreviousRootVersions.put(version, prevVersion);
+    return prevVersion;
   }
 
   private String getNextRootVersion(@NotNull String version) throws VcsException {
-    final String defaultResult = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() + 1000));
-    return getRootVersion(new NextVersionHandler(version, defaultResult));
+    String nextVersion = myNextRootVersions.get(version);
+    if (nextVersion != null) {
+      return nextVersion;
+    }
+    nextVersion = VaultUtil.getDateString(new Date(VaultUtil.getDate(version).getTime() + 1000)); // default result
+    nextVersion = getRootVersion(new NextVersionHandler(version, nextVersion));
+    myNextRootVersions.put(version, nextVersion);
+    return nextVersion;
   }
 
   private String getRootVersion(@NotNull VersionHandler handler)
@@ -194,31 +223,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   private final class HistoryHandler extends VaultConnection.Handler {
-//        public static final byte Added = 10;
-//        public static final byte BranchedFrom = 20;
-//        public static final byte BranchedFromItem = 30;
-//        public static final byte BranchedFromShare = 40;
-//        public static final byte BranchedFromShareItem = 50;
-//        public static final byte CheckIn = 60;
-//        public static final byte Created = 70;
-//        public static final byte Deleted = 80;
-//        public static final byte Label = 90;
-//        public static final byte MovedFrom = 120;
-//        public static final byte MovedTo = -126;
-//        public static final byte Obliterated = -116;
-//        public static final byte Pinned = -106;
-//        public static final byte PropertyChange = -96;
-//        public static final byte Renamed = -86;
-//        public static final byte RenamedItem = -76;
-//        public static final byte SharedTo = -66;
-//        public static final byte Snapshot = -56;
-//        public static final byte SnapshotFrom = -55;
-//        public static final byte SnapshotItem = -54;
-//        public static final byte Undeleted = -46;
-//        public static final byte UnPinned = -36;
-    //TODO: process rollback
-//        public static final byte Rollback = -26;
-
     private final Map<ModificationInfo, List<VcsChange>> myModifications
       = new HashMap<ModificationInfo, List<VcsChange>>();
 
@@ -355,23 +359,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       });
     }
 
-    private GeneralCommandLine createListFolderCommandLine(String path) {
-      final GeneralCommandLine cl = new GeneralCommandLine();
-      cl.setExePath(myRoot.getProperty("vault.path"));
-      cl.addParameter("listfolder");
-      cl.addParameter("-server");
-      cl.addParameter(myRoot.getProperty("vault.server"));
-      cl.addParameter("-user");
-      cl.addParameter(myRoot.getProperty("vault.user"));
-      cl.addParameter("-password");
-      cl.addParameter(myRoot.getProperty("secure:vault.password"));
-      cl.addParameter("-repository");
-      cl.addParameter(myRoot.getProperty("vault.repo"));
-
-      cl.addParameter(path);
-      return cl;
-    }
-
     private void addFolderContent(@NotNull final String path,
                                   @NotNull final String version, @NotNull final String prevVersion,
                                   @NotNull final String actionString,
@@ -398,6 +385,23 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         }
       });
     }
+  }
+
+  private GeneralCommandLine createListFolderCommandLine(String path) {
+    final GeneralCommandLine cl = new GeneralCommandLine();
+    cl.setExePath(myRoot.getProperty("vault.path"));
+    cl.addParameter("listfolder");
+    cl.addParameter("-server");
+    cl.addParameter(myRoot.getProperty("vault.server"));
+    cl.addParameter("-user");
+    cl.addParameter(myRoot.getProperty("vault.user"));
+    cl.addParameter("-password");
+    cl.addParameter(myRoot.getProperty("secure:vault.password"));
+    cl.addParameter("-repository");
+    cl.addParameter(myRoot.getProperty("vault.repo"));
+
+    cl.addParameter(path);
+    return cl;
   }
 
   public static final class ModificationInfo {

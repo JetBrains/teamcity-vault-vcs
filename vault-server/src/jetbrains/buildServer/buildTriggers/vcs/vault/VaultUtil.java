@@ -80,6 +80,8 @@ public final class VaultUtil {
   static {
     REMOVED_CHANGE_TYPES.add("Deleted");
     REMOVED_CHANGE_TYPES.add("MovedFrom");
+//    TODO: process rollback
+//    Rollback
   }
 
   public static String getDeletedName(@NotNull String actionString) {
