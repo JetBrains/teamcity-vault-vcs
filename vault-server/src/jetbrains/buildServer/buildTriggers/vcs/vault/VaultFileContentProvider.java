@@ -18,7 +18,6 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.*;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -45,7 +44,7 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
   @NotNull
   public byte[] getContent(@NotNull String filePath, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
     try {
-      return FileUtil.loadFileBytes(myConnection.getObject(root, filePath, version));
+      return FileUtil.loadFileBytes(myConnection.getObject(root, filePath, true, version));
     } catch (IOException e) {
       throw new VcsException(e);
     }

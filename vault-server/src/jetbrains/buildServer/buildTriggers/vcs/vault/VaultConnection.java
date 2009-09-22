@@ -54,18 +54,6 @@ public final class VaultConnection implements TestConnectionSupport {
     }
   }
 
-  private final String myCachesPath;
-
-  public VaultConnection(@NotNull String cachesPath) {
-    myCachesPath = cachesPath;
-
-    final File caches = new File(myCachesPath);
-    FileUtil.delete(caches);
-    if (!caches.mkdir()) {
-      LOG.warn("Unable to create caches dir: " + caches.getAbsolutePath());
-    }
-  }
-
   private static void runCommand(@NotNull GeneralCommandLine cl, Handler handler) throws VcsException {
     try {
       final InputStream inputStream = VaultProcessExecutor.runProcess(cl);
@@ -140,7 +128,7 @@ public final class VaultConnection implements TestConnectionSupport {
     runCommand(cl, handler);
   }
 
-  public void runRootHistoryCommand(@NotNull Map<String, String> properties, String beginDate, String endDate, @NotNull Handler handler) throws VcsException {
+  public void runHistoryCommand(@NotNull String repoPath, @NotNull Map<String, String> properties, String beginDate, String endDate, @NotNull Handler handler) throws VcsException {
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(properties.get("vault.path"));
 
@@ -152,7 +140,7 @@ public final class VaultConnection implements TestConnectionSupport {
       cl.addParameter(beginDate);
     }
     if (endDate != null) {
-      cl.addParameter("-begindate");
+      cl.addParameter("-enddate");
       cl.addParameter(endDate);
     }
 
@@ -167,16 +155,20 @@ public final class VaultConnection implements TestConnectionSupport {
 //    cl.addParameter("-excludeactions");
 //    cl.addParameter("label,obliterate,pin,propertychange");
 
-    cl.addParameter(ROOT);
+    cl.addParameter(repoPath);
     runCommand(cl, handler);
   }
 
-  public void runListFolderCommand(@NotNull String path, @NotNull Map<String, String> properties, @NotNull Handler handler) throws VcsException {
+  public void runListFolderCommand(@NotNull String path, @NotNull Map<String, String> properties, boolean noRecursive, @NotNull Handler handler) throws VcsException {
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(properties.get("vault.path"));
     cl.addParameter("listfolder");
     addRepositoryProperties(cl, properties);
+    if (noRecursive) {
+      cl.addParameter("-norecursive");      
+    }
     cl.addParameter(path);
+    runCommand(cl, handler);
   }
 
   private void addRepositoryProperties(@NotNull GeneralCommandLine cl, @NotNull Map<String, String> properties) {
@@ -208,7 +200,7 @@ public final class VaultConnection implements TestConnectionSupport {
     return handler.getResult();
   }
 
-  private String getRootVersionByDate(@NotNull VcsRoot root, @NotNull final String dateString) throws VcsException {
+  private String getVersionByDate(@NotNull String repoPath, @NotNull VcsRoot root, @NotNull final String dateString) throws VcsException {
     final ResultHandler handler = new ResultHandler() {
       public void startElement(String uri, String localName,
                                String qName, Attributes attributes)
@@ -219,41 +211,35 @@ public final class VaultConnection implements TestConnectionSupport {
         }
       }
     };
-    runRootVersionHistoryCommand(root.getProperties(), -1, handler);
+    runHistoryCommand(repoPath, root.getProperties(), null, null, handler);
     return handler.getResult();
   }
 
-  private static String versionToFolderName(@NotNull String version) {
-    return version.replace(":", "_").replace(" ", "_");
-  }
-
-  private boolean hasCacheFolder(@NotNull String folderName) {
-    return new File(myCachesPath, folderName).isDirectory();
-  }
-
-  public File getObject(@NotNull VcsRoot root, @NotNull String path, @NotNull String version) throws VcsException {
-    String folderName = versionToFolderName(version);
-    if (!hasCacheFolder(folderName)) {
-      buildCache(root, version, myCachesPath + File.separator + folderName);
-    }
-    File cachedFile = new File(myCachesPath + File.separator + folderName, path);
-    if (!cachedFile.exists()) {
-      buildCache(root, version, myCachesPath + File.separator + folderName);
-    }
-    return cachedFile;
-  }
-
-  private void buildCache(@NotNull VcsRoot root, @NotNull String version, @NotNull String destDir) throws VcsException {
+  public File getObject(@NotNull VcsRoot root, @NotNull String path, boolean noRecursive, @NotNull String version) throws VcsException {
     final GeneralCommandLine cl = new GeneralCommandLine();
     cl.setExePath(root.getProperty("vault.path"));
     cl.addParameter("getversion");
     addRepositoryProperties(cl, root.getProperties());
     cl.addParameter("-setfiletime");
     cl.addParameter("modification");
-    cl.addParameter(getRootVersionByDate(root, version));
-    cl.addParameter(ROOT);
-    cl.addParameter(destDir);
-
+    if (noRecursive) {
+      cl.addParameter("-norecursive");      
+    }
+    final String repoPath = getRepoPathFromPath(path);
+    cl.addParameter(getVersionByDate(repoPath, root, version));
+    cl.addParameter(repoPath);
+    final String tmpDir;
+    try {
+      tmpDir = FileUtil.createTempDirectory("vault", "").getAbsolutePath();
+    } catch (IOException e) {
+      throw new VcsException(e);
+    }
+    cl.addParameter(tmpDir);
     runCommand(cl, null);
+    return new File(tmpDir, !repoPath.contains("/") ? repoPath : repoPath.substring(repoPath.lastIndexOf("/")));
   }
+
+  public static String getRepoPathFromPath(@NotNull String relativePath) {
+    return (relativePath.length() == 0 || ".".equals(relativePath)) ? ROOT : ROOT + "/" + relativePath.replace("\\", "/");
+  }  
 }

@@ -78,7 +78,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnection(FileUtil.getTempDirectory()), root, fromVersion, toVersion);
+    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnection(), root, fromVersion, toVersion);
 
     try {
       vaultPatchBuilder.buildPatch(patchBuilder, IncludeRule.createDefaultInstance());

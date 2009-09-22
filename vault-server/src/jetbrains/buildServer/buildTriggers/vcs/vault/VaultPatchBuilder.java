@@ -41,8 +41,6 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private final String myFromVersion;
   private final String myToVersion;
 
-  private boolean myAlreadyCollected;
-
   public VaultPatchBuilder(@NotNull VaultConnection connection,
                            @NotNull VcsRoot root,
                            @Nullable String fromVersion,
@@ -52,17 +50,13 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
-    myAlreadyCollected = false;
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
-    if (myAlreadyCollected) {
-      return;
-    }
     LOG.debug("Start building patch");
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch");
-      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getObject(myRoot, "", myToVersion));
+      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getObject(myRoot, "", false, myToVersion));
     } else {
       LOG.debug("Perform incremental patch");
       final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myConnection, myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
@@ -72,14 +66,14 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
           File f;
           switch (c.getType()) {
             case CHANGED:
-              f = myConnection.getObject(myRoot, c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
+              f = myConnection.getObject(myRoot, c.getRelativeFileName(), true, c.getAfterChangeRevisionNumber());
               builder.changeOrCreateBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
             case DIRECTORY_CHANGED:
               builder.createDirectory(relativeFile);
               break;
             case ADDED:
-              f = myConnection.getObject(myRoot, c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
+              f = myConnection.getObject(myRoot, c.getRelativeFileName(), true, c.getAfterChangeRevisionNumber());
               builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
             case DIRECTORY_ADDED:
@@ -96,7 +90,6 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         }
       }
     }
-    myAlreadyCollected = true;
     LOG.debug("Finish building patch");
   }
 

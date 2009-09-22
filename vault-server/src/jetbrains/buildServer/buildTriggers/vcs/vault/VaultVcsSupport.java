@@ -40,9 +40,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   private final VaultFileContentProvider myFileContentProvider;
   private final VaultConnection myConnection;
 
-  public VaultVcsSupport(@NotNull ServerPaths serverPaths) {
+  public VaultVcsSupport() {
     LOG.debug("Vault plugin is working");
-    myConnection = new VaultConnection(serverPaths.getCachesDir() + File.separator + "vault");
+    myConnection = new VaultConnection();
     myFileContentProvider = new VaultFileContentProvider(myConnection);
   }
 
@@ -92,9 +92,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   //  boolean isCurrentVersionExpensive(); default false
-  public boolean allowSourceCaching() {
-    return false;
-  }
+  //  public boolean allowSourceCaching(); default true
 
   // end from VcsSupportCore
   //--------------------------------------------------------------------------------
