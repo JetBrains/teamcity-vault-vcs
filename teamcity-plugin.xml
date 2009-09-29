@@ -3,7 +3,7 @@
 <info>
 <name>vault</name>
 <display-name>Vault</display-name>
-<version>1</version>
+<version>@version@</version>
 </info>
 <deployment use-separate-classloader="false"/>
 </teamcity-plugin>
