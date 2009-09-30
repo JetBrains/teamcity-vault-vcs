@@ -18,14 +18,11 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
-import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.vcs.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -34,16 +31,17 @@ import java.util.*;
  * Date: 15.05.2009
  * Time: 18:22:17
  */
-public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules, BuildPatchByIncludeRules, PropertiesProcessor {
+public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules,
+                                                                       BuildPatchByIncludeRules,
+                                                                       PropertiesProcessor,
+                                                                       TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
 
   private final VaultFileContentProvider myFileContentProvider;
-  private final VaultConnection myConnection;
 
   public VaultVcsSupport() {
     LOG.debug("Vault plugin is working");
-    myConnection = new VaultConnection();
-    myFileContentProvider = new VaultFileContentProvider(myConnection);
+    myFileContentProvider = new VaultFileContentProvider();
   }
 
 
@@ -67,7 +65,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @Nullable
   public TestConnectionSupport getTestConnectionSupport() {
-    return myConnection;
+    return this;
   }
 
 //  VcsSupportCore 	getCore(); default this
@@ -84,7 +82,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
-    return myConnection.getCurrentDate(root);
+    return VaultConnection1.getCurrentVersion(new VaultConnectionParameters(root));
   }
 
   public boolean sourcesUpdatePossibleIfChangesNotFound(@NotNull VcsRoot root) {
@@ -92,7 +90,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   //  boolean isCurrentVersionExpensive(); default false
-  //  public boolean allowSourceCaching(); default true
+  public boolean allowSourceCaching() {
+    return false;
+  }
 
   // end from VcsSupportCore
   //--------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getName() {
-    return "vault";
+    return "vault-vcs";
   }
 
   @NotNull
@@ -137,7 +137,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public Comparator<String> getVersionComparator() {
-    return new VcsSupportUtil.DateVersionComparator(new SimpleDateFormat());
+    return new VcsSupportUtil.IntVersionComparator();
   }
 
 //  boolean 	isAgentSideCheckoutAvailable(); default false
@@ -153,7 +153,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   public IncludeRuleChangeCollector getChangeCollector(@NotNull VcsRoot root,
                                                        @NotNull String fromVersion,
                                                        @Nullable String currentVersion) throws VcsException {
-    return new VaultChangeCollector(myConnection, root, fromVersion, currentVersion);
+    return new VaultChangeCollector(root, fromVersion, currentVersion);
   }
 
   // end from CollectChangesByIncludeRules
@@ -165,7 +165,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public IncludeRulePatchBuilder getPatchBuilder(@NotNull VcsRoot root, @Nullable String fromVersion, @NotNull String toVersion) {
-    return new VaultPatchBuilder(myConnection, root, fromVersion, toVersion);
+    return new VaultPatchBuilder(root, fromVersion, toVersion);
   }
 
   // end from BuildPatchByIncludeRules
@@ -176,36 +176,44 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   public Collection<InvalidProperty> process(Map<String, String> properties) {
     List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
-    String prop = properties.get("vault.path");
+    String prop; 
+    prop = properties.get(VaultConnectionParameters.SERVER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.path", "Specify path to Vault Comand Line Client (e.g. c:\\Vault\\VaultClientAPI_5_0_1_18729\\vault.exe)"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server must not be empty"));
     }
-    prop = properties.get("vault.server");
+    prop = properties.get(VaultConnectionParameters.REPO);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.server", "Vault server must not be empty"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.REPO, "Repository name must not be empty"));
     }
-    prop = properties.get("vault.repo");
+    prop = properties.get(VaultConnectionParameters.USER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.repo", "Repository name must not be empty"));
-    }
-    prop = properties.get("vault.user");
-    if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty("vault.user", "Username must not be empty"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "Username must not be empty"));
     }
     if (invalids.size() > 0) {
       return invalids;
     }
-    if (properties.get("secure:vault.password") == null) {
-      properties.put("secure:vault.password", "");
+    if (properties.get(VaultConnectionParameters.PASSWORD) == null) {
+      properties.put(VaultConnectionParameters.PASSWORD, "");
     }
     try {
-      myConnection.testConnection(properties);
+      VaultConnection1.testConnection(new VaultConnectionParameters(properties));
     } catch (VcsException e) {
-      invalids.add(new InvalidProperty("vault.path", e.getMessage()));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, e.getMessage()));
     }
     return invalids;
   }
 
   // end from PropertiesProcessor
+  //-------------------------------------------------------------------------------
+
+  //-------------------------------------------------------------------------------
+  // from TestConnectionSupport
+
+  public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
+    VaultConnection1.testConnection(new VaultConnectionParameters(vcsRoot));
+    return null;
+  }
+
+  // end from TestConnectionSupport
   //-------------------------------------------------------------------------------
 }

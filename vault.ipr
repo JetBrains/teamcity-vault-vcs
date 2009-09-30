@@ -261,6 +261,17 @@
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
   </component>
   <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="http://svn.jetbrains.org/teamcity/plugins/vault/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
     <option name="myVersion" value="124" />
   </component>
   <component name="VcsDirectoryMappings">
@@ -275,9 +286,7 @@
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/util.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES>
-        <root url="intellijad://intellijad" />
-      </SOURCES>
+      <SOURCES />
     </library>
     <library name="TeamCity-openapi">
       <CLASSES>
@@ -305,7 +314,9 @@
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/spring.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="intellijad://intellijad" />
+      </SOURCES>
     </library>
     <library name="JDom">
       <CLASSES>
@@ -337,7 +348,9 @@
         <root url="jar://$TeamCityDistribution$/buildAgent/lib/trove4j.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES />
+      <SOURCES>
+        <root url="intellijad://intellijad" />
+      </SOURCES>
     </library>
     <library name="JUnit">
       <CLASSES>
@@ -345,6 +358,16 @@
       </CLASSES>
       <JAVADOC />
       <SOURCES />
+    </library>
+    <library name="Vault">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/lib" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="intellijad://intellijad" />
+      </SOURCES>
+      <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
     </library>
   </component>
   <UsedPathMacros>

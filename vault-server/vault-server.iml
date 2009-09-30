@@ -18,6 +18,7 @@
     <orderEntry type="library" name="Log4j" level="project" />
     <orderEntry type="library" name="Web" level="project" />
     <orderEntry type="library" name="JDom" level="project" />
+    <orderEntry type="library" name="Vault" level="project" />
   </component>
 </module>
 

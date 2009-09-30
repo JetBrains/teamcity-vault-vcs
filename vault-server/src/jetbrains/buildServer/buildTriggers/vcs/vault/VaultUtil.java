@@ -25,9 +25,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * User: vbedrosova
@@ -35,6 +33,31 @@ import java.util.Set;
  * Time: 19:32:05
  */
 public final class VaultUtil {
+  //        public static final byte Added = 10;
+//        public static final byte BranchedFrom = 20;
+//        public static final byte BranchedFromItem = 30;
+//        public static final byte BranchedFromShare = 40;
+//        public static final byte BranchedFromShareItem = 50;
+//        public static final byte CheckIn = 60;
+//        public static final byte Created = 70;
+//        public static final byte Deleted = 80;
+//        public static final byte Label = 90;
+//        public static final byte MovedFrom = 120;
+//        public static final byte MovedTo = -126;
+//        public static final byte Obliterated = -116;
+//        public static final byte Pinned = -106;
+//        public static final byte PropertyChange = -96;
+//        public static final byte Renamed = -86;
+//        public static final byte RenamedItem = -76;
+//        public static final byte SharedTo = -66;
+//        public static final byte Snapshot = -56;
+//        public static final byte SnapshotFrom = -55;
+//        public static final byte SnapshotItem = -54;
+//        public static final byte Undeleted = -46;
+//        public static final byte UnPinned = -36;
+    //TODO: process rollback
+//        public static final byte Rollback = -26;
+
   public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
 
   static {
@@ -50,9 +73,11 @@ public final class VaultUtil {
     NOT_CHANGED_CHANGE_TYPES.add("PropertyChange");
 
     NOT_CHANGED_CHANGE_TYPES.add("RenamedItem");
+
+    NOT_CHANGED_CHANGE_TYPES.add("MovedTo");
   }
 
-  public static final Set<String> ADDED_CHANGE_TYPES = new HashSet<String>();
+  public static final Set<String> ADDED_CHANGE_TYPES =  new HashSet<String>();
 
   static {
     ADDED_CHANGE_TYPES.add("Created");
@@ -62,7 +87,7 @@ public final class VaultUtil {
     ADDED_CHANGE_TYPES.add("BranchedFromShare");
     ADDED_CHANGE_TYPES.add("BranchedFromShareItem");
 
-    ADDED_CHANGE_TYPES.add("MovedTo");
+    ADDED_CHANGE_TYPES.add("MovedFrom");
 
     ADDED_CHANGE_TYPES.add("SharedTo");
 
@@ -71,66 +96,65 @@ public final class VaultUtil {
     ADDED_CHANGE_TYPES.add("SnapshotItem");
 
     ADDED_CHANGE_TYPES.add("Undeleted");
+    ADDED_CHANGE_TYPES.add("Renamed");
   }
 
-  public static final Set<String> CHANGED_CHANGE_TYPES = new HashSet<String>();
+  public static final Set<String> CHANGED_CHANGE_TYPES =  new HashSet<String>();
 
   static {
     CHANGED_CHANGE_TYPES.add("CheckIn");
-    CHANGED_CHANGE_TYPES.add("Renamed");
   }
 
-  public static final Set<String> REMOVED_CHANGE_TYPES = new HashSet<String>();
+  public static final Set<String> REMOVED_CHANGE_TYPES =  new HashSet<String>();
 
   static {
     REMOVED_CHANGE_TYPES.add("Deleted");
-    REMOVED_CHANGE_TYPES.add("MovedFrom");
 //    TODO: process rollback
-//    Rollback
+//    public static final byte Rollback = -26;
   }
 
-  public static String getDeletedName(@NotNull String actionString) {
-    // actionString is "Deleted file.txt"
-    //TODO: move to constants?
-    final String prefix = "Deleted ";
-    return "/" + actionString.substring(actionString.indexOf(prefix) + prefix.length());
-  }
-
-  public static String getMovedToName(@NotNull String actionString) {
-    // actionString is "Moved file.txt to fold1/file.txt"
-    //TODO: move to constants?
-    final String prefix = " to ";
-    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-  }
-
-  public static String getMovedFromName(@NotNull String actionString) {
-    // actionString is "Moved file.txt from fold1"
-    //TODO: move to constants?
-    final String prefix = " from ";
-    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-  }
-
-  public static String getRenamedFromName(@NotNull String actionString) {
-    // actionString is "Renamed from file.txt to file3.txt"
-    //TODO: move to constants?
-    final String prefix = "Renamed from ";
-    final String suffix = " to ";
-    return actionString.substring(actionString.indexOf(prefix) + prefix.length(), actionString.indexOf(suffix));
-  }
-
-  public static String getRenamedToName(@NotNull String actionString) {
-    // actionString is "Renamed from file.txt to file3.txt"
-    //TODO: move to constants?
-    final String prefix = " to ";
-    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-  }
-
-  public static String getSharedToName(@NotNull String actionString) {
-    // actionString is "Shared file.txt as file.txt"
-    //TODO: move to constants?
-    final String prefix = " as ";
-    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-  }
+//  public static String getDeletedName(@NotNull String actionString) {
+//    // actionString is "Deleted file.txt"
+//    //TODO: move to constants?
+//    final String prefix = "Deleted ";
+//    return "/" + actionString.substring(actionString.indexOf(prefix) + prefix.length());
+//  }
+//
+//  public static String getMovedToName(@NotNull String actionString) {
+//    // actionString is "Moved file.txt to fold1/file.txt"
+//    //TODO: move to constants?
+//    final String prefix = " to ";
+//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
+//  }
+//
+//  public static String getMovedFromName(@NotNull String actionString) {
+//    // actionString is "Moved file.txt from fold1"
+//    //TODO: move to constants?
+//    final String prefix = " from ";
+//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
+//  }
+//
+//  public static String getRenamedFromName(@NotNull String actionString) {
+//    // actionString is "Renamed from file.txt to file3.txt"
+//    //TODO: move to constants?
+//    final String prefix = "Renamed from ";
+//    final String suffix = " to ";
+//    return actionString.substring(actionString.indexOf(prefix) + prefix.length(), actionString.indexOf(suffix));
+//  }
+//
+//  public static String getRenamedToName(@NotNull String actionString) {
+//    // actionString is "Renamed from file.txt to file3.txt"
+//    //TODO: move to constants?
+//    final String prefix = " to ";
+//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
+//  }
+//
+//  public static String getSharedToName(@NotNull String actionString) {
+//    // actionString is "Shared file.txt as file.txt"
+//    //TODO: move to constants?
+//    final String prefix = " as ";
+//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
+//  }
 
   public static XMLReader createXmlReader(@NotNull ContentHandler contentHandler) throws VcsException {
     final XMLReader xmlReader;
@@ -156,11 +180,37 @@ public final class VaultUtil {
     return DateFormat.getDateTimeInstance().format(date);
   }
 
-  public static int parseInt(@NotNull String num) throws VcsException {
+  public static long parseLong(@NotNull String num) throws VcsException {
     try {
-      return Integer.parseInt(num);
+      return Long.parseLong(num);
     } catch (NumberFormatException e) {
       throw new VcsException(e);
     }
   }
+
+  public static String replaceLast(@NotNull String str, @NotNull String oldS, @NotNull String newS) {
+    final int s2Start = str.lastIndexOf(oldS);
+    final String s1 = str.substring(0, s2Start);
+    String s2 = str.substring(s2Start);
+
+    s2 = s2.replace(oldS, newS);
+    return s1 + s2;
+  }  
+
+  public static String replaceFirst(@NotNull String str, @NotNull String oldS, @NotNull String newS) {
+    final int s2Start = str.indexOf(oldS) + oldS.length();
+    String s1 = str.substring(0, s2Start);
+    final String s2 = str.substring(s2Start);
+
+    s1 = s1.replace(oldS, newS);
+    return s1 + s2;
+  }
+
+//  public static int parseInt(@NotNull String num) throws VcsException {
+//    try {
+//      return Integer.parseInt(num);
+//    } catch (NumberFormatException e) {
+//      throw new VcsException(e);
+//    }
+//  }
 }

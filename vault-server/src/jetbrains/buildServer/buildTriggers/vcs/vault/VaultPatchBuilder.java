@@ -36,44 +36,46 @@ import java.util.Map;
 public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private static final Logger LOG = Logger.getLogger(VaultPatchBuilder.class);
 
-  private final VaultConnection myConnection;
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private final String myToVersion;
 
-  public VaultPatchBuilder(@NotNull VaultConnection connection,
-                           @NotNull VcsRoot root,
+  public VaultPatchBuilder(@NotNull VcsRoot root,
                            @Nullable String fromVersion,
                            @NotNull String toVersion) {
 
-    myConnection = connection;
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
-    LOG.debug("Start building patch");
+    LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+              + " from version " + myFromVersion + " to version " + myToVersion);
     if (myFromVersion == null) {
-      LOG.debug("Perform clean patch");
-      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getObject(myRoot, "", false, myToVersion));
+      LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+                + " to version " + myToVersion);
+      VaultConnection1.connect(new VaultConnectionParameters(myRoot));
+      VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection1.getObject(includeRule.getFrom(), myToVersion));
+      VaultConnection1.disconnect();
     } else {
-      LOG.debug("Perform incremental patch");
-      final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myConnection, myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
+      LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+                + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
+      final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
       for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
         for (final VcsChange c : modifications.get(m)) {
           final File relativeFile = new File(c.getRelativeFileName());
           File f;
           switch (c.getType()) {
             case CHANGED:
-              f = myConnection.getObject(myRoot, c.getRelativeFileName(), true, c.getAfterChangeRevisionNumber());
+              f = VaultConnection1.getObject(c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
               builder.changeOrCreateBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
             case DIRECTORY_CHANGED:
               builder.createDirectory(relativeFile);
               break;
             case ADDED:
-              f = myConnection.getObject(myRoot, c.getRelativeFileName(), true, c.getAfterChangeRevisionNumber());
+              f = VaultConnection1.getObject(c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
               builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
               break;
             case DIRECTORY_ADDED:
@@ -90,7 +92,8 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         }
       }
     }
-    LOG.debug("Finish building patch");
+    LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+              + " from version " + myFromVersion + " to version " + myToVersion);
   }
 
   public void dispose() throws VcsException {

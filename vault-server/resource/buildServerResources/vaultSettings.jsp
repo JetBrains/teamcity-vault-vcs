@@ -21,17 +21,19 @@
 
 <table class="runnerFormTable">
     <l:settingsGroup title="Vault Settings">
+        <%--<tr>--%>
+            <%--<th><label for="vault.path">Vault Command Line Client path: <l:star/></label>--%>
+            <%--</th>--%>
+            <%--<td><props:textProperty name="vault.path" className="longField"/>--%>
+                <%--<span class="error" id="error_vault.path"></span></td>--%>
+        <%--</tr>--%>
         <tr>
-            <th><label for="vault.path">Vault Command Line Client path: <l:star/></label>
-            </th>
-            <td><props:textProperty name="vault.path" className="longField"/>
-                <span class="error" id="error_vault.path"></span></td>
-        </tr>
-        <tr>
-            <th><label for="vault.server">Vault server: <l:star/></label>
+            <th><label for="vault.server">Vault server URL: <l:star/></label>
             </th>
             <td><props:textProperty name="vault.server" className="longField"/>
-                <span class="error" id="error_vault.server"></span></td>
+                <span class="error" id="error_vault.server"></span>
+                <%--<span class="smallNote">Type URL like http://hostname:port</span>--%>
+            </td>                
         </tr>
         <tr>
             <%--<th><label for="vault.repo">Reposiory name: <bs:help file="ClearCase" anchor="relPathOptionDescription"/> <l:star/></label>--%>

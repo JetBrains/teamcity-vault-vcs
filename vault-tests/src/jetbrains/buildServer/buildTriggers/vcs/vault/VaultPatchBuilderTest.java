@@ -20,7 +20,6 @@ import jetbrains.buildServer.vcs.patches.PatchTestCase;
 import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
 import jetbrains.buildServer.vcs.impl.SVcsRootImpl;
 import jetbrains.buildServer.vcs.IncludeRule;
-import jetbrains.buildServer.vcs.VcsRoot;
 import jetbrains.buildServer.util.FileUtil;
 
 import java.io.File;
@@ -78,7 +77,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnection(), root, fromVersion, toVersion);
+    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(root, fromVersion, toVersion);
 
     try {
       vaultPatchBuilder.buildPatch(patchBuilder, IncludeRule.createDefaultInstance());

@@ -84,6 +84,48 @@
     <pathelement location="${basedir}/vault-tests/lib/testng-5.9-jdk15.jar"/>
   </path>
   
+  <path id="library.vault.classpath">
+    <pathelement location="${basedir}/lib/DragnetLib.jar"/>
+    <pathelement location="${basedir}/lib/ICSharpCode.SharpZipLib.jar"/>
+    <pathelement location="${basedir}/lib/J2EE.Helpers.jar"/>
+    <pathelement location="${basedir}/lib/J2SE.Helpers.jar"/>
+    <pathelement location="${basedir}/lib/Microsoft.VisualBasic.jar"/>
+    <pathelement location="${basedir}/lib/Novell.Directory.Ldap.jar"/>
+    <pathelement location="${basedir}/lib/PortalControls.jar"/>
+    <pathelement location="${basedir}/lib/Portlet.Helpers.jar"/>
+    <pathelement location="${basedir}/lib/System.Data.OracleClient.jar"/>
+    <pathelement location="${basedir}/lib/System.Data.jar"/>
+    <pathelement location="${basedir}/lib/System.DirectoryServices.jar"/>
+    <pathelement location="${basedir}/lib/System.Drawing.jar"/>
+    <pathelement location="${basedir}/lib/System.Runtime.Remoting.jar"/>
+    <pathelement location="${basedir}/lib/System.Runtime.Serialization.Formatters.Soap.jar"/>
+    <pathelement location="${basedir}/lib/System.Web.Services.jar"/>
+    <pathelement location="${basedir}/lib/System.Web.jar"/>
+    <pathelement location="${basedir}/lib/System.Xml.jar"/>
+    <pathelement location="${basedir}/lib/System.jar"/>
+    <pathelement location="${basedir}/lib/VCDiff.jar"/>
+    <pathelement location="${basedir}/lib/VaultClientIntegrationLib.jar"/>
+    <pathelement location="${basedir}/lib/VaultClientNetLib.jar"/>
+    <pathelement location="${basedir}/lib/VaultClientOperationsLib.jar"/>
+    <pathelement location="${basedir}/lib/VaultLib.jar"/>
+    <pathelement location="${basedir}/lib/clibwrapper_jiio.jar"/>
+    <pathelement location="${basedir}/lib/commons-logging-1.1.jar"/>
+    <pathelement location="${basedir}/lib/jai_codec.jar"/>
+    <pathelement location="${basedir}/lib/jai_core.jar"/>
+    <pathelement location="${basedir}/lib/jai_imageio.jar"/>
+    <pathelement location="${basedir}/lib/jni.jar"/>
+    <pathelement location="${basedir}/lib/log4j-1.2.14.jar"/>
+    <pathelement location="${basedir}/lib/logging.jar"/>
+    <pathelement location="${basedir}/lib/mlibwrapper_jai.jar"/>
+    <pathelement location="${basedir}/lib/mscorlib.jar"/>
+    <pathelement location="${basedir}/lib/mscorlib_orig.jar"/>
+    <pathelement location="${basedir}/lib/util.jar"/>
+    <pathelement location="${basedir}/lib/vault-ant-5_0_1_18729.jar"/>
+    <pathelement location="${basedir}/lib/vault.jar"/>
+    <pathelement location="${basedir}/lib/vmwutils.jar"/>
+    <pathelement location="${basedir}/lib/vs.jar"/>
+  </path>
+  
   <path id="library.web.classpath">
     <pathelement location="${path.variable.teamcitydistribution}/lib/servlet-api.jar"/>
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/spring-webmvc.jar"/>
@@ -114,6 +156,7 @@
     <path refid="library.log4j.classpath"/>
     <path refid="library.web.classpath"/>
     <path refid="library.jdom.classpath"/>
+    <path refid="library.vault.classpath"/>
   </path>
   
   <path id="vault-server.runtime.module.classpath">
@@ -124,6 +167,7 @@
     <path refid="library.log4j.classpath"/>
     <path refid="library.web.classpath"/>
     <path refid="library.jdom.classpath"/>
+    <path refid="library.vault.classpath"/>
   </path>
   
   

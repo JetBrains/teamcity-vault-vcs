@@ -21,6 +21,7 @@ import jetbrains.buildServer.vcs.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.File;
 
 /**
  * User: vbedrosova
@@ -28,12 +29,6 @@ import java.io.IOException;
  * Time: 12:19:39
  */
 public final class VaultFileContentProvider implements VcsFileContentProvider {
-  private final VaultConnection myConnection;
-
-  public VaultFileContentProvider(@NotNull VaultConnection connection) {
-    myConnection = connection;
-  }
-
   @NotNull
   public byte[] getContent(@NotNull VcsModification vcsModification, @NotNull VcsChangeInfo change, @NotNull VcsChangeInfo.ContentType contentType, @NotNull VcsRoot vcsRoot) throws VcsException {
     return getContent(change.getRelativeFileName(), vcsRoot,
@@ -42,9 +37,12 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
   }
 
   @NotNull
-  public byte[] getContent(@NotNull String filePath, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
+  public byte[] getContent(@NotNull String path, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
+    VaultConnection1.connect(new VaultConnectionParameters(root));
+    final File f = VaultConnection1.getObject(path, version);
+    VaultConnection1.disconnect();
     try {
-      return FileUtil.loadFileBytes(myConnection.getObject(root, filePath, true, version));
+      return FileUtil.loadFileBytes(f);
     } catch (IOException e) {
       throw new VcsException(e);
     }
