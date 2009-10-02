@@ -21,6 +21,11 @@
 
 <table class="runnerFormTable">
     <l:settingsGroup title="Vault Settings">
+        <tr class="noBorder" id="xmlReportParsing.reportType.container">
+            <td colspan="2">
+                Make sure Vault Java API jars are present at &lt;TeamCity home&gt;/webapps/ROOT/WEB-INF/lib/ directory.
+            </td>
+        </tr>
         <%--<tr>--%>
             <%--<th><label for="vault.path">Vault Command Line Client path: <l:star/></label>--%>
             <%--</th>--%>
