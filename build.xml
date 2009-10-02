@@ -11,7 +11,23 @@
     <!--<property environment="env"/>-->
     <!--<property name="build.number" value="${env.BUILD_NUMBER}"/>-->
 
-    <target name="all" depends="check.teamcitydistribution, vault.all"/>
+    <target name="all" depends="check.teamcitydistribution, check.vault.api, vault.all"/>
+
+    <target name="check.vault.api">
+      <check.property name="path.variable.vaultapi"
+                      fail-message="Please define 'path.variable.vaultapi' property in build.properties file. The property should point to Vault API jars."
+          />
+
+      <condition property="vault.api.not.present">
+        <not>
+          <and>
+            <available file="${path.variable.vaultapi}/VaultClientIntegrationLib.jar"/>
+          </and>
+        </not>
+      </condition>
+      <fail if="vault.api.not.present"
+            message="Cannot find Vault Java API at path '${path.variable.vaultapi}'. The property 'path.variable.vaultapi' should point to Vault API jars."/>
+    </target>    
 
     <target name="dist" depends="all, define.version">
         <package.teamcity.plugin name="${plugin.name}"

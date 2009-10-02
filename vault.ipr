@@ -325,8 +325,7 @@
     </library>
     <library name="Patch-testing">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/vault-tests/lib/patches-tests.jar!/" />
-        <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/patches-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/vault-tests/lib/patches-test.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
@@ -343,13 +342,6 @@
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/patches-impl.jar!/" />
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/server.jar!/" />
         <root url="jar://$TeamCityDistribution$/buildAgent/lib/trove4j.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
-    <library name="JUnit">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/vault-tests/lib/junit-4.5.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

@@ -51,17 +51,12 @@
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/jdom.jar"/>
   </path>
   
-  <path id="library.junit.classpath">
-    <pathelement location="${basedir}/vault-tests/lib/junit-4.5.jar"/>
-  </path>
-  
   <path id="library.log4j.classpath">
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/log4j-1.2.12.jar"/>
   </path>
   
   <path id="library.patch-testing.classpath">
-    <pathelement location="${basedir}/vault-tests/lib/patches-tests.jar"/>
-    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/patches-impl.jar"/>
+    <pathelement location="${basedir}/vault-tests/lib/patches-test.jar"/>
   </path>
   
   <path id="library.teamcity-openapi.classpath">
@@ -243,7 +238,6 @@
     <pathelement location="${vault-server.testoutput.dir}"/>
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
-    <path refid="library.junit.classpath"/>
     <path refid="library.vault.classpath"/>
   </path>
   
@@ -256,7 +250,6 @@
     <path refid="vault-server.runtime.module.classpath"/>
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
-    <path refid="library.junit.classpath"/>
     <path refid="library.vault.classpath"/>
   </path>
   
