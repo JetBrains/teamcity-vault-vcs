@@ -27,7 +27,12 @@ import java.io.ByteArrayOutputStream;
 
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.AfterSuite;
 import org.jetbrains.annotations.NotNull;
+import VaultClientIntegrationLib.ServerOperations;
+import VaultClientIntegrationLib.DateSortOption;
+import VaultLib.VaultHistoryItem;
 
 /**
  * User: vbedrosova
@@ -35,24 +40,46 @@ import org.jetbrains.annotations.NotNull;
  * Time: 18:29:44
  */
 
-/*
-As for now the versions are:
-
-27.08.2009 11:20:31 repo created
-27.08.2009 11:54:15 added $/file1.txt
-27.08.2009 12:12:29 edited $/file1.txt
-
- */
-
 public class VaultPatchBuilderTest extends PatchTestCase {
-  private static final String PATH = "c:\\vbedrosova\\work\\Vault\\VaultClientAPI_5_0_1_18729\\vault.exe";
-  private static final String SERVER = "ruspd-pc02.swiftteams.local:8888";
+  private static final String SERVER_URL = "http://ruspd-pc02.swiftteams.local:8888";
   private static final String USER = "admin";
   private static final String PASWORD = "password";
-  private static final String REPO = "Test";
+  private static final String REPO = "VaultPluginTestRepo";
+
+  private long myBeginTx;
 
   protected String getTestDataPath() {
     return "vault-tests" + File.separator + "testData";
+  }
+
+  @BeforeSuite
+  protected void setUpRepo() throws Exception {
+    ServerOperations.client.LoginOptions.URL = SERVER_URL;
+    ServerOperations.client.LoginOptions.User = USER;
+    ServerOperations.client.LoginOptions.Password = PASWORD;
+
+    try {
+      ServerOperations.ProcessCommandDeleteRepository(REPO);
+    } catch (Exception e) {
+      System.out.println(e);
+    }
+    ServerOperations.ProcessCommandAddRepository(REPO, false);
+
+    ServerOperations.client.LoginOptions.Repository = REPO;
+
+    ServerOperations.Login();
+    myBeginTx = getBeginTx();
+    ServerOperations.Logout();
+  }
+
+  private long getBeginTx() throws Exception {
+    final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
+    return historyItems[0].get_TxID();
+  }
+
+  @AfterSuite
+  protected void tearDownRepo() throws Exception {
+    ServerOperations.ProcessCommandDeleteRepository(REPO);
   }
 
   @BeforeMethod
@@ -69,8 +96,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   private void runTest(String fromVersion, @NotNull String toVersion) throws Exception {
     final SVcsRootImpl root = new SVcsRootImpl("vault");    
-    root.addProperty("vault.path", PATH);
-    root.addProperty("vault.server", SERVER);
+    root.addProperty("vault.server", SERVER_URL);
     root.addProperty("vault.user", USER);
     root.addProperty("secure:vault.password", PASWORD);
     root.addProperty("vault.repo", REPO);
@@ -88,12 +114,17 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testExportOneTextFile() throws Exception {
-    runTest(null, "27.08.2009 11:54:15");
+  public void testEmptyRepo() throws Exception {
+    runTest(null, "" + myBeginTx);
   }
 
-  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testChangeOneTextFile() throws Exception {
-    runTest("27.08.2009 11:54:15", "27.08.2009 12:12:29");
-  }
+//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+//  public void testExportOneTextFile() throws Exception {
+//    runTest(null, "" + myBeginTx);
+//  }
+//
+//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+//  public void testChangeOneTextFile() throws Exception {
+//    runTest("27.08.2009 11:54:15", "27.08.2009 12:12:29");
+//  }
 }

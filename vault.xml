@@ -61,6 +61,7 @@
   
   <path id="library.patch-testing.classpath">
     <pathelement location="${basedir}/vault-tests/lib/patches-tests.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/patches-impl.jar"/>
   </path>
   
   <path id="library.teamcity-openapi.classpath">
@@ -85,45 +86,45 @@
   </path>
   
   <path id="library.vault.classpath">
-    <pathelement location="${basedir}/lib/DragnetLib.jar"/>
-    <pathelement location="${basedir}/lib/ICSharpCode.SharpZipLib.jar"/>
-    <pathelement location="${basedir}/lib/J2EE.Helpers.jar"/>
-    <pathelement location="${basedir}/lib/J2SE.Helpers.jar"/>
-    <pathelement location="${basedir}/lib/Microsoft.VisualBasic.jar"/>
-    <pathelement location="${basedir}/lib/Novell.Directory.Ldap.jar"/>
-    <pathelement location="${basedir}/lib/PortalControls.jar"/>
-    <pathelement location="${basedir}/lib/Portlet.Helpers.jar"/>
-    <pathelement location="${basedir}/lib/System.Data.OracleClient.jar"/>
-    <pathelement location="${basedir}/lib/System.Data.jar"/>
-    <pathelement location="${basedir}/lib/System.DirectoryServices.jar"/>
-    <pathelement location="${basedir}/lib/System.Drawing.jar"/>
-    <pathelement location="${basedir}/lib/System.Runtime.Remoting.jar"/>
-    <pathelement location="${basedir}/lib/System.Runtime.Serialization.Formatters.Soap.jar"/>
-    <pathelement location="${basedir}/lib/System.Web.Services.jar"/>
-    <pathelement location="${basedir}/lib/System.Web.jar"/>
-    <pathelement location="${basedir}/lib/System.Xml.jar"/>
-    <pathelement location="${basedir}/lib/System.jar"/>
-    <pathelement location="${basedir}/lib/VCDiff.jar"/>
-    <pathelement location="${basedir}/lib/VaultClientIntegrationLib.jar"/>
-    <pathelement location="${basedir}/lib/VaultClientNetLib.jar"/>
-    <pathelement location="${basedir}/lib/VaultClientOperationsLib.jar"/>
-    <pathelement location="${basedir}/lib/VaultLib.jar"/>
-    <pathelement location="${basedir}/lib/clibwrapper_jiio.jar"/>
-    <pathelement location="${basedir}/lib/commons-logging-1.1.jar"/>
-    <pathelement location="${basedir}/lib/jai_codec.jar"/>
-    <pathelement location="${basedir}/lib/jai_core.jar"/>
-    <pathelement location="${basedir}/lib/jai_imageio.jar"/>
-    <pathelement location="${basedir}/lib/jni.jar"/>
-    <pathelement location="${basedir}/lib/log4j-1.2.14.jar"/>
-    <pathelement location="${basedir}/lib/logging.jar"/>
-    <pathelement location="${basedir}/lib/mlibwrapper_jai.jar"/>
-    <pathelement location="${basedir}/lib/mscorlib.jar"/>
-    <pathelement location="${basedir}/lib/mscorlib_orig.jar"/>
-    <pathelement location="${basedir}/lib/util.jar"/>
-    <pathelement location="${basedir}/lib/vault-ant-5_0_1_18729.jar"/>
-    <pathelement location="${basedir}/lib/vault.jar"/>
-    <pathelement location="${basedir}/lib/vmwutils.jar"/>
-    <pathelement location="${basedir}/lib/vs.jar"/>
+    <pathelement location="${path.variable.vaultapi}/DragnetLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/ICSharpCode.SharpZipLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/J2EE.Helpers.jar"/>
+    <pathelement location="${path.variable.vaultapi}/J2SE.Helpers.jar"/>
+    <pathelement location="${path.variable.vaultapi}/Microsoft.VisualBasic.jar"/>
+    <pathelement location="${path.variable.vaultapi}/Novell.Directory.Ldap.jar"/>
+    <pathelement location="${path.variable.vaultapi}/PortalControls.jar"/>
+    <pathelement location="${path.variable.vaultapi}/Portlet.Helpers.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Data.OracleClient.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Data.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.DirectoryServices.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Drawing.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Runtime.Remoting.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Runtime.Serialization.Formatters.Soap.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Web.Services.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Web.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.Xml.jar"/>
+    <pathelement location="${path.variable.vaultapi}/System.jar"/>
+    <pathelement location="${path.variable.vaultapi}/VCDiff.jar"/>
+    <pathelement location="${path.variable.vaultapi}/VaultClientIntegrationLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/VaultClientNetLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/VaultClientOperationsLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/VaultLib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/clibwrapper_jiio.jar"/>
+    <pathelement location="${path.variable.vaultapi}/commons-logging-1.1.jar"/>
+    <pathelement location="${path.variable.vaultapi}/jai_codec.jar"/>
+    <pathelement location="${path.variable.vaultapi}/jai_core.jar"/>
+    <pathelement location="${path.variable.vaultapi}/jai_imageio.jar"/>
+    <pathelement location="${path.variable.vaultapi}/jni.jar"/>
+    <pathelement location="${path.variable.vaultapi}/log4j-1.2.14.jar"/>
+    <pathelement location="${path.variable.vaultapi}/logging.jar"/>
+    <pathelement location="${path.variable.vaultapi}/mlibwrapper_jai.jar"/>
+    <pathelement location="${path.variable.vaultapi}/mscorlib.jar"/>
+    <pathelement location="${path.variable.vaultapi}/mscorlib_orig.jar"/>
+    <pathelement location="${path.variable.vaultapi}/util.jar"/>
+    <pathelement location="${path.variable.vaultapi}/vault-ant-5_0_1_18729.jar"/>
+    <pathelement location="${path.variable.vaultapi}/vault.jar"/>
+    <pathelement location="${path.variable.vaultapi}/vmwutils.jar"/>
+    <pathelement location="${path.variable.vaultapi}/vs.jar"/>
   </path>
   
   <path id="library.web.classpath">
@@ -243,6 +244,7 @@
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
     <path refid="library.junit.classpath"/>
+    <path refid="library.vault.classpath"/>
   </path>
   
   <path id="vault-tests.runtime.module.classpath">
@@ -255,6 +257,7 @@
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
     <path refid="library.junit.classpath"/>
+    <path refid="library.vault.classpath"/>
   </path>
   
   

@@ -314,9 +314,7 @@
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/spring.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES>
-        <root url="intellijad://intellijad" />
-      </SOURCES>
+      <SOURCES />
     </library>
     <library name="JDom">
       <CLASSES>
@@ -328,11 +326,10 @@
     <library name="Patch-testing">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/vault-tests/lib/patches-tests.jar!/" />
+        <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/patches-impl.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES>
-        <root url="intellijad://intellijad" />
-      </SOURCES>
+      <SOURCES />
     </library>
     <library name="TestNG">
       <CLASSES>
@@ -348,9 +345,7 @@
         <root url="jar://$TeamCityDistribution$/buildAgent/lib/trove4j.jar!/" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES>
-        <root url="intellijad://intellijad" />
-      </SOURCES>
+      <SOURCES />
     </library>
     <library name="JUnit">
       <CLASSES>
@@ -361,18 +356,18 @@
     </library>
     <library name="Vault">
       <CLASSES>
-        <root url="file://$PROJECT_DIR$/lib" />
+        <root url="file://$VaultAPI$" />
       </CLASSES>
       <JAVADOC />
-      <SOURCES>
-        <root url="intellijad://intellijad" />
-      </SOURCES>
-      <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
+      <SOURCES />
+      <jarDirectory url="file://$VaultAPI$" recursive="false" />
+      <jarDirectory url="file://$VaultAPI$" recursive="false" />
     </library>
   </component>
   <UsedPathMacros>
     <macro name="TEMPLATE" />
     <macro name="TeamCityDistribution" />
+    <macro name="VaultAPI" />
   </UsedPathMacros>
 </project>
 

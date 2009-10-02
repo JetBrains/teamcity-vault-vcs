@@ -27,7 +27,6 @@ public final class VaultConnection1 {
       return;
     }
     try {
-//      ServerOperations.client.get_ClientInstance().get_Connection().GetObjectVersionList();
       ServerOperations.client.LoginOptions.URL = parameters.getUrl();
       ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
       ServerOperations.client.LoginOptions.User = parameters.getUser();
