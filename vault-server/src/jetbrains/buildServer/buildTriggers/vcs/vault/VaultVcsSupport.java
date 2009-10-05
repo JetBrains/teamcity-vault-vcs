@@ -25,6 +25,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import VaultClientNetLib.VaultConnection;
+
 
 /**
  * User: vbedrosova
@@ -196,7 +198,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       properties.put(VaultConnectionParameters.PASSWORD, "");
     }
     try {
-      VaultConnection1.testConnection(new VaultConnectionParameters(properties));
+      testConnection(properties);
     } catch (VcsException e) {
       invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, e.getMessage()));
     }
@@ -210,10 +212,17 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from TestConnectionSupport
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
-    VaultConnection1.testConnection(new VaultConnectionParameters(vcsRoot));
+    testConnection(vcsRoot.getProperties());
     return null;
   }
 
   // end from TestConnectionSupport
   //-------------------------------------------------------------------------------
+
+  private void testConnection(@NotNull Map<String, String> properties) throws VcsException {
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException("No Vault Java API jars are present at <TeamCity web application>/WEB-INF/lib directory. You should download them from Vault vendor manually.");
+    }
+    VaultConnection1.testConnection(new VaultConnectionParameters(properties));    
+  }
 }
