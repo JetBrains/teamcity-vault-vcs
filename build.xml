@@ -59,7 +59,7 @@
         <delete dir="${vault.java.clc}"/>
     </target>
     
-    <target name="dist" depends="all, define.version">
+    <target name="dist" depends="define.version">
         <package.teamcity.plugin name="${plugin.name}"
                                  server.output="${vault-server.output.dir}"
                                  out="dist"
