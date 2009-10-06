@@ -6,29 +6,65 @@
 
     <property name="plugin.name" value="vault-vcs"/>
 
+    <property name="vault.java.clc.url"
+              value="http://download-us.sourcegear.com/Vault/5.0.1.18729/vaultJavaCLC_5_0_1_18729.zip"/>
+
     <import file="${basedir}/teamcity-common.xml"/>
 
-    <!--<property environment="env"/>-->
+    <property environment="env"/>
     <!--<property name="build.number" value="${env.BUILD_NUMBER}"/>-->
 
-    <target name="all" depends="check.teamcitydistribution, check.vault.api, vault.all"/>
+    <target name="all" depends="check.teamcitydistribution, prepare.vault.api, vault.all"/>
 
-    <target name="check.vault.api">
-      <check.property name="path.variable.vaultapi"
-                      fail-message="Please define 'path.variable.vaultapi' property in build.properties file. The property should point to Vault API jars."
-          />
+    <target name="prepare.vault.api" depends="prepare.path.variable.vaultapi, check.vault.api.present, get.vault.api"/>
 
-      <condition property="vault.api.not.present">
-        <not>
-          <and>
-            <available file="${path.variable.vaultapi}/VaultClientIntegrationLib.jar"/>
-          </and>
-        </not>
-      </condition>
-      <fail if="vault.api.not.present"
-            message="Cannot find Vault Java API at path '${path.variable.vaultapi}'. The property 'path.variable.vaultapi' should point to Vault API jars."/>
-    </target>    
+    <target name="prepare.path.variable.vaultapi"
+            depends="set.path.variable.vaultapi.if.under.teamcity, set.path.variable.vaultapi"/>
 
+    <target name="set.path.variable.vaultapi.if.under.teamcity"
+            if="teamcity.build.checkoutDir"
+            unless="path.variable.vaultapi">
+        <echo message="${path.variable.vaultapi}"/>
+        <property name="path.variable.vaultapi" value="${teamcity.build.checkoutDir}/vaultAPI"/>
+        <echo message="Set path.variable.vaultapi as ${path.variable.vaultapi}"/>
+    </target>
+
+    <target name="set.path.variable.vaultapi"
+            unless="path.variable.vaultapi">
+        <echo message="${path.variable.vaultapi}"/>
+        <property name="path.variable.vaultapi" value="${basedir}/vaultAPI"/>
+        <echo message="Set path.variable.vaultapi as ${path.variable.vaultapi}"/>
+    </target>
+
+    <target name="check.vault.api.present">
+        <echo message="${path.variable.vaultapi}"/>
+        <condition property="vault.api.not.present">
+          <not>
+            <and>
+              <available file="${path.variable.vaultapi}/VaultClientIntegrationLib.jar"/>
+            </and>
+          </not>
+        </condition>
+    </target>
+
+    <target name="get.vault.api" if="vault.api.not.present">
+        <property name="vault.java.clc.zip" value="${env.TEMP}/vault_java_clc.zip"/>
+        <property name="vault.java.clc" value="${env.TEMP}/vault_java_clc"/>
+        <delete file="${vault.java.clc.zip}"/>
+        <delete dir="${vault.java.clc}"/>
+        <get src="${vault.java.clc.url}"
+             dest="${vault.java.clc.zip}"/>
+        <unzip src="${vault.java.clc.zip}" dest="${env.TEMP}/vault_java_clc"/>
+        <echo message="${path.variable.vaultapi}"/>
+        <copy todir="${path.variable.vaultapi}" overwrite="true">
+            <fileset dir="${vault.java.clc}/vaultJavaCLC/lib">
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+        <delete file="${vault.java.clc.zip}"/>
+        <delete dir="${vault.java.clc}"/>
+    </target>
+    
     <target name="dist" depends="all, define.version">
         <package.teamcity.plugin name="${plugin.name}"
                                  server.output="${vault-server.output.dir}"
