@@ -19,31 +19,26 @@
     <target name="prepare.vault.api" depends="prepare.path.variable.vaultapi, check.vault.api.present, get.vault.api"/>
 
     <target name="prepare.path.variable.vaultapi"
-            depends="set.path.variable.vaultapi.if.under.teamcity, set.path.variable.vaultapi"/>
+            depends="set.path.variable.vaultapi.if.under.teamcity, set.path.variable.vaultapi.if.not.under.teamcity"/>
 
     <target name="set.path.variable.vaultapi.if.under.teamcity"
             if="teamcity.build.checkoutDir"
             unless="path.variable.vaultapi">
-        <echo message="${path.variable.vaultapi}"/>
         <property name="path.variable.vaultapi" value="${teamcity.build.checkoutDir}/vaultAPI"/>
-        <echo message="Set path.variable.vaultapi as ${path.variable.vaultapi}"/>
     </target>
 
-    <target name="set.path.variable.vaultapi"
+    <target name="set.path.variable.vaultapi.if.not.under.teamcity"
             unless="path.variable.vaultapi">
-        <echo message="${path.variable.vaultapi}"/>
         <property name="path.variable.vaultapi" value="${basedir}/vaultAPI"/>
-        <echo message="Set path.variable.vaultapi as ${path.variable.vaultapi}"/>
     </target>
 
-    <target name="check.vault.api.present">
-        <echo message="${path.variable.vaultapi}"/>
+    <target name="check.vault.api.present" if="path.variable.vaultapi">
         <condition property="vault.api.not.present">
           <not>
             <and>
               <available file="${path.variable.vaultapi}/VaultClientIntegrationLib.jar"/>
             </and>
-          </not>
+          </not>               
         </condition>
     </target>
 
@@ -55,7 +50,6 @@
         <get src="${vault.java.clc.url}"
              dest="${vault.java.clc.zip}"/>
         <unzip src="${vault.java.clc.zip}" dest="${env.TEMP}/vault_java_clc"/>
-        <echo message="${path.variable.vaultapi}"/>
         <copy todir="${path.variable.vaultapi}" overwrite="true">
             <fileset dir="${vault.java.clc}/vaultJavaCLC/lib">
                 <include name="*.jar"/>
