@@ -15,7 +15,7 @@
 
     <target name="all" depends="check.teamcitydistribution, prepare.vault.api, vault.all"/>
 
-    <target name="prepare.vault.api" depends="check.vault.api, check.vault.api.present, get.vault.api"/>
+    <target name="prepare.vault.api" depends="check.vault.api, check.vault.api.present, get.vault.api.if.necessary"/>
 
     <!--<target name="prepare.path.variable.vaultapi"-->
             <!--depends="set.path.variable.vaultapi.if.under.teamcity, set.path.variable.vaultapi.if.not.under.teamcity"/>-->
@@ -47,13 +47,18 @@
         </condition>
     </target>
 
-    <target name="get.vault.api" if="vault.api.not.present">
+    <target name="get.vault.api.if.necessary" if="vault.api.not.present">
+      <echo message="Vault API is not found at ${path.variable.vaultapi}, will download."/>
+      <antcall target="get.vault.api"/>
+    </target>
+
+    <target name="get.vault.api">
+        <echo message="Downloading Vault API from SourceGear site, this can take a while..."/>
         <property name="vault.java.clc.zip" value="${env.TEMP}/vault_java_clc.zip"/>
         <property name="vault.java.clc" value="${env.TEMP}/vault_java_clc"/>
         <delete file="${vault.java.clc.zip}"/>
         <delete dir="${vault.java.clc}"/>
-        <get src="${vault.java.clc.url}"
-             dest="${vault.java.clc.zip}"/>
+        <get src="${vault.java.clc.url}" dest="${vault.java.clc.zip}" verbose="true"/>
         <unzip src="${vault.java.clc.zip}" dest="${env.TEMP}/vault_java_clc"/>
         <copy todir="${path.variable.vaultapi}" overwrite="true">
             <fileset dir="${vault.java.clc}/vaultJavaCLC/lib">
@@ -62,9 +67,12 @@
         </copy>
         <delete file="${vault.java.clc.zip}"/>
         <delete dir="${vault.java.clc}"/>
+        <echo message="Vault API prepared in ${path.variable.vaultapi}"/>
     </target>
-    
-    <target name="dist" depends="define.version">
+
+    <target name="dist" depends="all,package"/>
+
+    <target name="package" depends="define.version">
         <package.teamcity.plugin name="${plugin.name}"
                                  server.output="${vault-server.output.dir}"
                                  out="dist"
