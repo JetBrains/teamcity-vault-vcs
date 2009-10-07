@@ -63,14 +63,12 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   public Map<ModificationInfo, List<VcsChange>> collectModifications(@NotNull IncludeRule includeRule) throws VcsException {
-    final Map<ModificationInfo, List<VcsChange>> modifications = new HashMap<ModificationInfo, List<VcsChange>>();
-
     if (myCurrentVersion.equals(myFromVersion)) {
       LOG.debug("Will not collect changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myCurrentVersion + ", from equals to");
       return Collections.emptyMap();
     }
-
+    final Map<ModificationInfo, List<VcsChange>> modifications = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
     final VaultHistoryItem[] items = VaultConnection1.collectChanges(includeRule.getFrom(), myFromVersion, myCurrentVersion);
     for (int i = 0; i < items.length; ++i) {
       final VaultHistoryItem item = items[i];
@@ -95,8 +93,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         changes = modifications.get(modificationInfo);
       }
 
-      final String repoPath = item.get_Name().startsWith(ROOT_PREFIX) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
-      final String histRepoPath = item.get_HistoricName().startsWith(ROOT_PREFIX) ? item.get_HistoricName() : ROOT_PREFIX + item.get_HistoricName();
+      final String repoPath = item.get_Name().startsWith(VaultConnection1.ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
+      final String histRepoPath = item.get_HistoricName().startsWith(VaultConnection1.ROOT) ? item.get_HistoricName() : ROOT_PREFIX + item.get_HistoricName();
       final String misc1 = item.get_MiscInfo1();
       final String misc2 = item.get_MiscInfo2();
 

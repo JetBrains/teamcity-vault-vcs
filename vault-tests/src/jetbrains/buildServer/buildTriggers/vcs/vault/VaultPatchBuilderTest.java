@@ -25,10 +25,7 @@ import jetbrains.buildServer.util.FileUtil;
 import java.io.File;
 import java.io.ByteArrayOutputStream;
 
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.AfterSuite;
+import org.testng.annotations.*;
 import org.jetbrains.annotations.NotNull;
 import VaultClientIntegrationLib.ServerOperations;
 import VaultClientIntegrationLib.DateSortOption;
@@ -44,7 +41,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   private static final String SERVER_URL = "http://ruspd-pc02.swiftteams.local:8888";
   private static final String USER = "admin";
   private static final String PASWORD = "password";
-  private static final String REPO = "VaultPluginTestRepo";
 
   private long myBeginTx;
 
@@ -52,24 +48,20 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     return "vault-tests" + File.separator + "testData";
   }
 
+  private String getObjectForRepo(@NotNull String path) {
+    return getTestDataPath() + File.separator + "repoContent" + File.separator + path;
+  }
   @BeforeSuite
-  protected void setUpRepo() throws Exception {
+  protected void setUpSuite() throws Exception {
     ServerOperations.client.LoginOptions.URL = SERVER_URL;
     ServerOperations.client.LoginOptions.User = USER;
     ServerOperations.client.LoginOptions.Password = PASWORD;
+    ServerOperations.client.AutoCommit = true;
 
-    try {
-      ServerOperations.ProcessCommandDeleteRepository(REPO);
-    } catch (Exception e) {
-      System.out.println(e);
-    }
-    ServerOperations.ProcessCommandAddRepository(REPO, false);
-
-    ServerOperations.client.LoginOptions.Repository = REPO;
-
-    ServerOperations.Login();
-    myBeginTx = getBeginTx();
-    ServerOperations.Logout();
+    final File testDataSvn = TestUtil.getTestData("repoContent_Vcs", null);
+    final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
+    FileUtil.createDir(testDataNoSvn);
+    FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
   }
 
   private long getBeginTx() throws Exception {
@@ -77,21 +69,40 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     return historyItems[0].get_TxID();
   }
 
-  @AfterSuite
-  protected void tearDownRepo() throws Exception {
-    ServerOperations.ProcessCommandDeleteRepository(REPO);
-  }
-
   @BeforeMethod
   protected void setUp() throws Exception {
 //    final File cache = FileUtil.createTempDirectory("vault", "");
 //    FileUtil.delete(cache);
 //    System.setProperty("vault.caches.path", cache.getAbsolutePath());
+    super.setUp();
+
+    Thread.sleep(2000);
+
     final String testName = getTestName();
     final File testDataSvn = TestUtil.getTestData(testName + "_Vcs", null);
     final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
     FileUtil.createDir(testDataNoSvn);
     FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
+
+    ServerOperations.client.LoginOptions.Repository = testName;
+
+    try {
+      ServerOperations.ProcessCommandDeleteRepository(testName);
+    } catch (Exception e) {
+      System.out.println("Unable to delete repository " + testName + "( may be doesn't exist )");
+    }
+    ServerOperations.ProcessCommandAddRepository(testName, false);
+
+
+    ServerOperations.Login();
+    myBeginTx = getBeginTx();
+    ServerOperations.Logout();
+  }
+
+  @AfterMethod
+  protected void tearDown() throws Exception {
+    Thread.sleep(2000);    
+    ServerOperations.ProcessCommandDeleteRepository(getTestName());
   }
 
   private void runTest(String fromVersion, @NotNull String toVersion) throws Exception {
@@ -99,7 +110,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     root.addProperty("vault.server", SERVER_URL);
     root.addProperty("vault.user", USER);
     root.addProperty("secure:vault.password", PASWORD);
-    root.addProperty("vault.repo", REPO);
+    root.addProperty("vault.repo", getTestName());
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
@@ -114,15 +125,145 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testEmptyRepo() throws Exception {
+  public void testEmptyRepoCleanPatch() throws Exception {
     runTest(null, "" + myBeginTx);
   }
 
-//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-//  public void testExportOneTextFile() throws Exception {
-//    runTest(null, "" + myBeginTx);
-//  }
-//
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEmptyRepoFromEqualsTo() throws Exception {
+    runTest("" + myBeginTx, "" + myBeginTx);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEmptyRepoToDoesNotExist() throws Exception {
+    runTest("" + myBeginTx, "" + (myBeginTx + 20));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testExportOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.Logout();
+    runTest(null, "" + (myBeginTx + 1));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testExportOneDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.Logout();
+    runTest(null, "" + (myBeginTx + 1));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testRenameOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testRenameOneEmptyDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testDeleteOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    final String[] toDelete = {"$/file1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testDeleteOneEmptyDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    final String[] toDelete = {"$/fold1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddAndRenameOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddAndRenameOneEmptyDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddAndDeleteOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    final String[] toDelete = {"$/file1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddAndDeleteOneEmptyDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    final String[] toDelete = {"$/fold1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddRenameAndDeleteOneTextFile() throws Exception {
+    final String[] toAdd = {getObjectForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
+    final String[] toDelete = {"$/new_file1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 3));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddRenameAndDeleteOneEmptyDir() throws Exception {
+    final String[] toAdd = {getObjectForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    final String[] toDelete = {"$/new_fold1"};
+    ServerOperations.ProcessCommandDelete(toDelete);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 3));
+  }
 //  @Test(groups = {"all", "vault"}, dataProvider = "dp")
 //  public void testChangeOneTextFile() throws Exception {
 //    runTest("27.08.2009 11:54:15", "27.08.2009 12:12:29");
