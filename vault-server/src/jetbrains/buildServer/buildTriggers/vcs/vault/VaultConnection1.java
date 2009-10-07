@@ -264,13 +264,12 @@ public final class VaultConnection1 {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
   }
 
-  private static long getVersionByTxId(@NotNull String repoPath, long txIdStr) throws VcsException {
+  private static long getVersionByTxId(@NotNull String repoPath, long txId) throws VcsException {
     try {
       if (!objectExists(repoPath)) {
-        throw new VcsException("Can't get version by txId " + txIdStr + " for " + repoPath + ": not in repo");
+        throw new VcsException("Can't get version by txId " + txId + " for " + repoPath + ": not in repo");
       }
-      final long txId = txIdStr;
-      if (isFile(repoPath, txIdStr)) {
+      if (isFile(repoPath, txId)) {
         final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
                                                 null, null, null, null, null, null, -1, -1, 1000);
 
@@ -299,11 +298,16 @@ public final class VaultConnection1 {
                                                   @NotNull String fromVersion,
                                                   @NotNull String toVersion) throws VcsException {
     final String repoPath = getRepoPathFromPath(path);
+    final long objectFromVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(fromVersion)) + 1; 
+    final long objectToVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(toVersion));
+    if (objectFromVersion > objectToVersion) {
+      return new VaultHistoryItem[0];
+
+    }
     return ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.asc,
                                                   null, null/*"label,obliterate,pin,propertychange"*/ ,
                                                   null, null, null, null,
-                                                  getVersionByTxId(repoPath, VaultUtil.parseLong(fromVersion)) + 1,
-                                                  getVersionByTxId(repoPath, VaultUtil.parseLong(toVersion)), 1000);
+                                                  objectFromVersion, objectToVersion, 1000);
   }
 
   public static VaultClientFolder listFolder(@NotNull String repoPath) {
