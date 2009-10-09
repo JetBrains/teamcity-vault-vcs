@@ -62,32 +62,6 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
       final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
       patch(modifications, builder);
-//      for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
-//        for (final VcsChange c : modifications.get(m)) {
-//          final File relativeFile = new File(c.getRelativeFileName());
-//          File f;
-//          switch (c.getType()) {
-//            case CHANGED:
-//              f = VaultConnection1.getObject(c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
-//              builder.changeOrCreateBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
-//              break;
-//            case ADDED:
-//              f = VaultConnection1.getObject(c.getRelativeFileName(), c.getAfterChangeRevisionNumber());
-//              builder.createBinaryFile(relativeFile, null, new FileInputStream(f), f.length());
-//              break;
-//            case DIRECTORY_ADDED:
-//              builder.createDirectory(relativeFile);
-//              break;
-//            case REMOVED:
-//              builder.deleteFile(relativeFile, false);
-//              break;
-//            case DIRECTORY_REMOVED:
-//              builder.deleteDirectory(relativeFile, false);
-//              break;
-//            case NOT_CHANGED:
-//          }
-//        }
-//      }
     }
     LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
@@ -118,7 +92,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
                 "can't create a file " + f + " there");
             }
             if (addedFiles.containsKey(f) || modifiedFiles.containsKey(f)) {
-              throw new VcsException("Incorrect change set: file " + f.getPath() + " has already been added, can't add a file again");              
+              throw new VcsException("Incorrect change set: file " + f.getPath() + " has already been added, can't add a file again");
             }
             if (deletedFiles.contains(f)) {
               deletedFiles.remove(f);

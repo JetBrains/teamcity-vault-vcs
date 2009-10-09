@@ -50,7 +50,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion);
 
-    final List<ModificationData> modifications = new ArrayList<ModificationData>();
+    final List<ModificationData> modifications = new LinkedList<ModificationData>();
 
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo info : map.keySet()) {
@@ -120,13 +120,15 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         } else {
           collectChange(includeRule, changes, oldRepoPath, version, prevVersion, actionString, DIRECTORY_REMOVED);
           addFolderContent(includeRule, repoPath, repoPath, newRepoPath, changes, actionString, version, prevVersion);
+          processRenamedInHistory(VaultConnection1.getPathFromRepoPath(newRepoPath), VaultConnection1.getPathFromRepoPath(oldRepoPath), modifications, modificationInfo);
         }
       } else if ("SharedTo".equals(typeStr)) {
-        if (VaultConnection1.isFile(misc2.replace(histRepoPath, repoPath), version) || VaultConnection1.isFile(misc1, version)) {
-          collectChange(includeRule, changes, misc2, version, prevVersion, actionString, ADDED);
+        if (VaultConnection1.isFile(misc1.replace(histRepoPath, repoPath), version) || VaultConnection1.isFile(misc1, version)) {
+          collectChange(includeRule, changes, misc1, version, prevVersion, actionString, ADDED);
         } else {
-          addFolderContent(includeRule, misc2, repoPath, histRepoPath, changes, actionString, version, prevVersion);
+          addFolderContent(includeRule, misc1, repoPath, histRepoPath, changes, actionString, version, prevVersion);
         }
+        processSharedInHistory(misc1, modifications, modificationInfo);
       } else if ("MovedFrom".equals(typeStr)) {
         final String objRepoPath = repoPath + "/" + misc1;
         final String objHistRepoPath = histRepoPath + "/" + misc1;
@@ -137,6 +139,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           collectChange(includeRule, changes, misc2, version, prevVersion, actionString, DIRECTORY_REMOVED);
           addFolderContent(includeRule, objRepoPath, repoPath, histRepoPath, changes, actionString, version, prevVersion);
         }
+        processRenamedInHistory(VaultConnection1.getPathFromRepoPath(objHistRepoPath), VaultConnection1.getPathFromRepoPath(misc2), modifications, modificationInfo);
       } else if ("CheckIn".equals(typeStr)) {
         if (VaultConnection1.isFile(repoPath, version)) {
           collectChange(includeRule, changes, histRepoPath, version, prevVersion, actionString, CHANGED);
@@ -224,6 +227,45 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         continue;
       }
       addFolderContent(includeRule, folderRepoPath, currentRepoPath, histRepoPath, changes, actionString, version, prevVersion);
+    }
+  }
+
+  private void processRenamedInHistory(@NotNull String newName, @NotNull String oldName, @NotNull Map<ModificationInfo, List<VcsChange>> modifications,
+                                       @NotNull ModificationInfo currentModificationInfo) {
+    for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
+      if (m.equals(currentModificationInfo)) {
+        continue;  
+      }
+      final List<VcsChange> changes = modifications.get(m);
+      final List<VcsChange> toRename = new ArrayList<VcsChange>();
+      for (final VcsChange c : changes) {
+        if (c.getRelativeFileName().contains(newName)) {
+          toRename.add(c);
+        }
+      }
+      for (final VcsChange c : toRename) {
+        changes.add(changes.indexOf(c), new VcsChange(c.getType(), c.getChangeTypeName(),
+                                                      c.getFileName().replace(newName, oldName), c.getRelativeFileName().replace(newName, oldName),
+                                                      c.getBeforeChangeRevisionNumber(), c.getAfterChangeRevisionNumber()));
+        changes.remove(c);
+      }
+    }  
+  }
+
+  private void processSharedInHistory(@NotNull String path, @NotNull Map<ModificationInfo, List<VcsChange>> modifications,
+                                      @NotNull ModificationInfo currentModificationInfo) {
+    for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
+      if (m.equals(currentModificationInfo)) {
+        continue;
+      }
+      final List<VcsChange> changes = modifications.get(m);
+      final List<VcsChange> toRename = new ArrayList<VcsChange>();
+      for (final VcsChange c : changes) {
+        if (c.getRelativeFileName().equals(path)) {
+          toRename.add(c);
+        }
+      }
+      changes.removeAll(toRename);
     }
   }
 

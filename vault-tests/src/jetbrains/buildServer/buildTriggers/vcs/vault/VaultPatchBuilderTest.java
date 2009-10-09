@@ -52,10 +52,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     return getTestDataPath() + File.separator + "repoContent" + File.separator + path;
   }
 
-  private File getObjectFileForRepo(@NotNull String path) {
-    return new File(getObjectPathForRepo(path));
-  }
-
   private File getBeforeFolder() {
     return getTestData("before");
   }
@@ -75,6 +71,8 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
     FileUtil.createDir(testDataNoSvn);
     FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
+    FileUtil.createDir(new File(testDataNoSvn, "fold1"));
+    FileUtil.createDir(new File(testDataNoSvn, "fold2"));
   }
 
   private long getBeginTx() throws Exception {
@@ -170,6 +168,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testExportOneDir() throws Exception {
     FileUtil.createDir(new File(getAfterFolder(), "fold1"));
+
     final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
@@ -191,6 +190,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   public void testRenameOneEmptyDir() throws Exception {
     FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
     FileUtil.createDir(new File(getAfterFolder(), "new_fold1"));
+
     final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
@@ -213,6 +213,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testDeleteOneEmptyDir() throws Exception {
     FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+
     final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
@@ -235,6 +236,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddAndRenameOneEmptyDir() throws Exception {
     FileUtil.createDir(new File(getAfterFolder(), "new_fold1"));
+
     final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
@@ -288,6 +290,115 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 3));
   }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFileIntoFolders() throws Exception {
+    final String[] toAdd = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 1));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFilesIntoFolders() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toAdd2 = {getObjectPathForRepo("file2")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testRenameFolder() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toAdd2 = {getObjectPathForRepo("file2")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 2), "" + (myBeginTx + 3));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFilesIntoFoldersRenameFolder() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toAdd2 = {getObjectPathForRepo("file2")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 3));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveFile() throws Exception {
+    FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+
+    final String[] toAdd = {getObjectPathForRepo("file1"), getObjectPathForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandMove("$/file1", "$/fold1");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFileAndMove() throws Exception {
+    FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+
+    final String[] toAdd = {getObjectPathForRepo("file1"), getObjectPathForRepo("fold1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandMove("$/file1", "$/fold1");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveFolder() throws Exception {
+    FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+    FileUtil.createDir(new File(getBeforeFolder(), "fold2"));
+    final File fold1 = new File(getAfterFolder(), "fold1");
+    FileUtil.createDir(fold1);
+    FileUtil.createDir(new File(fold1, "fold2"));
+
+    final String[] toAdd = {getObjectPathForRepo("fold1"), getObjectPathForRepo("fold2")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd);
+    ServerOperations.ProcessCommandMove("$/fold2", "$/fold1");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveFolderWithContent() throws Exception {
+    FileUtil.createDir(new File(getBeforeFolder(), "fold2"));
+
+    final String[] toAdd1 = {getObjectPathForRepo("file2")};
+    final String[] toAdd2 = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold3", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandMove("$/fold1", "$/fold2");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 3), "" + (myBeginTx + 4));
+  }
+
+//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+//  public void testAddFileAndShare() throws Exception {
+//    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+//    ServerOperations.Login();
+//    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+//    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+//    ServerOperations.Logout();
+//    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+//  }
 //  @Test(groups = {"all", "vault"}, dataProvider = "dp")
 //  public void testChangeOneTextFile() throws Exception {
 //    runTest("27.08.2009 11:54:15", "27.08.2009 12:12:29");
