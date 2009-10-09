@@ -25,4 +25,9 @@ public class TestUtil {
     }
     throw new FileNotFoundException(file1.getAbsolutePath() + " or file " + file3.getAbsolutePath() + " should exist.");
   }
+
+  public static File getTestDataMayNotExist(String fileName, String folderName) throws FileNotFoundException {
+    final String path = getTestData(null, null).getPath() + (folderName != null ? File.separator + folderName : "") + (fileName != null ? File.separator + fileName : "");
+    return new File(path);
+  }
 }

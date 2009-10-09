@@ -48,9 +48,22 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     return "vault-tests" + File.separator + "testData";
   }
 
-  private String getObjectForRepo(@NotNull String path) {
+  private String getObjectPathForRepo(@NotNull String path) {
     return getTestDataPath() + File.separator + "repoContent" + File.separator + path;
   }
+
+  private File getObjectFileForRepo(@NotNull String path) {
+    return new File(getObjectPathForRepo(path));
+  }
+
+  private File getBeforeFolder() {
+    return getTestData("before");
+  }
+
+  private File getAfterFolder() {
+    return getTestData("after");
+  }
+
   @BeforeSuite
   protected void setUpSuite() throws Exception {
     ServerOperations.client.LoginOptions.URL = SERVER_URL;
@@ -79,10 +92,16 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     Thread.sleep(2000);
 
     final String testName = getTestName();
-    final File testDataSvn = TestUtil.getTestData(testName + "_Vcs", null);
+    final File testDataSvn = TestUtil.getTestDataMayNotExist(testName + "_Vcs", null);
     final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
     FileUtil.createDir(testDataNoSvn);
-    FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
+    if (testDataSvn.isDirectory()) {
+      FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
+    } else {
+      FileUtil.createDir(testDataNoSvn);
+    }
+    FileUtil.createDir(new File(testDataNoSvn, "before"));
+    FileUtil.createDir(new File(testDataNoSvn, "after"));
 
     ServerOperations.client.LoginOptions.Repository = testName;
 
@@ -141,7 +160,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testExportOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.Logout();
@@ -150,7 +169,8 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testExportOneDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    FileUtil.createDir(new File(getAfterFolder(), "fold1"));
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.Logout();
@@ -159,7 +179,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testRenameOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/file1", "new_file1");
@@ -169,7 +189,9 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testRenameOneEmptyDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+    FileUtil.createDir(new File(getAfterFolder(), "new_fold1"));
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
@@ -179,7 +201,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testDeleteOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     final String[] toDelete = {"$/file1"};
@@ -190,7 +212,8 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testDeleteOneEmptyDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    FileUtil.createDir(new File(getBeforeFolder(), "fold1"));
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     final String[] toDelete = {"$/fold1"};
@@ -201,7 +224,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddAndRenameOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/file1", "new_file1");
@@ -211,7 +234,8 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddAndRenameOneEmptyDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    FileUtil.createDir(new File(getAfterFolder(), "new_fold1"));
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
@@ -221,7 +245,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddAndDeleteOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     final String[] toDelete = {"$/file1"};
@@ -232,7 +256,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddAndDeleteOneEmptyDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     final String[] toDelete = {"$/fold1"};
@@ -243,7 +267,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddRenameAndDeleteOneTextFile() throws Exception {
-    final String[] toAdd = {getObjectForRepo("file1")};
+    final String[] toAdd = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/file1", "new_file1");
@@ -255,7 +279,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testAddRenameAndDeleteOneEmptyDir() throws Exception {
-    final String[] toAdd = {getObjectForRepo("fold1")};
+    final String[] toAdd = {getObjectPathForRepo("fold1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd);
     ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
