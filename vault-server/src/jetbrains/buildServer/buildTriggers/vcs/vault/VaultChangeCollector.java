@@ -123,12 +123,13 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           processRenamedInHistory(VaultConnection1.getPathFromRepoPath(newRepoPath), VaultConnection1.getPathFromRepoPath(oldRepoPath), modifications, modificationInfo);
         }
       } else if ("SharedTo".equals(typeStr)) {
-        if (VaultConnection1.isFile(misc1.replace(histRepoPath, repoPath), version) || VaultConnection1.isFile(misc1, version)) {
-          collectChange(includeRule, changes, misc1, version, prevVersion, actionString, ADDED);
+        final String newRepoPath = misc2.replace(histRepoPath, repoPath); 
+        if (VaultConnection1.isFile(newRepoPath, version) || VaultConnection1.isFile(misc1, version)) {
+          collectChange(includeRule, changes, misc2, version, prevVersion, actionString, ADDED);
         } else {
-          addFolderContent(includeRule, misc1, repoPath, histRepoPath, changes, actionString, version, prevVersion);
+          addFolderContent(includeRule, newRepoPath, repoPath, histRepoPath, changes, actionString, version, prevVersion);
         }
-        processSharedInHistory(misc1, modifications, modificationInfo);
+        processSharedInHistory(VaultConnection1.getPathFromRepoPath(newRepoPath), modifications, modificationInfo);
       } else if ("MovedFrom".equals(typeStr)) {
         final String objRepoPath = repoPath + "/" + misc1;
         final String objHistRepoPath = histRepoPath + "/" + misc1;
@@ -239,7 +240,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       final List<VcsChange> changes = modifications.get(m);
       final List<VcsChange> toRename = new ArrayList<VcsChange>();
       for (final VcsChange c : changes) {
-        if (c.getRelativeFileName().contains(newName)) {
+        if (c.getRelativeFileName().startsWith(newName)) {
           toRename.add(c);
         }
       }
@@ -261,7 +262,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       final List<VcsChange> changes = modifications.get(m);
       final List<VcsChange> toRename = new ArrayList<VcsChange>();
       for (final VcsChange c : changes) {
-        if (c.getRelativeFileName().equals(path)) {
+        if (c.getRelativeFileName().startsWith(path)) {
           toRename.add(c);
         }
       }

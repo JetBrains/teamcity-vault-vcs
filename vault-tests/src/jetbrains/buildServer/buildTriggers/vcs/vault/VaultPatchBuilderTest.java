@@ -39,6 +39,11 @@ import VaultLib.VaultHistoryItem;
 
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final String SERVER_URL = "http://ruspd-pc02.swiftteams.local:8888";
+//  private static final String SERVER_URL = System.getProperty("vault.server") == null ?
+//                                           "http://ruspd-pc02.swiftteams.local:8888" :
+//                                           System.getProperty("vault.server");
+//  System.
+
   private static final String USER = "admin";
   private static final String PASWORD = "password";
 
@@ -390,17 +395,41 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     runTest("" + (myBeginTx + 3), "" + (myBeginTx + 4));
   }
 
-//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-//  public void testAddFileAndShare() throws Exception {
-//    final String[] toAdd1 = {getObjectPathForRepo("file1")};
-//    ServerOperations.Login();
-//    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
-//    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
-//    ServerOperations.Logout();
-//    runTest("" + myBeginTx, "" + (myBeginTx + 2));
-//  }
-//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-//  public void testChangeOneTextFile() throws Exception {
-//    runTest("27.08.2009 11:54:15", "27.08.2009 12:12:29");
-//  }
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFileAndShare() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareFolderWithContent() throws Exception {
+    FileUtil.createDir(new File(getBeforeFolder(), "fold2"));
+
+    final String[] toAdd1 = {getObjectPathForRepo("file2")};
+    final String[] toAdd2 = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold3", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 3), "" + (myBeginTx + 4));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFilesInFodlerAndShareFolder() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file2")};
+    final String[] toAdd2 = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold3", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 4));
+  }
 }
