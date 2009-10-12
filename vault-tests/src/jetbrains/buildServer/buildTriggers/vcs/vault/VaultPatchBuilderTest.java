@@ -29,7 +29,11 @@ import org.testng.annotations.*;
 import org.jetbrains.annotations.NotNull;
 import VaultClientIntegrationLib.ServerOperations;
 import VaultClientIntegrationLib.DateSortOption;
+import VaultClientIntegrationLib.GetOptions;
+import VaultClientIntegrationLib.UnchangedHandler;
 import VaultLib.VaultHistoryItem;
+import VaultClientOperationsLib.LocalCopyType;
+import VaultClientOperationsLib.ChangeSetItemColl;
 
 /**
  * User: vbedrosova
@@ -133,12 +137,12 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @AfterMethod
   protected void tearDown() throws Exception {
-    Thread.sleep(2000);    
+    Thread.sleep(2000);
     ServerOperations.ProcessCommandDeleteRepository(getTestName());
   }
 
   private void runTest(String fromVersion, @NotNull String toVersion) throws Exception {
-    final SVcsRootImpl root = new SVcsRootImpl("vault");    
+    final SVcsRootImpl root = new SVcsRootImpl("vault");
     root.addProperty("vault.server", SERVER_URL);
     root.addProperty("vault.user", USER);
     root.addProperty("secure:vault.password", PASWORD);
@@ -441,5 +445,72 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 4));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEditFile() throws Exception {
+    final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toCheckoutAndCommit = {"$/fold1/file1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toCheckoutAndCommit, true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toCheckoutAndCommit);
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddAndEditFile() throws Exception {
+    final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toCheckoutAndCommit = {"$/fold1/file1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toCheckoutAndCommit, true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toCheckoutAndCommit);
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBigPatch() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toAdd2 = {getObjectPathForRepo("file2")};
+    final String[] toAdd3 = {getObjectPathForRepo("file3")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd1);
+    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
+
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
+    ServerOperations.ProcessCommandRename("$/fold1/file2", "new_file2");
+
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandAdd("$/fold2", toAdd3);
+    ServerOperations.ProcessCommandRename("$/fold2/file3", "new_file3 ");
+
+    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.ProcessCommandRename("$/fold2", "new_fold2");
+
+    ServerOperations.ProcessCommandCreateFolder("$/new_fold1/fold3");
+    ServerOperations.ProcessCommandMove("$/new_file1", "$/new_fold1/fold3");
+    ServerOperations.ProcessCommandRename("$/new_fold1/fold3", "new_fold3");
+    ServerOperations.ProcessCommandMove("$/new_fold1/new_fold3", "$/new_fold2");    
+
+    ServerOperations.ProcessCommandShare("$/new_fold2", "$/new_fold1");
+
+//    final String[] toDelete1 = {"$/new_fold2/new_file2"};
+//    ServerOperations.ProcessCommandDelete(toDelete1);
+    final String[] toDelete2 = {"$/new_fold2"};
+    ServerOperations.ProcessCommandDelete(toDelete2);
+
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 16));
   }
 }
