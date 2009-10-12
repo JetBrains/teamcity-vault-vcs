@@ -105,9 +105,18 @@
     <target name="test" depends="all, test-nofail, check_failures"/>
 
     <target name="test-nofail">
+        <check.property name="vault.test.server"
+                        fail-message="Vault test server URL is not specified in build.properties"/>
+        <check.property name="vault.test.login"
+                        fail-message="Vault test login is not specified in build.properties"/>
+        <check.property name="vault.test.server"
+                        fail-message="Vault test user password is not specified in build.properties"/>
         <delete dir="test-reports" quiet="true"/>
         <mkdir dir="test-reports"/>
         <testng failureproperty="failure_found">
+            <jvmarg value="-Dvault.test.server=${vault.test.server}" />
+            <jvmarg value="-Dvault.test.login=${vault.test.login}" />
+            <jvmarg value="-Dvault.test.password=${vault.test.password}" />
             <classpath>
                 <path refid="vault-tests.runtime.module.classpath"/>
             </classpath>

@@ -38,14 +38,24 @@ import VaultLib.VaultHistoryItem;
  */
 
 public class VaultPatchBuilderTest extends PatchTestCase {
-  private static final String SERVER_URL = "http://ruspd-pc02.swiftteams.local:8888";
-//  private static final String SERVER_URL = System.getProperty("vault.server") == null ?
-//                                           "http://ruspd-pc02.swiftteams.local:8888" :
-//                                           System.getProperty("vault.server");
-//  System.
+  private static final String SERVER_URL = System.getProperty("vault.test.server");
+  private static final String USER = System.getProperty("vault.test.login");
+  private static final String PASWORD = System.getProperty("vault.test.password");
 
-  private static final String USER = "admin";
-  private static final String PASWORD = "password";
+  {
+    if (SERVER_URL == null) {
+      fail("Vault test server URL is not specified in JVM arguments." +
+        "Use -Dvault.test.server=\"...\" jvm option to specify Vault test server URL");
+    }
+    if (USER == null) {
+      fail("Vault test user is not specified in JVM arguments." +
+        "Use -Dvault.test.login=\"...\" jvm option to specify Vault test user");
+    }
+    if (PASWORD == null) {
+      fail("Vault test user password is not specified in JVM arguments." +
+        "Use -Dvault.test.password=\"...\" jvm option to specify Vault test user password");
+    }
+  }
 
   private long myBeginTx;
 
