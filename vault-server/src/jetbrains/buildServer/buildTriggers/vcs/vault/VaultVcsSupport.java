@@ -18,12 +18,15 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
+import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.vcs.*;
+import jetbrains.buildServer.util.FileUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.io.File;
 
 import VaultClientNetLib.VaultConnection;
 
@@ -41,9 +44,16 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   private final VaultFileContentProvider myFileContentProvider;
 
-  public VaultVcsSupport() {
+  public VaultVcsSupport(@NotNull ServerPaths serverPaths) {
     LOG.debug("Vault plugin is working");
     myFileContentProvider = new VaultFileContentProvider();
+    final File cache = new File(serverPaths.getCachesDir(), "vault");
+    if (FileUtil.delete(cache)) {
+      LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
+    }
+    if (System.getProperty("vault.enable.cache") != null) {
+      VaultConnection1.enableCache(cache);
+    }
   }
 
 

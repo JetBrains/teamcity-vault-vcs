@@ -61,8 +61,6 @@ public final class VaultUtil {
   public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
 
   static {
-    NOT_CHANGED_CHANGE_TYPES.add("Added");
-
     NOT_CHANGED_CHANGE_TYPES.add("Label");
 
     NOT_CHANGED_CHANGE_TYPES.add("Obliterated");
@@ -75,6 +73,17 @@ public final class VaultUtil {
     NOT_CHANGED_CHANGE_TYPES.add("RenamedItem");
 
     NOT_CHANGED_CHANGE_TYPES.add("MovedTo");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Snapshot");
+    NOT_CHANGED_CHANGE_TYPES.add("SnapshotFrom");
+    NOT_CHANGED_CHANGE_TYPES.add("SnapshotItem");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Undeleted");
+
+    NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShare");
+    NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShareItem");
+
+    NOT_CHANGED_CHANGE_TYPES.add("Rollback");
   }
 
   public static final Set<String> ADDED_CHANGE_TYPES =  new HashSet<String>();
@@ -82,20 +91,15 @@ public final class VaultUtil {
   static {
     ADDED_CHANGE_TYPES.add("Created");
 
+    ADDED_CHANGE_TYPES.add("Added");
+
     ADDED_CHANGE_TYPES.add("BranchedFrom");
     ADDED_CHANGE_TYPES.add("BranchedFromItem");
-    ADDED_CHANGE_TYPES.add("BranchedFromShare");
-    ADDED_CHANGE_TYPES.add("BranchedFromShareItem");
 
     ADDED_CHANGE_TYPES.add("MovedFrom");
 
     ADDED_CHANGE_TYPES.add("SharedTo");
 
-    ADDED_CHANGE_TYPES.add("Snapshot");
-    ADDED_CHANGE_TYPES.add("SnapshotFrom");
-    ADDED_CHANGE_TYPES.add("SnapshotItem");
-
-    ADDED_CHANGE_TYPES.add("Undeleted");
     ADDED_CHANGE_TYPES.add("Renamed");
   }
 
@@ -109,52 +113,7 @@ public final class VaultUtil {
 
   static {
     REMOVED_CHANGE_TYPES.add("Deleted");
-//    TODO: process rollback
-//    public static final byte Rollback = -26;
   }
-
-//  public static String getDeletedName(@NotNull String actionString) {
-//    // actionString is "Deleted file.txt"
-//    //TODO: move to constants?
-//    final String prefix = "Deleted ";
-//    return "/" + actionString.substring(actionString.indexOf(prefix) + prefix.length());
-//  }
-//
-//  public static String getMovedToName(@NotNull String actionString) {
-//    // actionString is "Moved file.txt to fold1/file.txt"
-//    //TODO: move to constants?
-//    final String prefix = " to ";
-//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-//  }
-//
-//  public static String getMovedFromName(@NotNull String actionString) {
-//    // actionString is "Moved file.txt from fold1"
-//    //TODO: move to constants?
-//    final String prefix = " from ";
-//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-//  }
-//
-//  public static String getRenamedFromName(@NotNull String actionString) {
-//    // actionString is "Renamed from file.txt to file3.txt"
-//    //TODO: move to constants?
-//    final String prefix = "Renamed from ";
-//    final String suffix = " to ";
-//    return actionString.substring(actionString.indexOf(prefix) + prefix.length(), actionString.indexOf(suffix));
-//  }
-//
-//  public static String getRenamedToName(@NotNull String actionString) {
-//    // actionString is "Renamed from file.txt to file3.txt"
-//    //TODO: move to constants?
-//    final String prefix = " to ";
-//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-//  }
-//
-//  public static String getSharedToName(@NotNull String actionString) {
-//    // actionString is "Shared file.txt as file.txt"
-//    //TODO: move to constants?
-//    final String prefix = " as ";
-//    return actionString.substring(actionString.indexOf(prefix) + prefix.length());
-//  }
 
   public static XMLReader createXmlReader(@NotNull ContentHandler contentHandler) throws VcsException {
     final XMLReader xmlReader;
@@ -205,12 +164,4 @@ public final class VaultUtil {
     s1 = s1.replace(oldS, newS);
     return s1 + s2;
   }
-
-//  public static int parseInt(@NotNull String num) throws VcsException {
-//    try {
-//      return Integer.parseInt(num);
-//    } catch (NumberFormatException e) {
-//      throw new VcsException(e);
-//    }
-//  }
 }

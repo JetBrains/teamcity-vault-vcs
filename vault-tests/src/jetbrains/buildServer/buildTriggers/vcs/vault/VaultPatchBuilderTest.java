@@ -101,12 +101,13 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @BeforeMethod
   protected void setUp() throws Exception {
-//    final File cache = FileUtil.createTempDirectory("vault", "");
-//    FileUtil.delete(cache);
-//    System.setProperty("vault.caches.path", cache.getAbsolutePath());
     super.setUp();
 
     Thread.sleep(2000);
+
+    final File cache = FileUtil.createTempDirectory("vault", "");
+    FileUtil.delete(cache);
+    VaultConnection1.enableCache(cache);
 
     final String testName = getTestName();
     final File testDataSvn = TestUtil.getTestDataMayNotExist(testName + "_Vcs", null);
@@ -480,6 +481,67 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testDeleteFileAndThenParentDir() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toDelete1 = {"$/fold1/file1"};
+    final String[] toDelete2 = {"$/fold1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.ProcessCommandDelete(toDelete1);
+    ServerOperations.ProcessCommandDelete(toDelete2);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 3));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBranchFolderWithContent() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toAdd2 = {getObjectPathForRepo("file2")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd2);
+    ServerOperations.ProcessCommandBranch("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 2), "" + (myBeginTx + 3));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEditFileBuildPatchTwice() throws Exception {
+    final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toCheckoutAndCommit = {"$/fold1/file1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toCheckoutAndCommit, true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toCheckoutAndCommit);
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEditFileBuildPatchTwiceDisabledCache() throws Exception {
+    VaultConnection1.enableCache(null);
+
+    final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toCheckoutAndCommit = {"$/fold1/file1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd1);
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toCheckoutAndCommit, true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toCheckoutAndCommit);
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testBigPatch() throws Exception {
     final String[] toAdd1 = {getObjectPathForRepo("file1")};
     final String[] toAdd2 = {getObjectPathForRepo("file2")};
@@ -501,16 +563,30 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandCreateFolder("$/new_fold1/fold3");
     ServerOperations.ProcessCommandMove("$/new_file1", "$/new_fold1/fold3");
     ServerOperations.ProcessCommandRename("$/new_fold1/fold3", "new_fold3");
-    ServerOperations.ProcessCommandMove("$/new_fold1/new_fold3", "$/new_fold2");    
+    ServerOperations.ProcessCommandMove("$/new_fold1/new_fold3", "$/new_fold2");
 
     ServerOperations.ProcessCommandShare("$/new_fold2", "$/new_fold1");
 
-//    final String[] toDelete1 = {"$/new_fold2/new_file2"};
-//    ServerOperations.ProcessCommandDelete(toDelete1);
-    final String[] toDelete2 = {"$/new_fold2"};
-    ServerOperations.ProcessCommandDelete(toDelete2);
+    final String[] toDelete = {"$/new_fold2"};
+    ServerOperations.ProcessCommandDelete(toDelete);
 
     ServerOperations.Logout();
-    runTest("" + myBeginTx, "" + (myBeginTx + 16));
+    runTest("" + myBeginTx, "" + (myBeginTx + 15));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBigPatch1() throws Exception {
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd1);
+    ServerOperations.ProcessCommandCreateFolder("$/fold1");
+    ServerOperations.ProcessCommandMove("$/file1", "$/fold1");
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandMove("$/fold1", "$/fold2");
+    ServerOperations.ProcessCommandRename("$/fold2/fold1", "folder1");
+    ServerOperations.ProcessCommandRename("$/fold2", "folder2");
+    ServerOperations.ProcessCommandRename("$/folder2/folder1/file1", "f1");
+    ServerOperations.Logout();
+    runTest("" + myBeginTx, "" + (myBeginTx + 8));
   }
 }

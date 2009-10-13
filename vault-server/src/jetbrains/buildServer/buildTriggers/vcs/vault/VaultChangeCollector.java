@@ -3,6 +3,8 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1.ROOT;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1.ROOT_PREFIX;
 import jetbrains.buildServer.vcs.*;
 import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 import org.apache.log4j.Logger;
@@ -11,10 +13,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import VaultClientOperationsLib.VaultClientFolder;
-import VaultClientOperationsLib.VaultClientFileColl;
-import VaultClientOperationsLib.VaultClientFile;
-import VaultClientOperationsLib.VaultClientFolderColl;
+import VaultClientOperationsLib.*;
+import VaultClientIntegrationLib.RepositoryUtil;
 
 
 /**
@@ -24,7 +24,6 @@ import VaultClientOperationsLib.VaultClientFolderColl;
  */
 public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
-  private static final String ROOT_PREFIX = "$/";
 
   private final VcsRoot myRoot;
   private final String myFromVersion;
@@ -76,6 +75,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       final int type = item.get_HistItemType();
       final String typeStr = VaultHistoryType.GetHistoryTypeName(type);
       if (NOT_CHANGED_CHANGE_TYPES.contains(typeStr)) {
+        LOG.debug("Skipping " + typeStr + " command in history");
         continue;
       }
       final String version = "" + item.get_TxID();
@@ -93,15 +93,28 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         changes = modifications.get(modificationInfo);
       }
 
-      final String repoPath = item.get_Name().startsWith(VaultConnection1.ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
-      final String histRepoPath = item.get_HistoricName().startsWith(VaultConnection1.ROOT) ? item.get_HistoricName() : ROOT_PREFIX + item.get_HistoricName();
+      final String repoPath = item.get_Name().startsWith(ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
+      final String histRepoPath = item.get_HistoricName().startsWith(ROOT) ? item.get_HistoricName() : ROOT_PREFIX + item.get_HistoricName();
       final String misc1 = item.get_MiscInfo1();
       final String misc2 = item.get_MiscInfo2();
 
       final String prevVersion = "" + (item.get_TxID() - 1);
       final String actionString = item.GetActionString();
 
-      if ("Created".equals(typeStr)) {
+      if ("Added".equals(typeStr)) {
+        final VcsChange prevChange = changes.get(changes.size() - 1);
+        if ("Created".equals(prevChange.getChangeTypeName())) {
+          final String objHistPath = VaultConnection1.getPathFromRepoPath(histRepoPath + "/" + misc1);
+          if (!prevChange.getFileName().equals(objHistPath)) {
+            changes.add(changes.indexOf(prevChange), new VcsChange(prevChange.getType(), typeStr,
+                                                                   objHistPath, objHistPath,
+                                                                   prevVersion, version));
+            changes.remove(prevChange);
+          }
+          continue;
+        }
+        throw new VcsException("Illegal change sequence: Added must come after Created");
+      } else if ("Created".equals(typeStr)) {
         if (VaultConnection1.isFile(repoPath, version)) {
           collectChange(includeRule, changes, histRepoPath, version, prevVersion, actionString, ADDED);
         } else {
@@ -127,7 +140,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         if (VaultConnection1.isFile(newRepoPath, version) || VaultConnection1.isFile(misc1, version)) {
           collectChange(includeRule, changes, misc2, version, prevVersion, actionString, ADDED);
         } else {
-          addFolderContent(includeRule, newRepoPath, repoPath, histRepoPath, changes, actionString, version, prevVersion);
+          addFolderContent(includeRule, newRepoPath, newRepoPath, misc2, changes, actionString, version, prevVersion);
         }
         processSharedInHistory(VaultConnection1.getPathFromRepoPath(newRepoPath), modifications, modificationInfo);
       } else if ("MovedFrom".equals(typeStr)) {
@@ -138,7 +151,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           collectChange(includeRule, changes, objHistRepoPath, version, prevVersion, actionString, ADDED);
         } else {
           collectChange(includeRule, changes, misc2, version, prevVersion, actionString, DIRECTORY_REMOVED);
-          addFolderContent(includeRule, objRepoPath, repoPath, histRepoPath, changes, actionString, version, prevVersion);
+          addFolderContent(includeRule, objRepoPath, objRepoPath, objHistRepoPath, changes, actionString, version, prevVersion);
         }
         processRenamedInHistory(VaultConnection1.getPathFromRepoPath(objHistRepoPath), VaultConnection1.getPathFromRepoPath(misc2), modifications, modificationInfo);
       } else if ("CheckIn".equals(typeStr)) {
@@ -161,7 +174,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                              @NotNull List<VcsChange> changes, @NotNull String repoPath,
                              @NotNull String version, @NotNull String prevVersion, @NotNull String actionString,
                              @NotNull VcsChangeInfo.Type type) {
-    if (VaultConnection1.ROOT.equals(repoPath)) {
+    if (ROOT.equals(repoPath)) {
       return;
     }
     String relativePath = VaultConnection1.getPathFromRepoPath(repoPath);
@@ -210,24 +223,39 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                                 @NotNull String prevVersion) throws VcsException {
     collectChange(includeRule, changes, repoFolderPath.replace(currentRepoPath, histRepoPath), version, prevVersion, actionString, DIRECTORY_ADDED);
 
-    final VaultClientFolder fold = VaultConnection1.listFolder(repoFolderPath);
+    String currentRepoFolderPath = repoFolderPath; 
+    if (!VaultConnection1.objectExists(repoFolderPath)) {
+      final String name = VaultConnection1.getName(repoFolderPath);
+      externalFor: for (final VaultClientTreeObject o : RepositoryUtil.MatchWildcardToTreeObjects(repoFolderPath.replace(name, "*"))) {
+        for (final VaultHistoryItem i : VaultConnection1.collectChanges(o.get_FullPath(), null, null)) {
+          if ("Renamed".equals(VaultHistoryType.GetHistoryTypeName(i.get_HistItemType()))) {
+            if (name.equals(i.get_MiscInfo2())) {
+              currentRepoFolderPath = currentRepoFolderPath.replace(name, i.get_MiscInfo1());
+              break externalFor;
+            }
+          }
+        }
+      }
+    }
+
+    final VaultClientFolder fold = VaultConnection1.listFolder(currentRepoFolderPath);
 
     final VaultClientFileColl files = fold.get_Files();
     for (int i = 0; i < files.get_Count(); ++i) {
-      final String fileRepoPath = (repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
+      final String fileRepoPath = (currentRepoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
       if (!VaultConnection1.objectExists(fileRepoPath, version)) {
         continue;
       }
-      collectChange(includeRule, changes, fileRepoPath.replace(currentRepoPath, histRepoPath), version, prevVersion, actionString, ADDED);
+      collectChange(includeRule, changes, fileRepoPath.replace(currentRepoFolderPath, repoFolderPath).replace(currentRepoPath, histRepoPath), version, prevVersion, actionString, ADDED);
     }
 
     final VaultClientFolderColl folders = fold.get_Folders();
     for (int i = 0; i < folders.get_Count(); ++i) {
-      final String folderRepoPath = (repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name());
+      final String folderRepoPath = (currentRepoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name());
       if (!VaultConnection1.objectExists(folderRepoPath, version)) {
         continue;
       }
-      addFolderContent(includeRule, folderRepoPath, currentRepoPath, histRepoPath, changes, actionString, version, prevVersion);
+      addFolderContent(includeRule, folderRepoPath, currentRepoPath.replace(repoFolderPath, currentRepoFolderPath), histRepoPath, changes, actionString, version, prevVersion);
     }
   }
 
