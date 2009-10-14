@@ -15,23 +15,9 @@
 
     <target name="all" depends="check.teamcitydistribution, prepare.vault.api, vault.all"/>
 
-    <target name="prepare.vault.api" depends="check.vault.api, check.vault.api.present, get.vault.api.if.necessary"/>
+    <target name="prepare.vault.api" depends="check.vault.api.variable, check.vault.api.present, get.vault.api.if.necessary"/>
 
-    <!--<target name="prepare.path.variable.vaultapi"-->
-            <!--depends="set.path.variable.vaultapi.if.under.teamcity, set.path.variable.vaultapi.if.not.under.teamcity"/>-->
-
-    <!--<target name="set.path.variable.vaultapi.if.under.teamcity"-->
-            <!--if="teamcity.build.checkoutDir"-->
-            <!--unless="path.variable.vaultapi">-->
-        <!--<property name="path.variable.vaultapi" value="${teamcity.build.checkoutDir}/vaultAPI"/>-->
-    <!--</target>-->
-
-    <!--<target name="set.path.variable.vaultapi.if.not.under.teamcity"-->
-            <!--unless="path.variable.vaultapi">-->
-        <!--<property name="path.variable.vaultapi" value="${basedir}/vaultAPI"/>-->
-    <!--</target>-->
-
-    <target name="check.vault.api" description="checks whether manually downloaded Vault Java API is ready to be used by IDEA-generated build">
+    <target name="check.vault.api.variable" description="checks whether manually downloaded Vault Java API is ready to be used by IDEA-generated build">
       <check.property name="path.variable.vaultapi"
                       fail-message="Please define 'path.variable.vaultapi' property in build.properties file. The property should point to Vault Java API jars."
           />
