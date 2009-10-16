@@ -134,7 +134,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String describeVcsRoot(VcsRoot vcsRoot) {
-    return "vault: " + vcsRoot.getName();
+    final String server = vcsRoot.getProperty(VaultConnectionParameters.SERVER); 
+    return (server == null) ? "vault" : ("vault: " + server);
   }
 
   public Map<String, String> getDefaultVcsProperties() {
@@ -231,7 +232,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   private void testConnection(@NotNull Map<String, String> properties) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException("No Vault Java API jars are present at <TeamCity web application>/WEB-INF/lib directory. You should download them from Vault vendor manually.");
+      throw new VcsException("No Vault Java API jars are present at <TeamCity web application>/WEB-INF/lib directory." +
+        "You should download them from Vault vendor manually, put to <TeamCity web application>/WEB-INF/lib and restart the server.");
     }
     VaultConnection1.testConnection(new VaultConnectionParameters(properties));    
   }
