@@ -2,6 +2,8 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
+import VaultLib.VaultDate;
+import VaultLib.VaultDateTime;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1.ROOT;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1.ROOT_PREFIX;
@@ -85,7 +87,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         comment = "No comment";
       }
 
-      final ModificationInfo modificationInfo = new ModificationInfo(version, item.get_UserLogin(), comment, VaultUtil.getDate(item.get_TxDate().toString()));
+      final VaultDateTime txDate = item.get_TxDate();
+      final ModificationInfo modificationInfo = new ModificationInfo(version, item.get_UserLogin(), comment,
+                                                new GregorianCalendar(txDate.get_Year(), txDate.get_Month(),
+                                                                      txDate.get_Day(), txDate.get_Hour(),
+                                                                      txDate.get_Minute(), txDate.get_Second()).getTime());
       final List<VcsChange> changes;
       if (!modifications.containsKey(modificationInfo)) {
         changes = new ArrayList<VcsChange>();
