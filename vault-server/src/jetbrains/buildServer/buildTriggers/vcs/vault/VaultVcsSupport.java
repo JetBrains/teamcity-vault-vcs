@@ -211,7 +211,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     try {
       testConnection(properties);
     } catch (VcsException e) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, e.getMessage()));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, (e.getCause() != null) ? e.getCause().getMessage() : e.getMessage()));
     }
     return invalids;
   }
