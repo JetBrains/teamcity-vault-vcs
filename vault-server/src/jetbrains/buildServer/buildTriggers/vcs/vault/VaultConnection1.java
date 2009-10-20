@@ -27,20 +27,26 @@ public final class VaultConnection1 {
   public static final String ROOT_PREFIX = "$/";
   public static final String CURRENT = ".";
 
+  private static final int CONNECTION_TRIES_NUMBER = 10;
+
   private static File myCachesDir = null;
 
   public static void connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
     if (ServerOperations.isConnected()) {
       return;
     }
-    try {
-      ServerOperations.client.LoginOptions.URL = parameters.getUrl();
-      ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
-      ServerOperations.client.LoginOptions.User = parameters.getUser();
-      ServerOperations.client.LoginOptions.Password = parameters.getPassword();
-      ServerOperations.Login();
-    } catch (Exception e) {
-      throw new VcsException(e);
+    ServerOperations.client.LoginOptions.URL = parameters.getUrl();
+    ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
+    ServerOperations.client.LoginOptions.User = parameters.getUser();
+    ServerOperations.client.LoginOptions.Password = parameters.getPassword();
+    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+      try {
+        ServerOperations.Login();
+      } catch (Exception e) {
+        if (i == CONNECTION_TRIES_NUMBER) {
+          throw new VcsException(e);
+        }
+      }
     }
   }
 
