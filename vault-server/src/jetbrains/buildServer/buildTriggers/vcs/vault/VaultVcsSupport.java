@@ -192,15 +192,15 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     String prop; 
     prop = properties.get(VaultConnectionParameters.SERVER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server must not be empty"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server must be specified"));
     }
     prop = properties.get(VaultConnectionParameters.REPO);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.REPO, "Repository name must not be empty"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.REPO, "Repository name must be specified"));
     }
     prop = properties.get(VaultConnectionParameters.USER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "Username must not be empty"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "Username must be specified"));
     }
     if (invalids.size() > 0) {
       return invalids;
