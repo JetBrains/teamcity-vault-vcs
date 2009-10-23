@@ -41,6 +41,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                                        PropertiesProcessor,
                                                                        TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
+  private static final String HTTP_PEFIX = "http://";
 
   private final VaultFileContentProvider myFileContentProvider;
 
@@ -188,11 +189,13 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from PropertiesProcessor
 
   public Collection<InvalidProperty> process(Map<String, String> properties) {
-    List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
+    final List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
     String prop; 
     prop = properties.get(VaultConnectionParameters.SERVER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server must be specified"));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server URL must be specified"));
+    } else if (!prop.startsWith(HTTP_PEFIX)) {
+      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server URL must have http://hostname[:port] structure"));
     }
     prop = properties.get(VaultConnectionParameters.REPO);
     if ((prop == null) || ("".equals(prop))) {
@@ -200,18 +203,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     }
     prop = properties.get(VaultConnectionParameters.USER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "Username must be specified"));
-    }
-    if (invalids.size() > 0) {
-      return invalids;
-    }
-    if (properties.get(VaultConnectionParameters.PASSWORD) == null) {
-      properties.put(VaultConnectionParameters.PASSWORD, "");
-    }
-    try {
-      testConnection(properties);
-    } catch (VcsException e) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, (e.getCause() != null) ? e.getCause().getMessage() : e.getMessage()));
+      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "User name must be specified"));
     }
     return invalids;
   }
