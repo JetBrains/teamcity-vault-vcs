@@ -26,34 +26,19 @@
                 Make sure Vault Java API jars are present at &lt;TeamCity web application&gt;/WEB-INF/lib  directory.
             </td>
         </tr>
-        <%--<tr>--%>
-            <%--<th><label for="vault.path">Vault Command Line Client path: <l:star/></label>--%>
-            <%--</th>--%>
-            <%--<td><props:textProperty name="vault.path" className="longField"/>--%>
-                <%--<span class="error" id="error_vault.path"></span></td>--%>
-        <%--</tr>--%>
         <tr>
             <th><label for="vault.server">Vault server URL: <l:star/></label>
             </th>
             <td><props:textProperty name="vault.server" className="longField"/>
                 <span class="error" id="error_vault.server"></span>
-                <%--<span class="smallNote">Type URL like http://hostname:port</span>--%>
             </td>                
         </tr>
         <tr>
-            <%--<th><label for="vault.repo">Reposiory name: <bs:help file="ClearCase" anchor="relPathOptionDescription"/> <l:star/></label>--%>
             <th><label for="vault.repo">Repository name: <l:star/></label>
             </th>
             <td><props:textProperty name="vault.repo" className="longField"/>
                 <span class="error" id="error_vault.repo"></span></td>
         </tr>
-        <%--<tr>--%>
-          <%--<th><label for="vault.enable.ssl">Enable SSL:</label></th>--%>
-          <%--<td>--%>
-            <%--<props:checkboxProperty name="vault.enable.ssl" disabled="true"/>--%>
-              <%--<span class="error" id="error_vault.enable.ssl"></span></td>--%>
-          <%--</td>--%>
-        <%--</tr>--%>
         <tr>
             <th><label for="vault.user">User name:  <l:star/></label>
             </th>

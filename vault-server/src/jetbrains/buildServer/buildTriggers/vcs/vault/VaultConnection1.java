@@ -35,19 +35,20 @@ public final class VaultConnection1 {
     if (ServerOperations.isConnected()) {
       return;
     }
-    ServerOperations.client.LoginOptions.URL = parameters.getUrl();
-    ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
-    ServerOperations.client.LoginOptions.User = parameters.getUser();
-    ServerOperations.client.LoginOptions.Password = parameters.getPassword();
-    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+//    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
       try {
+        ServerOperations.client.LoginOptions.URL = parameters.getUrl();
+        ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
+        ServerOperations.client.LoginOptions.User = parameters.getUser();
+        ServerOperations.client.LoginOptions.Password = parameters.getPassword();
         ServerOperations.Login();
-      } catch (Exception e) {
-        if (i == CONNECTION_TRIES_NUMBER) {
-          throw new VcsException(e);
+        return;
+      } catch (Throwable e) {
+//        if (i == CONNECTION_TRIES_NUMBER) {
+          throw new VcsException(e.getMessage());
         }
-      }
-    }
+//      }
+//    }
   }
 
   public static void disconnect() throws VcsException {
@@ -55,7 +56,7 @@ public final class VaultConnection1 {
       assert ServerOperations.isConnected();
       ServerOperations.Logout();
     } catch (Exception e) {
-      throw new VcsException(e);
+      throw new VcsException(e.getMessage());
     }
   }
 
