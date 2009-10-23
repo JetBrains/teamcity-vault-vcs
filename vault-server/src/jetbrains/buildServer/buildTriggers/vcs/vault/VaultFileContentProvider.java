@@ -44,7 +44,7 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
     try {
       return FileUtil.loadFileBytes(f);
     } catch (IOException e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 }

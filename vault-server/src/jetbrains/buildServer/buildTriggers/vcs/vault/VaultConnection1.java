@@ -37,8 +37,11 @@ public final class VaultConnection1 {
         connectNotForce(parameters);
         return;
       } catch (VcsException e) {
+        if (("Repository " + parameters.getRepoName() + " not found").equals(e.getMessage())) {
+          throw e;
+        }
         if (i == CONNECTION_TRIES_NUMBER) {
-          throw new VcsException(e.getMessage());
+          throw new VcsException(e.getMessage(), e.getCause());
         }
       }
     }
@@ -55,7 +58,7 @@ public final class VaultConnection1 {
       ServerOperations.client.LoginOptions.Password = parameters.getPassword();
       ServerOperations.Login();
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 
@@ -64,7 +67,7 @@ public final class VaultConnection1 {
       assert ServerOperations.isConnected();
       ServerOperations.Logout();
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 
@@ -83,7 +86,7 @@ public final class VaultConnection1 {
       assert historyItems.length == 0;
       return "" + historyItems[0].get_TxID();
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     } finally {
       disconnect();
     }
@@ -98,7 +101,7 @@ public final class VaultConnection1 {
     try {
       return RepositoryUtil.PathExists(repoPath);
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 
@@ -124,7 +127,7 @@ public final class VaultConnection1 {
         return getObjectFromParent(getName(repoPath), parent, version).isFile();
       }
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 
@@ -185,7 +188,7 @@ public final class VaultConnection1 {
     try {
       FileUtil.copy(getFile, cachedFile);
     } catch (IOException e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
     return cachedFile;
   }
@@ -208,7 +211,7 @@ public final class VaultConnection1 {
     try {
       FileUtil.copyDir(getFolder, cachedFolder);
     } catch (IOException e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
     return cachedFolder ;
   }
@@ -247,7 +250,7 @@ public final class VaultConnection1 {
       GetOperations.ProcessCommandGetVersionToLocationOutsideWorkingFolder(repoPath, (int) version, getOptions, destDir.getAbsolutePath());
       return destDir;
     } catch (IOException e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
   }
 
@@ -303,7 +306,7 @@ public final class VaultConnection1 {
         }
       }
     } catch (Exception e) {
-      throw new VcsException(e.getMessage());
+      throw new VcsException(e.getMessage(), e);
     }
     return 0;
   }
