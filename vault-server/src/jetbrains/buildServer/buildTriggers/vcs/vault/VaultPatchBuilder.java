@@ -61,7 +61,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
       final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
-      patch(modifications, builder);
+      patch(includeRule, modifications, builder);
     }
     LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
@@ -70,7 +70,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   public void dispose() throws VcsException {
   }
 
-  private void patch(@NotNull Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications,
+  private void patch(@NotNull IncludeRule includeRule, @NotNull Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications,
                      @NotNull PatchBuilder builder) throws IOException, VcsException {
     final Set<File> deletedFiles = new LinkedHashSet<File>();
     final Set<File> deletedDirs = new LinkedHashSet<File>();
@@ -175,13 +175,17 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       builder.createDirectory(d);
     }
     for (final File f : addedFiles.keySet()) {
-      final File content = VaultConnection.getObject(f.getPath(), addedFiles.get(f));
+      final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
       builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
     }
     for (final File f : modifiedFiles.keySet()) {
-      final File content = VaultConnection.getObject(f.getPath(), modifiedFiles.get(f));
+      final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
       builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
     }
+  }
+
+  private String getPathWithIncludeRule(@NotNull IncludeRule includeRule, @NotNull String path) {
+    return "".equals(includeRule.getFrom()) ? path : includeRule.getFrom() + "/" + path;
   }
 
   private File containsAncestor(@NotNull Set<File> files, @NotNull File f) {

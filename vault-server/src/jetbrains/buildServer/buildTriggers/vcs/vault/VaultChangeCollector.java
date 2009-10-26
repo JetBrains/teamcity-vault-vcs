@@ -102,9 +102,15 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     String relativePath = VaultConnection.getPathFromRepoPath(repoPath);
 
     final String from = includeRule.getFrom();
-    final String to = includeRule.getTo();
-    if (!relativePath.equals(from) && relativePath.startsWith(from) && !"".equals(from)) {
-        relativePath = replaceFirst(relativePath, from, to);
+//    final String to = includeRule.getTo();
+//    if (!relativePath.equals(from) && relativePath.startsWith(from) && !"".equals(from)) {
+//        relativePath = replaceFirst(relativePath, from, to);
+//    }
+
+    if (!"".equals(from) && relativePath.startsWith(from)) {
+      relativePath = relativePath.substring(from.length() + 1);
+    } else {
+      LOG.debug("Relative path " + relativePath + " in repo doesn't start with include rule \"from\" " + from);
     }
 
     changes.add(new VcsChange(type, changeName, relativePath, relativePath, prevVersion, version));
@@ -171,7 +177,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
         } else {
           if (!isSharedPath(newPath)) {
-            addFolderContent(includeRule, repoPath,  changes, item.GetActionString(), mi);
+            addFolderContent(repoPath,  changes, item.GetActionString(), mi);
             pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
           }
         }
@@ -187,7 +193,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
             pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
             pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
           } else {
-            addFolderContent(includeRule, repoPath, changes, item.GetActionString(), mi);
+            addFolderContent(repoPath, changes, item.GetActionString(), mi);
             pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
           }
           myPathHistory.rename(oldRepoParentPath, misc2, misc1);
@@ -203,7 +209,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
           pushChange(changes, item.GetActionString(), mi, oldPath, REMOVED);
         } else {
-          addFolderContent(includeRule, newPath, changes, item.GetActionString(), mi);
+          addFolderContent(newPath, changes, item.GetActionString(), mi);
           pushChange(changes, item.GetActionString(), mi, oldPath, DIRECTORY_REMOVED);
         }
         myPathHistory.move(oldRepoParentPath, VaultConnection.getRepoParentPath(misc2), misc1);
@@ -215,7 +221,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         if (isFile) {
           pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
         } else {
-          addFolderContent(includeRule, newPath, changes, item.GetActionString(), mi);
+          addFolderContent(newPath, changes, item.GetActionString(), mi);
         }
         mySharedPaths.add(newPath);
         continue;
@@ -308,8 +314,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     VaultConnection.disconnect();
   }
 
-  private void addFolderContent(@NotNull IncludeRule includeRule,
-                                @NotNull String repoFolderPath,
+  private void addFolderContent(@NotNull String repoFolderPath,
                                 @NotNull Stack<ChangeInfo> changes,
                                 @NotNull String actionString,
                                 @NotNull ModificationInfo mi) throws VcsException {
@@ -337,7 +342,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       if (!VaultConnection.objectExists(oldFolderRepoPath, mi.getVersion())) {
         continue;
       }
-      addFolderContent(includeRule, folderRepoPath, changes, actionString, mi);
+      addFolderContent(folderRepoPath, changes, actionString, mi);
     }
   }
 
