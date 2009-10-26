@@ -109,26 +109,22 @@ public final class VaultConnection1 {
     return getVersionByTxId(repoPath, VaultUtil.parseLong(version)) != 0;
   }
 
-  public static boolean isFile(@NotNull String repoPath, @NotNull String version) throws VcsException {
-    return isFile(repoPath, VaultUtil.parseLong(version));
+  public static boolean isFileForExistingObject(@NotNull String repoPath) throws VcsException {
+    try {
+      RepositoryUtil.FindVaultFileAtReposOrLocalPath(repoPath);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+}
+
+  public static boolean isFileForUnxistingObject(@NotNull String repoPath, @NotNull String version) throws VcsException {
+    return isFileForUnexistingObject(repoPath, VaultUtil.parseLong(version));
   }
 
-  private static boolean isFile(@NotNull String repoPath, long version) throws VcsException {
-    try {
-      if (objectExists(repoPath)) {
-        try {
-          RepositoryUtil.FindVaultFileAtReposOrLocalPath(repoPath);
-          return true;
-        } catch (Exception e) {
-          return false;
-        }
-      } else {
-        final String parent = getRepoParentPath(repoPath);
-        return getObjectFromParent(getName(repoPath), parent, version).isFile();
-      }
-    } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
-    }
+  private static boolean isFileForUnexistingObject(@NotNull String repoPath, long version) throws VcsException {
+    final String parent = getRepoParentPath(repoPath);
+    return getObjectFromParent(getName(repoPath), parent, version).isFile();
   }
 
   public static File getObject(@NotNull String path, @NotNull String version) throws VcsException {
@@ -156,7 +152,7 @@ public final class VaultConnection1 {
   }
 
   private static File getObjectItself(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
-    if (isFile(repoPath, version)) {
+    if (isFileForExistingObject(repoPath)) {
       if (cacheEnabled()) {
         return getFileUsingCache(repoPath, version);
       }
@@ -183,7 +179,7 @@ public final class VaultConnection1 {
     System.out.println("Saving cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
     final File getFile = getFileFromVcs(repoPath, version);
     if (!getFile.isFile()) {
-      throw new VcsException("Couldn't get file " + repoPath + " at version" + " from repo");      
+      throw new VcsException("Couldn't get file " + repoPath + " at version" + " from repo");
     }
     try {
       FileUtil.copy(getFile, cachedFile);
@@ -223,9 +219,9 @@ public final class VaultConnection1 {
     }
     String cacheName;
     if (ROOT.equals(repoPath)) {
-      cacheName = "root";      
+      cacheName = "root";
     } else if (repoPath.startsWith("$/")) {
-      cacheName = repoPath.substring(2).replace("/", "_");       
+      cacheName = repoPath.substring(2).replace("/", "_");
     } else {
       throw new VcsException("Unable to get cache for " + repoPath + " at version " + version +
                              ", repo path must start with $");
@@ -262,12 +258,12 @@ public final class VaultConnection1 {
       f = new File(getRepoObject(parent, txId, true), name);
     }
     if (txId == 1) {
-      throw new VcsException("Unable to get " + name + " at version "  + version + " from parent " + parent);      
+      throw new VcsException("Unable to get " + name + " at version "  + version + " from parent " + parent);
     }
     return f;
   }
 
-  private static String getRepoParentPath(@NotNull String repoPath) {
+  public static String getRepoParentPath(@NotNull String repoPath) {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf("/"));
   }
 
@@ -286,9 +282,9 @@ public final class VaultConnection1 {
   private static long getVersionByTxId(@NotNull String repoPath, long txId) throws VcsException {
     try {
       if (!objectExists(repoPath)) {
-        throw new VcsException("Can't get version by txId " + txId + " for " + repoPath + ": not in repo");
+        return 0;
       }
-      if (isFile(repoPath, txId)) {
+      if (isFileForExistingObject(repoPath)) {
         final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
                                                 null, null, null, null, null, null, -1, -1, 1000);
 
@@ -321,7 +317,7 @@ public final class VaultConnection1 {
       return new VaultHistoryItem[0];
 
     }
-    return ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.asc,
+    return ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
                                                   null, null/*"label,obliterate,pin,propertychange"*/ ,
                                                   null, null, null, null,
                                                   objectFromVersion, objectToVersion, 1000);

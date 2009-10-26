@@ -169,7 +169,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       builder.deleteFile(f, false);
     }
     for (final File d : deletedDirs) {
-      builder.deleteDirectory(d, false);      
+      builder.deleteDirectory(d, false);
     }
     for (final File d : addedDirs) {
       builder.createDirectory(d);

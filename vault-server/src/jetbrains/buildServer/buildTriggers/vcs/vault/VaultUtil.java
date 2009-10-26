@@ -61,6 +61,8 @@ public final class VaultUtil {
   public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
 
   static {
+    NOT_CHANGED_CHANGE_TYPES.add("Created");
+
     NOT_CHANGED_CHANGE_TYPES.add("Label");
 
     NOT_CHANGED_CHANGE_TYPES.add("Obliterated");
@@ -70,9 +72,7 @@ public final class VaultUtil {
 
     NOT_CHANGED_CHANGE_TYPES.add("PropertyChange");
 
-    NOT_CHANGED_CHANGE_TYPES.add("RenamedItem");
-
-    NOT_CHANGED_CHANGE_TYPES.add("MovedTo");
+    NOT_CHANGED_CHANGE_TYPES.add("MovedFrom");
 
     NOT_CHANGED_CHANGE_TYPES.add("Snapshot");
     NOT_CHANGED_CHANGE_TYPES.add("SnapshotFrom");
@@ -89,18 +89,17 @@ public final class VaultUtil {
   public static final Set<String> ADDED_CHANGE_TYPES =  new HashSet<String>();
 
   static {
-    ADDED_CHANGE_TYPES.add("Created");
-
     ADDED_CHANGE_TYPES.add("Added");
 
     ADDED_CHANGE_TYPES.add("BranchedFrom");
     ADDED_CHANGE_TYPES.add("BranchedFromItem");
 
-    ADDED_CHANGE_TYPES.add("MovedFrom");
-
-    ADDED_CHANGE_TYPES.add("SharedTo");
+    ADDED_CHANGE_TYPES.add("MovedTo");
 
     ADDED_CHANGE_TYPES.add("Renamed");
+    ADDED_CHANGE_TYPES.add("RenamedItem");
+
+    ADDED_CHANGE_TYPES.add("SharedTo");
   }
 
   public static final Set<String> CHANGED_CHANGE_TYPES =  new HashSet<String>();
