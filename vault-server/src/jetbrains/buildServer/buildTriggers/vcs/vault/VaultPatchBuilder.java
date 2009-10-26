@@ -54,9 +54,9 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " to version " + myToVersion);
-      VaultConnection1.connect(new VaultConnectionParameters(myRoot));
-      VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection1.getObject(includeRule.getFrom(), myToVersion));
-      VaultConnection1.disconnect();
+      VaultConnection.connect(new VaultConnectionParameters(myRoot));
+      VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection.getObject(includeRule.getFrom(), myToVersion));
+      VaultConnection.disconnect();
     } else {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
@@ -175,11 +175,11 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       builder.createDirectory(d);
     }
     for (final File f : addedFiles.keySet()) {
-      final File content = VaultConnection1.getObject(f.getPath(), addedFiles.get(f));
+      final File content = VaultConnection.getObject(f.getPath(), addedFiles.get(f));
       builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
     }
     for (final File f : modifiedFiles.keySet()) {
-      final File content = VaultConnection1.getObject(f.getPath(), modifiedFiles.get(f));
+      final File content = VaultConnection.getObject(f.getPath(), modifiedFiles.get(f));
       builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
     }
   }

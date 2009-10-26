@@ -20,8 +20,8 @@ import VaultClientOperationsLib.VaultClientFolder;
  * Date: 22.09.2009
  * Time: 14:18:44
  */
-public final class VaultConnection1 {
-  private static final Logger LOG = Logger.getLogger(VaultConnection1.class);
+public final class VaultConnection {
+  private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
   public static final String ROOT = "$";
   public static final String ROOT_PREFIX = "$/";

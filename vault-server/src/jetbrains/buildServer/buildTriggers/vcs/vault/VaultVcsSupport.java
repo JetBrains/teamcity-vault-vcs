@@ -28,8 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.io.File;
 
-import VaultClientNetLib.VaultConnection;
-
 
 /**
  * User: vbedrosova
@@ -53,7 +51,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
     }
     if (System.getProperty("vault.enable.cache") != null) {
-      VaultConnection1.enableCache(cache);
+      VaultConnection.enableCache(cache);
     }
   }
 
@@ -95,7 +93,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
-    return VaultConnection1.getCurrentVersion(new VaultConnectionParameters(root));
+    return VaultConnection.getCurrentVersion(new VaultConnectionParameters(root));
   }
 
   public boolean sourcesUpdatePossibleIfChangesNotFound(@NotNull VcsRoot root) {
@@ -227,6 +225,6 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       throw new VcsException("No Vault Java API jars are present at <TeamCity web application>/WEB-INF/lib directory. " +
         "You should download them from Vault vendor manually, put to <TeamCity web application>/WEB-INF/lib and restart the server.");
     }
-    VaultConnection1.testConnection(new VaultConnectionParameters(properties));    
+    VaultConnection.testConnection(new VaultConnectionParameters(properties));
   }
 }

@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class VaultPathHistory {
   private final Map<String, Node> myPathMap = new HashMap<String, Node>();
-  private final Node myRoot = new Node(VaultConnection1.ROOT, VaultConnection1.ROOT, null);
+  private final Node myRoot = new Node(VaultConnection.ROOT, VaultConnection.ROOT, null);
 
   public static void main(String[] args) {
     testRename();
@@ -200,7 +200,7 @@ public class VaultPathHistory {
   public String getNewPath(@NotNull String oldPath) {
     final String[] components = oldPath.split("/");
     Node node = myRoot;
-    String newPath = VaultConnection1.ROOT;
+    String newPath = VaultConnection.ROOT;
     for (int i = 1; i < components.length; ++i) {
       final String name = components[i];
       if (node == null || !node.hasChild(name)) {
@@ -231,7 +231,7 @@ public class VaultPathHistory {
   private Node addTreeNode(@NotNull String oldPath, @NotNull String newPath) {
     final String[] components = oldPath.split("/");
     Node node = myRoot;
-    String np = VaultConnection1.ROOT;
+    String np = VaultConnection.ROOT;
     for (int i = 1; i < components.length; ++i) {
       final String name = components[i];
       if (!node.hasChild(name)) {
