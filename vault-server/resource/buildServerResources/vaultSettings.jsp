@@ -1,31 +1,48 @@
+<%@ page import="jetbrains.buildServer.buildTriggers.vcs.vault.VaultApiDetector" %>
+<%@ page import="java.io.File" %>
 <%--
-  ~ Copyright 2000-2009 JetBrains s.r.o.
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  --%>
+~ Copyright 2000-2009 JetBrains s.r.o.
+~
+~ Licensed under the Apache License, Version 2.0 (the "License");
+~ you may not use this file except in compliance with the License.
+~ You may obtain a copy of the License at
+~
+~ http://www.apache.org/licenses/LICENSE-2.0
+~
+~ Unless required by applicable law or agreed to in writing, software
+~ distributed under the License is distributed on an "AS IS" BASIS,
+~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~ See the License for the specific language governing permissions and
+~ limitations under the License.
+--%>
 
 <%@include file="/include.jsp" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="bs" tagdir="/WEB-INF/tags" %>
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
+<c:set var="libDir" value='<%=application.getRealPath("WEB-INF/lib")%>'/>
 
 <table class="runnerFormTable">
+    <c:set var="vaultApiPresent"><%=VaultApiDetector.detectApi()%></c:set>
+    <c:set var="fileSeparator"><%=File.separator%></c:set>
+    
     <l:settingsGroup title="Vault Settings">
-        <tr class="noBorder" id="xmlReportParsing.reportType.container">
-            <td colspan="2">
-                Make sure Vault Java API jars are present at &lt;TeamCity web application&gt;/WEB-INF/lib  directory.
-            </td>
-        </tr>
+        <c:if test="${not vaultApiPresent}">
+            <tr>
+                <td colspan="2">
+                    <div class="attentionComment">
+                        <%--Make sure Vault Java API jars are present at &lt;TeamCity web application&gt;/WEB-INF/lib  directory.--%>
+                        <font color="red">Vault integration could not find Vault Java API jars.</font>
+                        <br><br>
+                        These files can be found at <strong>vaultJavaCLC##</strong>${fileSeparator}lib directory where <strong>##</strong> are digits corresponding Vault version.
+                        Copy these files into '${libDir}' folder and restart TeamCity.
+                        <br><br>
+                        If you have no Vault Java Command Line Client you can find the related information on SourceGear Vault
+                        <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>
+                    </div>
+                </td>
+            </tr>
+        </c:if>
         <tr>
             <th><label for="vault.server">Vault server URL: <l:star/></label>
             </th>
