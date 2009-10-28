@@ -541,39 +541,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
   }
 
-//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-//  public void testBigPatch() throws Exception {
-//    final String[] toAdd1 = {getObjectPathForRepo("file1")};
-//    final String[] toAdd2 = {getObjectPathForRepo("file2")};
-//    final String[] toAdd3 = {getObjectPathForRepo("file3")};
-//    ServerOperations.Login();
-//    ServerOperations.ProcessCommandAdd("$", toAdd1);
-//    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
-//
-//    ServerOperations.ProcessCommandAdd("$/fold1", toAdd2);
-//    ServerOperations.ProcessCommandRename("$/fold1/file2", "new_file2");
-//
-//    ServerOperations.ProcessCommandCreateFolder("$/fold2");
-//    ServerOperations.ProcessCommandAdd("$/fold2", toAdd3);
-//    ServerOperations.ProcessCommandRename("$/fold2/file3", "new_file3 ");
-//
-//    ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
-//    ServerOperations.ProcessCommandRename("$/fold2", "new_fold2");
-//
-//    ServerOperations.ProcessCommandCreateFolder("$/new_fold1/fold3");
-//    ServerOperations.ProcessCommandMove("$/new_file1", "$/new_fold1/fold3");
-//    ServerOperations.ProcessCommandRename("$/new_fold1/fold3", "new_fold3");
-//    ServerOperations.ProcessCommandMove("$/new_fold1/new_fold3", "$/new_fold2");
-//
-//    ServerOperations.ProcessCommandShare("$/new_fold2", "$/new_fold1");
-//
-//    final String[] toDelete = {"$/new_fold2"};
-//    ServerOperations.ProcessCommandDelete(toDelete);
-//
-//    ServerOperations.Logout();
-//    runTest("" + myBeginTx, "" + (myBeginTx + 15));
-//  }
-
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testBigPatch() throws Exception {
     final String[] toAdd1 = {getObjectPathForRepo("file1")};
@@ -590,4 +557,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
   }
+
+  
 }

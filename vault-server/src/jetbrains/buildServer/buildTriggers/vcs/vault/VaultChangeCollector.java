@@ -104,10 +104,12 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     String relativePath = VaultConnection.getPathFromRepoPath(repoPath);
 
     final String from = includeRule.getFrom();
-    if (!"".equals(from) && relativePath.startsWith(from)) {
-      relativePath = relativePath.substring(from.length() + 1);
-    } else {
-      LOG.debug("Relative path " + relativePath + " in repo doesn't start with include rule \"from\" " + from);
+    if (!"".equals(from)) {
+      if (relativePath.startsWith(from)) {
+        relativePath = relativePath.substring(from.length() + 1);
+      } else {
+        LOG.debug("Relative path " + relativePath + " in repo doesn't start with include rule \"from\" " + from);
+      }
     }
 
     changes.add(new VcsChange(type, changeName, relativePath, relativePath, prevVersion, version));
