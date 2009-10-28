@@ -33,7 +33,7 @@ import java.util.*;
  * Time: 19:32:05
  */
 public final class VaultUtil {
-  //        public static final byte Added = 10;
+//        public static final byte Added = 10;
 //        public static final byte BranchedFrom = 20;
 //        public static final byte BranchedFromItem = 30;
 //        public static final byte BranchedFromShare = 40;
@@ -114,53 +114,11 @@ public final class VaultUtil {
     REMOVED_CHANGE_TYPES.add("Deleted");
   }
 
-  public static XMLReader createXmlReader(@NotNull ContentHandler contentHandler) throws VcsException {
-    final XMLReader xmlReader;
-    try {
-      xmlReader = XMLReaderFactory.createXMLReader();
-      xmlReader.setContentHandler(contentHandler);
-      xmlReader.setFeature("http://xml.org/sax/features/validation", false);
-      return xmlReader;
-    } catch (SAXException e) {
-      throw new VcsException(e);
-    }
-  }
-
-  public static Date getDate(@NotNull String dateString) throws VcsException {
-    try {
-      return DateFormat.getDateTimeInstance().parse(dateString);
-    } catch (ParseException e) {
-      throw new VcsException(e);
-    }
-  }
-
-  public static String getDateString(@NotNull Date date) {
-    return DateFormat.getDateTimeInstance().format(date);
-  }
-
   public static long parseLong(@NotNull String num) throws VcsException {
     try {
       return Long.parseLong(num);
     } catch (NumberFormatException e) {
       throw new VcsException(e);
     }
-  }
-
-  public static String replaceLast(@NotNull String str, @NotNull String oldS, @NotNull String newS) {
-    final int s2Start = str.lastIndexOf(oldS);
-    final String s1 = str.substring(0, s2Start);
-    String s2 = str.substring(s2Start);
-
-    s2 = s2.replace(oldS, newS);
-    return s1 + s2;
-  }  
-
-  public static String replaceFirst(@NotNull String str, @NotNull String oldS, @NotNull String newS) {
-    final int s2Start = str.indexOf(oldS) + oldS.length();
-    String s1 = str.substring(0, s2Start);
-    final String s2 = str.substring(s2Start);
-
-    s1 = s1.replace(oldS, newS);
-    return s1 + s2;
   }
 }

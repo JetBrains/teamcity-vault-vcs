@@ -104,11 +104,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     String relativePath = VaultConnection.getPathFromRepoPath(repoPath);
 
     final String from = includeRule.getFrom();
-//    final String to = includeRule.getTo();
-//    if (!relativePath.equals(from) && relativePath.startsWith(from) && !"".equals(from)) {
-//        relativePath = replaceFirst(relativePath, from, to);
-//    }
-
     if (!"".equals(from) && relativePath.startsWith(from)) {
       relativePath = relativePath.substring(from.length() + 1);
     } else {
@@ -276,7 +271,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     if (CHANGED_CHANGE_TYPES.contains(typeStr)) {
       return CHANGED;
     }
-    throw new VcsException("Couldn't get one of types (ADDED, DELETED, REMOVED) for " + typeStr);
+    throw new VcsException("Couldn't get one of types (ADDED, DIRECTORY_ADDED, REMOVED, DIRECTORY_REMOVED, CHANGED) for " + typeStr);
   }
 
   private static class ChangeInfo {

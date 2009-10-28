@@ -179,10 +179,10 @@ public final class VaultConnection {
       System.out.println("Found cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
       return cachedFile;
     }
+
     LOG.debug("Couldn't find cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version + ", will get it from repo");
-    System.out.println("Couldn't find cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version + ", will get it from repo");
     LOG.debug("Saving cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
-    System.out.println("Saving cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
+
     final File getFile = getFileFromVcs(repoPath, version);
     if (!getFile.isFile()) {
       throw new VcsException("Couldn't get file " + repoPath + " at version" + " from repo");
@@ -202,10 +202,10 @@ public final class VaultConnection {
       System.out.println("Found cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
       return cachedFolder ;
     }
+
     LOG.debug("Couldn't find cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version + ", will get it from repo");
-    System.out.println("Couldn't find cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version + ", will get it from repo");
     LOG.debug("Saving cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
-    System.out.println("Saving cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
+
     final File getFolder = getFolderFromVcs(repoPath, version, recursive);
     if (!getFolder.isDirectory()) {
       throw new VcsException("Couldn't get folder " + repoPath + " at version" + " from repo");
@@ -217,23 +217,6 @@ public final class VaultConnection {
     }
     return cachedFolder ;
   }
-
-//  private static File getCache(@NotNull String repoPath, long version) throws VcsException {
-//    if (myCachesDir == null) {
-//      throw new VcsException("Unable to get cache for " + repoPath + " at version " + version +
-//                             ", file caching is disabled");
-//    }
-//    String cacheName;
-//    if (ROOT.equals(repoPath)) {
-//      cacheName = "root";
-//    } else if (repoPath.startsWith("$/")) {
-//      cacheName = repoPath.substring(2).replace("/", "_");
-//    } else {
-//      throw new VcsException("Unable to get cache for " + repoPath + " at version " + version +
-//                             ", repo path must start with $");
-//    }
-//    return new File(myCachesDir, cacheName + "_" + version);
-//  }
 
   private File getFileFromVcs(@NotNull String repoPath, long version) throws VcsException {
     return new File(getObjectToDirFromVcs(repoPath, version, false), getName(repoPath));

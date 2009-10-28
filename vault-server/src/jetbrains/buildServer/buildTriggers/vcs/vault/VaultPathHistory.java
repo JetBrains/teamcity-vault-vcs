@@ -14,110 +14,6 @@ public class VaultPathHistory {
   private final Map<String, Node> myPathMap = new HashMap<String, Node>();
   private final Node myRoot = new Node(VaultConnection.ROOT, VaultConnection.ROOT, null);
 
-  public static void main(String[] args) {
-    testRename();
-    testMove();
-    testRenameMove();
-  }
-
-  private static void testMove() {
-    System.out.println("------MOVE------");
-
-    final VaultPathHistory ph = new VaultPathHistory();
-    ph.move("$", "$/trunk1/trunk2/trunk3", "1");
-    System.out.println(ph.getOldPath("$/trunk1/trunk2/trunk3/1/2/3"));
-    System.out.println("------------");
-
-    ph.move("$/trunk1/trunk2/trunk3", "$", "1");
-    System.out.println(ph.getOldPath("$/trunk1/trunk2/trunk3/1/2/3"));
-    System.out.println("------------");
-  }
-
-  private static void testRenameMove() {
-    System.out.println("------RENAME_MOVE------");
-
-    final VaultPathHistory ph = new VaultPathHistory();
-    ph.rename("$", "1", "11");
-    ph.rename("$", "2", "22");
-    ph.rename("$/2/7/8", "3", "33");
-    ph.rename("$/2/7/8/3", "4", "44");
-    ph.move("$/1/5/6", "$/2/7/8", "3");
-
-    System.out.println(ph.getOldPath("$/22/7/8/33"));
-    System.out.println(ph.getOldPath("$/22/7/8/33/44"));
-  }
-
-  private static void testRename() {
-    System.out.println("------RENAME------");
-
-    final VaultPathHistory ph = new VaultPathHistory();
-    System.out.println(ph.getOldPath("$/1/2/3"));
-    System.out.println("------------");
-
-    ph.rename("$", "11", "111");
-    System.out.println(ph.getOldPath("ph.rename(\"$\", \"11\", \"111\")"));
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/2"));
-    System.out.println(ph.getOldPath("$/111/2/3"));
-    System.out.println("------------");
-
-    ph.rename("$", "1", "11");
-    System.out.println("ph.rename(\"$\", \"1\", \"11\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/2"));
-    System.out.println(ph.getOldPath("$/111/2/3"));
-    System.out.println("------------");
-
-    ph.rename("$/1", "22", "222");
-    System.out.println("ph.rename(\"$/1\", \"22\", \"222\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/3"));
-    System.out.println("------------");
-
-    ph.rename("$/1", "2", "22");
-    System.out.println("ph.rename(\"$/1\", \"2\", \"22\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/3"));
-    System.out.println("------------");
-
-    ph.rename("$/1/2", "33", "333");
-    System.out.println("ph.rename(\"$/1/2\", \"33\", \"333\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/333"));
-    System.out.println("------------");
-
-    ph.rename("$/1/2", "3", "33");
-    System.out.println("ph.rename(\"$/1/2\", \"3\", \"33\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/333"));
-    System.out.println("------------");
-
-    ph.rename("$", "folder1", "1");
-    System.out.println("ph.rename(\"$\", \"folder1\", \"1\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/333"));
-    System.out.println("------------");
-
-    ph.rename("$/folder1", "folder2", "2");
-    System.out.println("ph.rename(\"$/folder1\", \"folder2\", \"2\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/333"));
-    System.out.println("------------");
-
-    ph.rename("$/folder1/folder2", "folder3", "3");
-    System.out.println("ph.rename(\"$/folder1/folder2\", \"folder3\", \"3\")");
-    System.out.println(ph.getOldPath("$/111"));
-    System.out.println(ph.getOldPath("$/111/222"));
-    System.out.println(ph.getOldPath("$/111/222/333"));
-    System.out.println("------------");
-  }
-
   public void rename(@NotNull String parent, @NotNull String fromName, @NotNull String toName) {
     final String from = parent + "/" + fromName;
     final String to = parent + "/" + toName;
@@ -133,14 +29,6 @@ public class VaultPathHistory {
         myPathMap.put(node.getNewPath(), node);        
       }
     }
-//    for (final String preNewPath : myPathMap.keySet()) {
-//      final Node node = myPathMap.get(preNewPath);
-//      if (to.equals(getTreeNodePath(node))) {
-//        node.setName(fromName);
-//        node.getParent().childRenamed(toName, fromName);
-//        return;
-//      }
-//    }
   }
 
   public void move(@NotNull String fromParent, @NotNull String toParent, @NotNull String name) {
@@ -160,18 +48,6 @@ public class VaultPathHistory {
         myPathMap.put(node.getNewPath(), node);
       }
     }
-//    for (final String preNewPath : myPathMap.keySet()) {
-//      final Node node = myPathMap.get(preNewPath);
-//        if (to.equals(getTreeNodePath(node))) {
-//        removeTreeNode(node);
-//        final Node oldParentNode = addTreeNode(fromParent, getNewPath(fromParent));
-//        oldParentNode.addChild(node);
-//        node.setParent(oldParentNode);
-//        return;
-//      }
-//    }
-//    final String newPath = getNewPath(to);
-//    myPathMap.put(newPath, addTreeNode(from, newPath));
   }
 
   public void delete(@NotNull String path) {

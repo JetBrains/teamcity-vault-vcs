@@ -31,7 +31,6 @@
             <tr>
                 <td colspan="2">
                     <div class="attentionComment">
-                        <%--Make sure Vault Java API jars are present at &lt;TeamCity web application&gt;/WEB-INF/lib  directory.--%>
                         <font color="red">Vault integration could not find Vault Java API jars.</font>
                         <br><br>
                         These files can be found at <strong>vaultJavaCLC##</strong>${fileSeparator}lib directory where <strong>##</strong> are digits corresponding Vault version.

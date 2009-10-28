@@ -103,7 +103,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   protected void setUp() throws Exception {
     super.setUp();
 
-    Thread.sleep(2000);
+//    Thread.sleep(2000);
 
     final File cache = FileUtil.createTempDirectory("vault", "");
     FileUtil.delete(cache);
@@ -138,7 +138,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @AfterMethod
   protected void tearDown() throws Exception {
-    Thread.sleep(2000);
+//    Thread.sleep(2000);
     ServerOperations.ProcessCommandDeleteRepository(getTestName());
   }
 
@@ -575,7 +575,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 //  }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testBigPatch1() throws Exception {
+  public void testBigPatch() throws Exception {
     final String[] toAdd1 = {getObjectPathForRepo("file1")};
     ServerOperations.Login();
     ServerOperations.ProcessCommandAdd("$", toAdd1);
@@ -590,20 +590,4 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
   }
-
-//  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-//  public void testBigPatch2() throws Exception {
-//    final String[] toAdd1 = {getObjectPathForRepo("file1")};
-//    ServerOperations.Login();
-//    ServerOperations.ProcessCommandAdd("$", toAdd1);
-//    ServerOperations.ProcessCommandCreateFolder("$/fold1");
-//    ServerOperations.ProcessCommandMove("$/file1", "$/fold1");
-//    ServerOperations.ProcessCommandCreateFolder("$/fold2");
-//    ServerOperations.ProcessCommandMove("$/fold1", "$/fold2");
-//    ServerOperations.ProcessCommandRename("$/fold2/fold1", "folder1");
-//    ServerOperations.ProcessCommandRename("$/fold2", "folder2");
-//    ServerOperations.ProcessCommandRename("$/folder2/folder1/file1", "f1");
-//    ServerOperations.Logout();
-//    runTest("" + myBeginTx, "" + (myBeginTx + 8));
-//  }
 }

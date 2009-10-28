@@ -143,8 +143,6 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   public String getVersionDisplayName(@NotNull String version, @NotNull VcsRoot root) throws VcsException {
-//TODO: how is better?
-//    return VaultUtil.getDate(version).toString();
     return version;
   }
 
