@@ -47,54 +47,52 @@ public final class VaultConnection {
   }
 
   public static VaultConnection connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    VaultConnection connection = new VaultConnection(parameters);    
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException (NO_API_FOUND_MESSAGE);      
+    }
+    final VaultConnection connection = new VaultConnection(parameters);    
     for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
         return connection;
-      } catch (VcsException e) {
+      } catch (Exception e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
-          throw e;
+          throw new VcsException(e.getMessage(), e);
         }
       }
     }
     return connection;
   }
 
-  private static void connectNotForce(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    try {
-      ServerOperations.client.LoginOptions.URL = parameters.getUrl();
-      ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
-      ServerOperations.client.LoginOptions.User = parameters.getUser();
-      ServerOperations.client.LoginOptions.Password = parameters.getPassword();
-      ServerOperations.Login();
-    } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
-    }
+  private static void connectNotForce(@NotNull VaultConnectionParameters parameters) throws Exception {
+    ServerOperations.client.LoginOptions.URL = parameters.getUrl();
+    ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
+    ServerOperations.client.LoginOptions.User = parameters.getUser();
+    ServerOperations.client.LoginOptions.Password = parameters.getPassword();
+    ServerOperations.Login();
   }
 
   public static String getCurrentVersion(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    boolean apiPresent = true;
+    connect(parameters);
     try {
-      connect(parameters);
       final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
       return "" + historyItems[0].get_TxID();
-    } catch (NoClassDefFoundError ncdfe) {
-      apiPresent = false;
-      throw new VcsException(NO_API_FOUND_MESSAGE, ncdfe);
     } catch (Exception e) {
       throw new VcsException(e.getMessage(), e);
     } finally {
-      if (apiPresent) {
-        VaultConnection.disconnect();
-      }
+      VaultConnection.disconnect();
     }
   }
 
   public static void testConnection(@NotNull VaultConnectionParameters parameters) throws VcsException {
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException (NO_API_FOUND_MESSAGE);
+    }
     try {
       connectNotForce(parameters);
+    } catch (Exception e) {
+      throw new VcsException(e.getMessage(), e);
     } finally {
       disconnect();
     }

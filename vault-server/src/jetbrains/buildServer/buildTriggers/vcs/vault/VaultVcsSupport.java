@@ -20,7 +20,6 @@ import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.vcs.*;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.NO_API_FOUND_MESSAGE;
 import jetbrains.buildServer.util.FileUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -212,17 +211,10 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from TestConnectionSupport
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
-    testConnection(vcsRoot.getProperties());
+    VaultConnection.testConnection(new VaultConnectionParameters(vcsRoot.getProperties()));
     return null;
   }
 
   // end from TestConnectionSupport
   //-------------------------------------------------------------------------------
-
-  private void testConnection(@NotNull Map<String, String> properties) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException (NO_API_FOUND_MESSAGE);
-    }
-    VaultConnection.testConnection(new VaultConnectionParameters(properties));
-  }
 }
