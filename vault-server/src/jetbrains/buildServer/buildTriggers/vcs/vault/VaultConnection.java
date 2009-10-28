@@ -32,15 +32,13 @@ public final class VaultConnection {
 
   private static final int CONNECTION_TRIES_NUMBER = 10;
 
-  private static VaultConnection ourInstance;
-
   @NotNull private VaultConnectionParameters myParameters;
 
-  public static void disconnect() throws VcsException {
+  public static void disconnect() {
     try {
       ServerOperations.Logout();
     } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+      LOG.error("Exception when disconnecting from Vault server occured", e);
     }
   }
 
@@ -49,11 +47,11 @@ public final class VaultConnection {
   }
 
   public static VaultConnection connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    ourInstance = new VaultConnection(parameters);    
+    VaultConnection connection = new VaultConnection(parameters);    
     for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
-        return ourInstance;
+        return connection;
       } catch (VcsException e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
@@ -61,7 +59,7 @@ public final class VaultConnection {
         }
       }
     }
-    return ourInstance;
+    return connection;
   }
 
   private static void connectNotForce(@NotNull VaultConnectionParameters parameters) throws VcsException {
@@ -176,7 +174,6 @@ public final class VaultConnection {
     final File cachedFile = VaultCache.getCache(repoPath, version);
     if (cachedFile.isFile()) {
       LOG.debug("Found cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
-      System.out.println("Found cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
       return cachedFile;
     }
 
@@ -199,7 +196,6 @@ public final class VaultConnection {
     final File cachedFolder = VaultCache.getCache(repoPath, version);
     if (cachedFolder .isDirectory()) {
       LOG.debug("Found cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
-      System.out.println("Found cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
       return cachedFolder ;
     }
 

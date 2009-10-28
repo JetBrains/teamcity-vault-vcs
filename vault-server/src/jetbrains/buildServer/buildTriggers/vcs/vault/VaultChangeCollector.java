@@ -173,10 +173,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
           pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
         } else {
-          if (!isSharedPath(newPath)) {
-            addFolderContent(repoPath,  changes, item.GetActionString(), mi);
-            pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
-          }
+          addFolderContent(repoPath,  changes, item.GetActionString(), mi);
+          pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
         }
         myPathHistory.rename(oldRepoParentPath, misc2, misc1);
         continue;
@@ -184,13 +182,14 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       if ("RenamedItem".equals(typeStr)) {
         final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
         final String oldPath = oldRepoParentPath + "/" + misc1;
+        final String newPath = myPathHistory.getNewPath(oldPath);
         if (changes.isEmpty() || !changes.peek().getRepoPath().equals(oldRepoParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
-          final boolean isFile = isFile(oldPath, myPathHistory.getNewPath(oldPath), version);
+          final boolean isFile = isFile(oldPath, newPath, version);
           if (isFile) {
             pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
             pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
           } else {
-            addFolderContent(repoPath, changes, item.GetActionString(), mi);
+            addFolderContent(newPath, changes, item.GetActionString(), mi);
             pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
           }
           myPathHistory.rename(oldRepoParentPath, misc2, misc1);
@@ -234,6 +233,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   private void pushChange(@NotNull Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
+    if (isSharedPath(path)) {
+      return;      
+    }
     changes.push(new ChangeInfo(actionString, path, mi, type));
   }
 
@@ -315,28 +317,28 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                                 @NotNull Stack<ChangeInfo> changes,
                                 @NotNull String actionString,
                                 @NotNull ModificationInfo mi) throws VcsException {
+    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
+
     if (!myConnection.objectExists(repoFolderPath, mi.getVersion())) {
       return;
     }
-
-    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
 
     final VaultClientFolder fold = myConnection.listFolder(repoFolderPath);
 
     final VaultClientFileColl files = fold.get_Files();
     for (int i = 0; i < files.get_Count(); ++i) {
-      final String fileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
+      final String fileRepoPath = repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name();
+      final String oldFileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
       if (!myConnection.objectExists(fileRepoPath, mi.getVersion())) {
         continue;
       }
-      changes.push(new ChangeInfo(actionString, fileRepoPath, mi, ADDED));
+      changes.push(new ChangeInfo(actionString, oldFileRepoPath, mi, ADDED));
     }
 
     final VaultClientFolderColl folders = fold.get_Folders();
     for (int i = 0; i < folders.get_Count(); ++i) {
-      final String folderRepoPath = (repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name());
-      final String oldFolderRepoPath = myPathHistory.getOldPath(folderRepoPath);
-      if (!myConnection.objectExists(oldFolderRepoPath, mi.getVersion())) {
+      final String folderRepoPath = repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name();
+      if (!myConnection.objectExists(folderRepoPath, mi.getVersion())) {
         continue;
       }
       addFolderContent(folderRepoPath, changes, actionString, mi);
