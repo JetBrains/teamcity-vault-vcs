@@ -20,6 +20,7 @@ import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.vcs.*;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.NO_API_FOUND_MESSAGE;
 import jetbrains.buildServer.util.FileUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
     }
     if (System.getProperty("vault.enable.cache") != null) {
-      VaultConnection.enableCache(cache);
+      VaultCache.enableCache(cache);
     }
   }
 
@@ -222,8 +223,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   private void testConnection(@NotNull Map<String, String> properties) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException("No Vault Java API jars are present at <TeamCity web application>/WEB-INF/lib directory. " +
-        "You should download them from Vault vendor manually, put to <TeamCity web application>/WEB-INF/lib and restart the server.");
+      throw new VcsException (NO_API_FOUND_MESSAGE);
     }
     VaultConnection.testConnection(new VaultConnectionParameters(properties));
   }

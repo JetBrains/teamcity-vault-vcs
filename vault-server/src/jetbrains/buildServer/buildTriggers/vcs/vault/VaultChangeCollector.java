@@ -28,6 +28,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private final String myCurrentVersion;
+  private VaultConnection myConnection;
 
 
   private final VaultPathHistory myPathHistory;
@@ -41,15 +42,16 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     myRoot = root;
     myFromVersion = fromVersion;
     myCurrentVersion = currentVersion;
+
+    try {
+      myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
+    } catch (VcsException e) {
+      LOG.error("Unable to set up connection for root "+ root, e);
+    }
+
     myPathHistory = new VaultPathHistory();
     myObjectTypesCache = new HashMap<String, Boolean>();
     mySharedPaths = new ArrayList<String>();
-
-    try {
-      VaultConnection.connect(new VaultConnectionParameters(myRoot));
-    } catch (VcsException e) {
-      LOG.error("Unable to connect to Vault", e);
-    }
   }
 
   @NotNull
@@ -124,7 +126,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return changes;
     }
 
-    final VaultHistoryItem[] items = VaultConnection.collectChanges(includeRule.getFrom(), myFromVersion, myCurrentVersion);
+    final VaultHistoryItem[] items = myConnection.collectChanges(includeRule.getFrom(), myFromVersion, myCurrentVersion);
 
     for (final VaultHistoryItem item : items) {
       final int type = item.get_HistItemType();
@@ -254,10 +256,10 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return myObjectTypesCache.get(newRepoPath);
     }
     Boolean isFile;
-    if (VaultConnection.objectExists(newRepoPath)) {
-      isFile = VaultConnection.isFileForExistingObject(newRepoPath);
+    if (myConnection.objectExists(newRepoPath)) {
+      isFile = myConnection.isFileForExistingObject(newRepoPath);
     } else {
-      isFile = VaultConnection.isFileForUnxistingObject(repoPath, version);
+      isFile = myConnection.isFileForUnxistingObject(repoPath, version);
     }
     myObjectTypesCache.put(newRepoPath, isFile);
     return isFile;
@@ -318,18 +320,18 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                                 @NotNull Stack<ChangeInfo> changes,
                                 @NotNull String actionString,
                                 @NotNull ModificationInfo mi) throws VcsException {
-    if (!VaultConnection.objectExists(repoFolderPath, mi.getVersion())) {
+    if (!myConnection.objectExists(repoFolderPath, mi.getVersion())) {
       return;
     }
 
     changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
 
-    final VaultClientFolder fold = VaultConnection.listFolder(repoFolderPath);
+    final VaultClientFolder fold = myConnection.listFolder(repoFolderPath);
 
     final VaultClientFileColl files = fold.get_Files();
     for (int i = 0; i < files.get_Count(); ++i) {
       final String fileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
-      if (!VaultConnection.objectExists(fileRepoPath, mi.getVersion())) {
+      if (!myConnection.objectExists(fileRepoPath, mi.getVersion())) {
         continue;
       }
       changes.push(new ChangeInfo(actionString, fileRepoPath, mi, ADDED));
@@ -339,7 +341,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     for (int i = 0; i < folders.get_Count(); ++i) {
       final String folderRepoPath = (repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name());
       final String oldFolderRepoPath = myPathHistory.getOldPath(folderRepoPath);
-      if (!VaultConnection.objectExists(oldFolderRepoPath, mi.getVersion())) {
+      if (!myConnection.objectExists(oldFolderRepoPath, mi.getVersion())) {
         continue;
       }
       addFolderContent(folderRepoPath, changes, actionString, mi);

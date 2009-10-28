@@ -38,6 +38,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private final String myToVersion;
+  private VaultConnection myConnection;
 
   public VaultPatchBuilder(@NotNull VcsRoot root,
                            @Nullable String fromVersion,
@@ -46,6 +47,11 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
+    try {
+      myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
+    } catch (VcsException e) {
+      LOG.error("Unable to set up connection for root "+ root, e);
+    }
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
@@ -54,9 +60,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " to version " + myToVersion);
-      VaultConnection.connect(new VaultConnectionParameters(myRoot));
-      VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection.getObject(includeRule.getFrom(), myToVersion));
-      VaultConnection.disconnect();
+      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getObject(includeRule.getFrom(), myToVersion));
     } else {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
@@ -68,6 +72,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   }
 
   public void dispose() throws VcsException {
+    VaultConnection.disconnect();
   }
 
   private void patch(@NotNull IncludeRule includeRule, @NotNull Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications,
@@ -174,12 +179,13 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     for (final File d : addedDirs) {
       builder.createDirectory(d);
     }
+
     for (final File f : addedFiles.keySet()) {
-      final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
+      final File content = myConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
       builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
     }
     for (final File f : modifiedFiles.keySet()) {
-      final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
+      final File content = myConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
       builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
     }
   }

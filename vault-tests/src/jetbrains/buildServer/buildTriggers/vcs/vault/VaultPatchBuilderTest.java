@@ -107,7 +107,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final File cache = FileUtil.createTempDirectory("vault", "");
     FileUtil.delete(cache);
-    VaultConnection.enableCache(cache);
+    VaultCache.enableCache(cache);
 
     final String testName = getTestName();
     final File testDataSvn = TestUtil.getTestDataMayNotExist(testName + "_Vcs", null);
@@ -524,7 +524,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testEditFileBuildPatchTwiceDisabledCache() throws Exception {
-    VaultConnection.enableCache(null);
+    VaultCache.enableCache(null);
 
     final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
     final String[] toAdd1 = {getObjectPathForRepo("file1")};

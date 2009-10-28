@@ -17,10 +17,10 @@ public final class VaultConnectionParameters {
   public static String USER = "vault.user";
   public static String PASSWORD = "secure:vault.password";
 
-  private final String myUrl;
-  private final String myRepoName;
-  private final String myUser;
-  private final String myPassword;
+  @NotNull private final String myUrl;
+  @NotNull private final String myRepoName;
+  @NotNull private final String myUser;
+  @NotNull private final String myPassword;
 
   public VaultConnectionParameters(@NotNull Map<String, String> properties) {
     myUrl = properties.get(SERVER);
@@ -33,19 +33,19 @@ public final class VaultConnectionParameters {
     this(root.getProperties());
   }
 
-  public String getUrl() {
+  @NotNull public String getUrl() {
     return myUrl;
   }
 
-  public String getRepoName() {
+  @NotNull public String getRepoName() {
     return myRepoName;
   }
 
-  public String getUser() {
+  @NotNull public String getUser() {
     return myUser;
   }
 
-  public String getPassword() {
+  @NotNull public String getPassword() {
     return myPassword;
   }
 }
