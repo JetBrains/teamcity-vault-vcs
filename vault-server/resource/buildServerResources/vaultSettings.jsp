@@ -37,7 +37,7 @@
                         Copy these files into '${libDir}' folder and restart TeamCity.
                         <br><br>
                         If you have no Vault Java Command Line Client you can find the related information on SourceGear Vault
-                        <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site.</a>
+                        <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>.
                     </div>
                 </td>
             </tr>
