@@ -557,6 +557,4 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
   }
-
-  
 }
