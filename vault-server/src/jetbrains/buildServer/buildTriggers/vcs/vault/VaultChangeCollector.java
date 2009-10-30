@@ -27,7 +27,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   private final VcsRoot myRoot;
   private final String myFromVersion;
-  private final String myCurrentVersion;
+  private String myCurrentVersion;
   private VaultConnection myConnection;
 
 
@@ -43,22 +43,28 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     myFromVersion = fromVersion;
     myCurrentVersion = currentVersion;
 
-    try {
-      myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
-    } catch (VcsException e) {
-      LOG.error("Unable to set up connection for root "+ root, e);
-    }
-
     myPathHistory = new VaultPathHistory();
     myObjectTypesCache = new HashMap<String, Boolean>();
     mySharedPaths = new ArrayList<String>();
+  }
+
+  private boolean isInit() {
+    return (myConnection != null);
+  }
+
+  private void init() throws VcsException {
+    if (myCurrentVersion == null) {
+      LOG.debug("Current version fro change collecting is null, so need to get current version");      
+      myCurrentVersion = VaultConnection.getCurrentVersion(new VaultConnectionParameters(myRoot));
+    }
+    LOG.debug("Setting up connection for collecting changes for root " + myRoot);
+    myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
   }
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
     LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion);
-
     final List<ModificationData> modifications = new LinkedList<ModificationData>();
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo mi : map.keySet()) {
@@ -71,6 +77,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   public Map<ModificationInfo, List<VcsChange>> collectModifications(@NotNull IncludeRule includeRule) throws VcsException {
+    if (!isInit()) {
+      init();
+    }
     final Map<ModificationInfo, List<VcsChange>> map = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
     final Stack<ChangeInfo> changeStack = collectCanges(includeRule);
     while (!changeStack.isEmpty()) {
@@ -117,7 +126,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   public Stack<ChangeInfo> collectCanges(@NotNull IncludeRule includeRule) throws VcsException {
     final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
-    if (myCurrentVersion.equals(myFromVersion)) {
+    if ((myCurrentVersion != null) && myCurrentVersion.equals(myFromVersion)) {
       LOG.debug("Will not collect changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myCurrentVersion + ", from equals to");
       return changes;

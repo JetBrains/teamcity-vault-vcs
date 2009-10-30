@@ -48,4 +48,28 @@ public final class VaultConnectionParameters {
   @NotNull public String getPassword() {
     return myPassword;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    VaultConnectionParameters that = (VaultConnectionParameters) o;
+
+    if (!myPassword.equals(that.myPassword)) return false;
+    if (!myRepoName.equals(that.myRepoName)) return false;
+    if (!myUrl.equals(that.myUrl)) return false;
+    if (!myUser.equals(that.myUser)) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = myUrl.hashCode();
+    result = 31 * result + myRepoName.hashCode();
+    result = 31 * result + myUser.hashCode();
+    result = 31 * result + myPassword.hashCode();
+    return result;
+  }
 }

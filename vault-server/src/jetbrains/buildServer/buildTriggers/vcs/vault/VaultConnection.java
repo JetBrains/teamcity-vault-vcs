@@ -31,12 +31,15 @@ public final class VaultConnection {
   private static final int CONNECTION_TRIES_NUMBER = 10;
 
   @NotNull private VaultConnectionParameters myParameters;
+  private static VaultConnection outConnection;
 
   public static void disconnect() {
     try {
       ServerOperations.Logout();
     } catch (Exception e) {
       LOG.error("Exception when disconnecting from Vault server occured", e);
+    } finally {
+      outConnection = null;
     }
   }
 
@@ -44,12 +47,24 @@ public final class VaultConnection {
     myParameters = parameters;
   }
 
+  @NotNull
+  private VaultConnectionParameters getParameters() {
+    return myParameters;
+  }
+
+  private static boolean isConnected(@NotNull VaultConnectionParameters parameters) {
+    return (outConnection != null) && parameters.equals(outConnection.getParameters()) && ServerOperations.isConnected();   
+  }
+
   public static VaultConnection connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    final VaultConnection connection = new VaultConnection(parameters);
+    if (isConnected(parameters)) {
+      return outConnection;     
+    }
+    outConnection = new VaultConnection(parameters);
     for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
-        return connection;
+        return outConnection;
       } catch (Exception e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
@@ -57,7 +72,7 @@ public final class VaultConnection {
         }
       }
     }
-    return connection;
+    return outConnection;
   }
 
   private static void connectNotForce(@NotNull VaultConnectionParameters parameters) throws Exception {
@@ -92,7 +107,6 @@ public final class VaultConnection {
 
   public boolean objectExists(@NotNull String repoPath) throws VcsException {
     try {
-      connect(myParameters);
       return RepositoryUtil.PathExists(repoPath);
     } catch (Exception e) {
       throw new VcsException(e.getMessage(), e);
@@ -283,14 +297,13 @@ public final class VaultConnection {
   }
 
   public VaultHistoryItem[] collectChanges(@NotNull String path,
-                                           String fromVersion,
-                                           String toVersion) throws VcsException {
+                                           @NotNull String fromVersion,
+                                           @NotNull String toVersion) throws VcsException {
     final String repoPath = path.startsWith(ROOT_PREFIX) ? path : getRepoPathFromPath(path);
-    final long objectFromVersion = (fromVersion == null) ? -1 : getVersionByTxId(repoPath, VaultUtil.parseLong(fromVersion)) + 1;
-    final long objectToVersion = (toVersion == null) ? -1 : getVersionByTxId(repoPath, VaultUtil.parseLong(toVersion));
+    final long objectFromVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(fromVersion)) + 1;
+    final long objectToVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(toVersion));
     if (objectFromVersion > objectToVersion) {
       return new VaultHistoryItem[0];
-
     }
     return ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
                                                   null, null/*"label,obliterate,pin,propertychange"*/ ,

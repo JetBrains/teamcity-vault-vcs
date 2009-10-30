@@ -47,16 +47,23 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
-    try {
-      myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
-    } catch (VcsException e) {
-      LOG.error("Unable to set up connection for root "+ root, e);
-    }
+  }
+
+  private boolean isInit() {
+    return (myConnection != null);
+  }
+
+  private void init() throws VcsException {
+    LOG.debug("Setting up connection for building patch for root " + myRoot);
+    myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
     LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
+    if (!isInit()) {
+      init();
+    }    
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " to version " + myToVersion);
