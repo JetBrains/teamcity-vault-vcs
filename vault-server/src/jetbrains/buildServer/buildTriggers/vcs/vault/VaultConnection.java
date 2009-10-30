@@ -23,8 +23,6 @@ import VaultClientOperationsLib.VaultClientFolder;
 public final class VaultConnection {
   private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
-  public static final String NO_API_FOUND_MESSAGE = "Vault integration could not find Vault Java API jars.";
-
   public static final String ROOT = "$";
   public static final String ROOT_PREFIX = "$/";
   public static final String SEPARATOR = "/";
@@ -47,10 +45,7 @@ public final class VaultConnection {
   }
 
   public static VaultConnection connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException (NO_API_FOUND_MESSAGE);      
-    }
-    final VaultConnection connection = new VaultConnection(parameters);    
+    final VaultConnection connection = new VaultConnection(parameters);
     for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
@@ -86,9 +81,6 @@ public final class VaultConnection {
   }
 
   public static void testConnection(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException (NO_API_FOUND_MESSAGE);
-    }
     try {
       connectNotForce(parameters);
     } catch (Exception e) {

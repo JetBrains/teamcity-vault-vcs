@@ -40,6 +40,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                                        TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
   private static final String HTTP_PEFIX = "http://";
+  public static final String NO_API_FOUND_MESSAGE = "Vault integration could not find Vault Java API jars.";
 
   private final VaultFileContentProvider myFileContentProvider;
 
@@ -93,6 +94,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException(NO_API_FOUND_MESSAGE);
+    }
     return VaultConnection.getCurrentVersion(new VaultConnectionParameters(root));
   }
 
@@ -100,7 +104,10 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return false; //TODO: false for now till labeling not supported
   }
 
-  //  boolean isCurrentVersionExpensive(); default false
+  public boolean isCurrentVersionExpensive() {
+    return true;
+  }
+
   public boolean allowSourceCaching() {
     return false;
   }
@@ -163,6 +170,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   public IncludeRuleChangeCollector getChangeCollector(@NotNull VcsRoot root,
                                                        @NotNull String fromVersion,
                                                        @Nullable String currentVersion) throws VcsException {
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException(NO_API_FOUND_MESSAGE);
+    }    
     return new VaultChangeCollector(root, fromVersion, currentVersion);
   }
 
@@ -211,6 +221,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from TestConnectionSupport
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
+    if (!VaultApiDetector.detectApi()) {
+      throw new VcsException(NO_API_FOUND_MESSAGE);
+    }
     VaultConnection.testConnection(new VaultConnectionParameters(vcsRoot.getProperties()));
     return null;
   }
