@@ -54,7 +54,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   private void init() throws VcsException {
     if (myCurrentVersion == null) {
-      LOG.debug("Current version fro change collecting is null, so need to get current version");      
+      LOG.debug("Current version for change collecting is null, so need to get current version");      
       myCurrentVersion = VaultConnection.getCurrentVersion(new VaultConnectionParameters(myRoot));
     }
     LOG.debug("Setting up connection for collecting changes for root " + myRoot);
