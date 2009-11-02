@@ -84,7 +84,7 @@ public final class VaultConnection {
       } catch (Exception e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
-          throw new VcsException(e.getMessage(), e);
+          throw new VcsException(specifyMessage(e.getMessage()), e);
         }
       }
     }
@@ -97,6 +97,8 @@ public final class VaultConnection {
     ServerOperations.client.LoginOptions.User = parameters.getUser();
     ServerOperations.client.LoginOptions.Password = parameters.getPassword();
     ServerOperations.Login();
+    //VaultLib.VaultStatusCode.FailServiceVersionNotSupported;
+//      VaultClientNetLib.VaultConnection.GetSoapExceptionStatusCodeInt();
   }
 
   public static String getCurrentVersion(@NotNull VaultConnectionParameters parameters) throws VcsException {
@@ -105,7 +107,7 @@ public final class VaultConnection {
       final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
       return "" + historyItems[0].get_TxID();
     } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+      throw new VcsException(specifyMessage(e.getMessage()), e);
     } finally {
       VaultConnection.disconnect();
     }
@@ -115,7 +117,7 @@ public final class VaultConnection {
     try {
       connectNotForce(parameters);
     } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+      throw new VcsException(specifyMessage(e.getMessage()), e);
     } finally {
       disconnect();
     }
@@ -329,5 +331,9 @@ public final class VaultConnection {
 
   public VaultClientFolder listFolder(@NotNull String repoPath) {
     return ServerOperations.ProcessCommandListFolder(repoPath, true);
+  }
+
+  private static String specifyMessage(String message) {
+    return "Exception occured while trying to connect to Vault server. See original message below:\n" + message;   
   }
 }

@@ -300,7 +300,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     if (CHANGED_CHANGE_TYPES.contains(typeStr)) {
       return CHANGED;
     }
-    throw new VcsException("Couldn't get one of types (ADDED, DIRECTORY_ADDED, REMOVED, DIRECTORY_REMOVED, CHANGED) for " + typeStr);
+    throw new VcsException("Couldn't reduce " + typeStr + " to one of types (ADDED, DIRECTORY_ADDED, REMOVED, DIRECTORY_REMOVED, CHANGED)");
   }
 
   private static class ChangeInfo {

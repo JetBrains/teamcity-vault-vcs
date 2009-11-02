@@ -52,7 +52,11 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
     }
     if (System.getProperty("vault.enable.cache") != null) {
+      LOG.debug("Vault plugin will store cache under " + cache.getAbsolutePath());
       VaultCache.enableCache(cache);
+    } else {
+      LOG.debug("Vault plugin will not use cache");      
+      VaultCache.enableCache(null);
     }
   }
 
