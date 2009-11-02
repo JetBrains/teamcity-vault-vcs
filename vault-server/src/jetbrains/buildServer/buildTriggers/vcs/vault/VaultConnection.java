@@ -51,7 +51,9 @@ public final class VaultConnection {
 
   public static void disconnect() {
     try {
-      ServerOperations.Logout();
+      if (ServerOperations.isConnected()) {
+        ServerOperations.Logout();
+      }
     } catch (Exception e) {
       LOG.error("Exception when disconnecting from Vault server occured", e);
     } finally {

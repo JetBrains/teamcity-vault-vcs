@@ -28,10 +28,10 @@ import java.io.File;
  * Time: 16:57:57
  */
 public final class VaultConnectionParameters {
-  public static String SERVER = "vault.server";
-  public static String REPO = "vault.repo";
-  public static String USER = "vault.user";
-  public static String PASSWORD = "secure:vault.password";
+  public static final String SERVER = "vault.server";
+  public static final String REPO = "vault.repo";
+  public static final String USER = "vault.user";
+  public static final String PASSWORD = "secure:vault.password";
 
   @NotNull private final String myUrl;
   @NotNull private final String myRepoName;
