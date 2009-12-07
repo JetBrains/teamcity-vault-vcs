@@ -42,6 +42,8 @@ import VaultClientOperationsLib.ChangeSetItemColl;
  */
 
 public class VaultPatchBuilderTest extends PatchTestCase {
+  private static final int CONNECTION_TRIES_NUMBER = 20;
+
   private static final String SERVER_URL = System.getProperty("vault.test.server");
   private static final String USER = System.getProperty("vault.test.login");
   private static final String PASWORD = System.getProperty("vault.test.password");
@@ -131,7 +133,14 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandAddRepository(testName, false);
 
 
-    ServerOperations.Login();
+    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+      try {
+        ServerOperations.Login();
+        break;
+      } catch (Exception e) {
+        ServerOperations.Logout();
+      }
+    }
     myBeginTx = getBeginTx();
     ServerOperations.Logout();
   }
@@ -556,5 +565,19 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandRename("$/folder2/folder1/f1", "f2");
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddDir() throws Exception {
+    final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+    final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
+
+    try {
+      patchBuilder.deleteDirectory(new File("dir"), false);
+      patchBuilder.createDirectory(new File("dir"));
+    } finally {
+      patchBuilder.close();
+    }
+    checkPatchResult(outputBuffer.toByteArray());
   }
 }

@@ -23,10 +23,12 @@ import VaultLib.VaultHistoryItem;
 import VaultLib.VaultDate;
 import VaultLib.VaultTxHistoryItem;
 import jetbrains.buildServer.vcs.VcsException;
+import jetbrains.buildServer.vcs.VcsRoot;
 import jetbrains.buildServer.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import VaultClientOperationsLib.SetFileTimeType;
 import VaultClientOperationsLib.VaultClientFolder;
@@ -37,6 +39,8 @@ import VaultClientOperationsLib.VaultClientFolder;
  * Time: 14:18:44
  */
 public final class VaultConnection {
+  public static final Object LOCK = new Object();
+
   private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
   public static final String ROOT = "$";
@@ -46,8 +50,27 @@ public final class VaultConnection {
 
   private static final int CONNECTION_TRIES_NUMBER = 10;
 
-  @NotNull private VaultConnectionParameters myParameters;
-  private static VaultConnection outConnection;
+  public static void connect(@NotNull Map<String, String> parameters) throws VcsException {
+    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+      try {
+        connectNotForce(parameters);
+        return;
+      } catch (Throwable e) {
+        disconnect();
+        if (i == CONNECTION_TRIES_NUMBER) {
+          throw new VcsException(specifyMessage(e.getMessage()), e);
+        }
+      }
+    }
+  }
+
+  private static void connectNotForce(Map<String, String> parameters) throws Throwable {
+    ServerOperations.client.LoginOptions.URL = parameters.get(VaultUtil.SERVER);
+    ServerOperations.client.LoginOptions.Repository = parameters.get(VaultUtil.REPO);
+    ServerOperations.client.LoginOptions.User = parameters.get(VaultUtil.USER);
+    ServerOperations.client.LoginOptions.Password = parameters.get(VaultUtil.PASSWORD);
+    ServerOperations.Login();
+  }
 
   public static void disconnect() {
     try {
@@ -55,77 +78,37 @@ public final class VaultConnection {
         ServerOperations.Logout();
       }
     } catch (Exception e) {
-      LOG.error("Exception when disconnecting from Vault server occured", e);
-    } finally {
-      outConnection = null;
+      LOG.error("Exception occured when disconnecting from Vault server", e);
     }
   }
 
-  private VaultConnection(@NotNull VaultConnectionParameters parameters) {
-    myParameters = parameters;
-  }
-
-  @NotNull
-  private VaultConnectionParameters getParameters() {
-    return myParameters;
-  }
-
-  private static boolean isConnected(@NotNull VaultConnectionParameters parameters) {
-    return (outConnection != null) && parameters.equals(outConnection.getParameters()) && ServerOperations.isConnected();   
-  }
-
-  public static VaultConnection connect(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    if (isConnected(parameters)) {
-      return outConnection;     
-    }
-    outConnection = new VaultConnection(parameters);
-    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+  public static String getCurrentVersion(@NotNull Map<String, String> parameters) throws VcsException {
+    synchronized (LOCK) {
+      connect(parameters);
       try {
-        connectNotForce(parameters);
-        return outConnection;
+        final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
+        return "" + historyItems[0].get_TxID();
       } catch (Exception e) {
-        disconnect();
-        if (i == CONNECTION_TRIES_NUMBER) {
-          throw new VcsException(specifyMessage(e.getMessage()), e);
-        }
+        throw new VcsException(specifyMessage(e.getMessage()), e);
+      } finally {
+        VaultConnection.disconnect();
       }
     }
-    return outConnection;
   }
 
-  private static void connectNotForce(@NotNull VaultConnectionParameters parameters) throws Exception {
-    ServerOperations.client.LoginOptions.URL = parameters.getUrl();
-    ServerOperations.client.LoginOptions.Repository = parameters.getRepoName();
-    ServerOperations.client.LoginOptions.User = parameters.getUser();
-    ServerOperations.client.LoginOptions.Password = parameters.getPassword();
-    ServerOperations.Login();
-    //VaultLib.VaultStatusCode.FailServiceVersionNotSupported;
-//      VaultClientNetLib.VaultConnection.GetSoapExceptionStatusCodeInt();
-  }
-
-  public static String getCurrentVersion(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    connect(parameters);
-    try {
-      final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
-      return "" + historyItems[0].get_TxID();
-    } catch (Exception e) {
-      throw new VcsException(specifyMessage(e.getMessage()), e);
-    } finally {
-      VaultConnection.disconnect();
+  public static void testConnection(@NotNull Map<String, String> parameters) throws VcsException {
+    synchronized (LOCK) {
+      try {
+        connectNotForce(parameters);
+      } catch (Throwable e) {
+        throw new VcsException(specifyMessage(e.getMessage()), e);
+      } finally {
+        disconnect();
+      }
     }
   }
 
-  public static void testConnection(@NotNull VaultConnectionParameters parameters) throws VcsException {
-    try {
-      connectNotForce(parameters);
-    } catch (Exception e) {
-      throw new VcsException(specifyMessage(e.getMessage()), e);
-    } finally {
-      disconnect();
-    }
-  }
-
-  public boolean objectExists(@NotNull String repoPath) throws VcsException {
+  public static boolean objectExists(@NotNull String repoPath) throws VcsException {
     try {
       return RepositoryUtil.PathExists(repoPath);
     } catch (Exception e) {
@@ -133,11 +116,11 @@ public final class VaultConnection {
     }
   }
 
-  public boolean objectExists(@NotNull String repoPath, @NotNull String version) throws VcsException {
+  public static boolean objectExists(@NotNull String repoPath, @NotNull String version) throws VcsException {
     return getVersionByTxId(repoPath, VaultUtil.parseLong(version)) != 0;
   }
 
-  public boolean isFileForExistingObject(@NotNull String repoPath) throws VcsException {
+  public static boolean isFileForExistingObject(@NotNull String repoPath) throws VcsException {
     try {
       RepositoryUtil.FindVaultFileAtReposOrLocalPath(repoPath);
       return true;
@@ -146,21 +129,21 @@ public final class VaultConnection {
     }
 }
 
-  public boolean isFileForUnxistingObject(@NotNull String repoPath, @NotNull String version) throws VcsException {
+  public static boolean isFileForUnxistingObject(@NotNull String repoPath, @NotNull String version) throws VcsException {
     return isFileForUnexistingObject(repoPath, VaultUtil.parseLong(version));
   }
 
-  private boolean isFileForUnexistingObject(@NotNull String repoPath, long version) throws VcsException {
+  private static boolean isFileForUnexistingObject(@NotNull String repoPath, long version) throws VcsException {
     final String parent = getRepoParentPath(repoPath);
     return getObjectFromParent(getName(repoPath), parent, version).isFile();
   }
 
-  public File getObject(@NotNull String path, @NotNull String version) throws VcsException {
+  public static File getObject(@NotNull String path, @NotNull String version) throws VcsException {
     final String repoPath = getRepoPathFromPath(path);
     return getRepoObject(repoPath, VaultUtil.parseLong(version), true);
   }
 
-  private File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
+  private static File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
     if (objectExists(repoPath)) {
       long objVersion = getVersionByTxId(repoPath, version);
       long txId = version;
@@ -179,7 +162,7 @@ public final class VaultConnection {
     return getObjectFromParent(name, parent, version);
   }
 
-  private File getObjectItself(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
+  private static File getObjectItself(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     if (isFileForExistingObject(repoPath)) {
       if (VaultCache.cacheEnabled()) {
         return getFileUsingCache(repoPath, version);
@@ -194,7 +177,7 @@ public final class VaultConnection {
     throw new VcsException("Object " + repoPath + " is not present at repo");
   }
 
-  private File getFileUsingCache(@NotNull String repoPath, long version) throws VcsException {
+  private static File getFileUsingCache(@NotNull String repoPath, long version) throws VcsException {
     final File cachedFile = VaultCache.getCache(repoPath, version);
     if (cachedFile.isFile()) {
       LOG.debug("Found cached file " + cachedFile.getAbsolutePath() + " for " + repoPath + " at version " + version);
@@ -216,7 +199,7 @@ public final class VaultConnection {
     return cachedFile;
   }
 
-  private File getFolderUsingCache(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
+  private static File getFolderUsingCache(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     final File cachedFolder = VaultCache.getCache(repoPath, version);
     if (cachedFolder .isDirectory()) {
       LOG.debug("Found cached folder " + cachedFolder .getAbsolutePath() + " for " + repoPath + " at version " + version);
@@ -238,15 +221,15 @@ public final class VaultConnection {
     return cachedFolder ;
   }
 
-  private File getFileFromVcs(@NotNull String repoPath, long version) throws VcsException {
+  private static File getFileFromVcs(@NotNull String repoPath, long version) throws VcsException {
     return new File(getObjectToDirFromVcs(repoPath, version, false), getName(repoPath));
   }
 
-  private File getFolderFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
+  private static File getFolderFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     return getObjectToDirFromVcs(repoPath, version, recursive);
   }
 
-  private File getObjectToDirFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
+  private static File getObjectToDirFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     try {
       final File destDir = FileUtil.createTempDirectory("vault_" + version + "_", "");
       final GetOptions getOptions = new GetOptions();
@@ -259,7 +242,7 @@ public final class VaultConnection {
     }
   }
 
-  private File getObjectFromParent(@NotNull String name, @NotNull String parent, long version) throws VcsException {
+  private static File getObjectFromParent(@NotNull String name, @NotNull String parent, long version) throws VcsException {
     File f =  new File(getRepoObject(parent, version, true), name);
     long txId = version;
     while (!f.exists() && (txId != 1)) {
@@ -288,7 +271,7 @@ public final class VaultConnection {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
   }
 
-  private long getVersionByTxId(@NotNull String repoPath, long txId) throws VcsException {
+  private static long getVersionByTxId(@NotNull String repoPath, long txId) throws VcsException {
     try {
       if (!objectExists(repoPath)) {
         return 0;
@@ -316,7 +299,7 @@ public final class VaultConnection {
     return 0;
   }
 
-  public VaultHistoryItem[] collectChanges(@NotNull String path,
+  public static VaultHistoryItem[] collectChanges(@NotNull String path,
                                            @NotNull String fromVersion,
                                            @NotNull String toVersion) throws VcsException {
     final String repoPath = path.startsWith(ROOT_PREFIX) ? path : getRepoPathFromPath(path);
@@ -331,7 +314,7 @@ public final class VaultConnection {
                                                   objectFromVersion, objectToVersion, 1000);
   }
 
-  public VaultClientFolder listFolder(@NotNull String repoPath) {
+  public static VaultClientFolder listFolder(@NotNull String repoPath) {
     return ServerOperations.ProcessCommandListFolder(repoPath, true);
   }
 

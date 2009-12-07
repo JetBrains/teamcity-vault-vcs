@@ -38,7 +38,6 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private final String myToVersion;
-  private VaultConnection myConnection;
 
   public VaultPatchBuilder(@NotNull VcsRoot root,
                            @Nullable String fromVersion,
@@ -49,25 +48,22 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myToVersion = toVersion;
   }
 
-  private boolean isInit() {
-    return (myConnection != null);
-  }
-
-  private void init() throws VcsException {
-    LOG.debug("Setting up connection for building patch for root " + myRoot);
-    myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
-  }
-
   public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
     LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
-    if (!isInit()) {
-      init();
-    }    
     if (myFromVersion == null) {
       LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " to version " + myToVersion);
-      VcsSupportUtil.exportFilesFromDisk(builder, myConnection.getObject(includeRule.getFrom(), myToVersion));
+      final File root;
+      synchronized (VaultConnection.LOCK) {
+        try {
+          VaultConnection.connect(myRoot.getProperties());
+          root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
+        } finally {
+          VaultConnection.disconnect();
+        }
+      }
+      VcsSupportUtil.exportFilesFromDisk(builder, root);
     } else {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
@@ -79,7 +75,6 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   }
 
   public void dispose() throws VcsException {
-    VaultConnection.disconnect();
   }
 
   private void patch(@NotNull IncludeRule includeRule, @NotNull Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications,
@@ -187,13 +182,21 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       builder.createDirectory(d);
     }
 
-    for (final File f : addedFiles.keySet()) {
-      final File content = myConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
-      builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
-    }
-    for (final File f : modifiedFiles.keySet()) {
-      final File content = myConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
-      builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+
+        for (final File f : addedFiles.keySet()) {
+            final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
+            builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
+          }
+        for (final File f : modifiedFiles.keySet()) {
+            final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
+            builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
+          }
+      } finally {
+        VaultConnection.disconnect();
+      }
     }
   }
 

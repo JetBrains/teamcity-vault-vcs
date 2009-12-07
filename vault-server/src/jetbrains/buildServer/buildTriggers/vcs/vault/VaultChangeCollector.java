@@ -16,21 +16,23 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import VaultClientOperationsLib.VaultClientFile;
+import VaultClientOperationsLib.VaultClientFileColl;
+import VaultClientOperationsLib.VaultClientFolder;
+import VaultClientOperationsLib.VaultClientFolderColl;
+import VaultLib.VaultDateTime;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
-import VaultLib.VaultDateTime;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT_PREFIX;
-import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import jetbrains.buildServer.vcs.*;
+import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-
-import VaultClientOperationsLib.*;
 
 
 /**
@@ -44,7 +46,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private final VcsRoot myRoot;
   private final String myFromVersion;
   private String myCurrentVersion;
-  private VaultConnection myConnection;
 
 
   private final VaultPathHistory myPathHistory;
@@ -64,19 +65,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     mySharedPaths = new ArrayList<String>();
   }
 
-  private boolean isInit() {
-    return (myConnection != null);
-  }
-
-  private void init() throws VcsException {
-    if (myCurrentVersion == null) {
-      LOG.debug("Current version for change collecting is null, so need to get current version");      
-      myCurrentVersion = VaultConnection.getCurrentVersion(new VaultConnectionParameters(myRoot));
-    }
-    LOG.debug("Setting up connection for collecting changes for root " + myRoot);
-    myConnection = VaultConnection.connect(new VaultConnectionParameters(myRoot));
-  }
-
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
     LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
@@ -93,8 +81,9 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   public Map<ModificationInfo, List<VcsChange>> collectModifications(@NotNull IncludeRule includeRule) throws VcsException {
-    if (!isInit()) {
-      init();
+    if (myCurrentVersion == null) {
+      LOG.debug("Current version for change collecting is null, so need to get current version");
+      myCurrentVersion = VaultConnection.getCurrentVersion(myRoot.getProperties());
     }
     final Map<ModificationInfo, List<VcsChange>> map = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
     final Stack<ChangeInfo> changeStack = collectCanges(includeRule);
@@ -138,7 +127,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     }
 
     changes.add(new VcsChange(type, changeName, relativePath, relativePath, prevVersion, version));
-  }  
+  }
 
   public Stack<ChangeInfo> collectCanges(@NotNull IncludeRule includeRule) throws VcsException {
     final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
@@ -148,120 +137,137 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return changes;
     }
 
-    final VaultHistoryItem[] items = myConnection.collectChanges(includeRule.getFrom(), myFromVersion, myCurrentVersion);
+    final VaultHistoryItem[] items;
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+        items = VaultConnection.collectChanges(includeRule.getFrom(), myFromVersion, myCurrentVersion);
+      } finally {
+        VaultConnection.disconnect();
+      }
+    }
 
-    for (final VaultHistoryItem item : items) {
-      final int type = item.get_HistItemType();
-      final String typeStr = VaultHistoryType.GetHistoryTypeName(type);
-      if (NOT_CHANGED_CHANGE_TYPES.contains(typeStr)) {
-        LOG.debug("Skipping " + typeStr + " command in history");
-        continue;
-      }
-      final String repoPath = item.get_Name().startsWith(ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
-      if (isSharedPath(repoPath)) {
-        LOG.debug("Skipping " + typeStr + " command for " + repoPath + " in history, path is shared");
-        continue;        
-      }
-      final String misc1 = item.get_MiscInfo1();
-      final String misc2 = item.get_MiscInfo2();
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+        
+        for (final VaultHistoryItem item : items) {
 
-      String comment = item.get_Comment();
-      if (comment == null) {
-        comment = "No comment";
-      }
-
-      final VaultDateTime txDate = item.get_TxDate();
-      final Date date = new GregorianCalendar(txDate.get_Year(), txDate.get_Month(),
-        txDate.get_Day(), txDate.get_Hour(),
-        txDate.get_Minute(), txDate.get_Second()).getTime();
-      final String version = "" + item.get_TxID(); 
-      final ModificationInfo mi = new ModificationInfo(version, item.get_UserLogin(), comment, date);
-
-      if ("Added".equals(typeStr)) {
-        final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(repoPath + "/" + misc1);
-        pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, newPath, version) ? ADDED : DIRECTORY_ADDED);
-        myObjectTypesCache.remove(newPath);
-        myPathHistory.delete(oldPath + "/" + misc1);
-        mySharedPaths.remove(newPath);
-        continue;
-      }
-      if ("Deleted".equals(typeStr)) {
-        final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
-        pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, myPathHistory.getNewPath(oldPath), version) ? REMOVED : DIRECTORY_REMOVED);
-        continue;
-      }
-      if ("Renamed".equals(typeStr)) {
-        final String oldRepoParentPath = VaultConnection.getRepoParentPath(myPathHistory.getOldPath(repoPath));
-        final String oldPath = oldRepoParentPath + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
-        final boolean isFile = isFile(oldPath, newPath, version);
-        if (isFile) {
-          pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
-          pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
-        } else {
-          addFolderContent(repoPath,  changes, item.GetActionString(), mi);
-          pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
-        }
-        myPathHistory.rename(oldRepoParentPath, misc2, misc1);
-        continue;
-      }
-      if ("RenamedItem".equals(typeStr)) {
-        final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
-        final String oldPath = oldRepoParentPath + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
-        if (changes.isEmpty() || !changes.peek().getRepoPath().equals(oldRepoParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
-          final boolean isFile = isFile(oldPath, newPath, version);
-          if (isFile) {
-            pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
-            pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
-          } else {
-            addFolderContent(newPath, changes, item.GetActionString(), mi);
-            pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
+          final int type = item.get_HistItemType();
+          final String typeStr = VaultHistoryType.GetHistoryTypeName(type);
+          if (NOT_CHANGED_CHANGE_TYPES.contains(typeStr)) {
+            LOG.debug("Skipping " + typeStr + " command in history");
+            continue;
           }
-          myPathHistory.rename(oldRepoParentPath, misc2, misc1);
+          final String repoPath = item.get_Name().startsWith(ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
+          if (isSharedPath(repoPath)) {
+            LOG.debug("Skipping " + typeStr + " command for " + repoPath + " in history, path is shared");
+            continue;
+          }
+          final String misc1 = item.get_MiscInfo1();
+          final String misc2 = item.get_MiscInfo2();
+
+          String comment = item.get_Comment();
+          if (comment == null) {
+            comment = "No comment";
+          }
+
+          final VaultDateTime txDate = item.get_TxDate();
+          final Date date = new GregorianCalendar(txDate.get_Year(), txDate.get_Month(),
+            txDate.get_Day(), txDate.get_Hour(),
+            txDate.get_Minute(), txDate.get_Second()).getTime();
+          final String version = "" + item.get_TxID();
+          final ModificationInfo mi = new ModificationInfo(version, item.get_UserLogin(), comment, date);
+
+          if ("Added".equals(typeStr)) {
+            final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+            final String newPath = myPathHistory.getNewPath(repoPath + "/" + misc1);
+            pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, newPath, version) ? ADDED : DIRECTORY_ADDED);
+            myObjectTypesCache.remove(newPath);
+            myPathHistory.delete(oldPath + "/" + misc1);
+            mySharedPaths.remove(newPath);
+            continue;
+          }
+          if ("Deleted".equals(typeStr)) {
+            final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+            pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, myPathHistory.getNewPath(oldPath), version) ? REMOVED : DIRECTORY_REMOVED);
+            continue;
+          }
+          if ("Renamed".equals(typeStr)) {
+            final String oldRepoParentPath = VaultConnection.getRepoParentPath(myPathHistory.getOldPath(repoPath));
+            final String oldPath = oldRepoParentPath + "/" + misc1;
+            final String newPath = myPathHistory.getNewPath(oldPath);
+            final boolean isFile = isFile(oldPath, newPath, version);
+            if (isFile) {
+              pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
+              pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
+            } else {
+              addFolderContent(repoPath, changes, item.GetActionString(), mi);
+              pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
+            }
+            myPathHistory.rename(oldRepoParentPath, misc2, misc1);
+            continue;
+          }
+          if ("RenamedItem".equals(typeStr)) {
+            final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
+            final String oldPath = oldRepoParentPath + "/" + misc1;
+            final String newPath = myPathHistory.getNewPath(oldPath);
+            if (changes.isEmpty() || !changes.peek().getRepoPath().equals(oldRepoParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
+              final boolean isFile = isFile(oldPath, newPath, version);
+              if (isFile) {
+                pushChange(changes, item.GetActionString(), mi, oldPath, ADDED);
+                pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, REMOVED);
+              } else {
+                addFolderContent(newPath, changes, item.GetActionString(), mi);
+                pushChange(changes, item.GetActionString(), mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
+              }
+              myPathHistory.rename(oldRepoParentPath, misc2, misc1);
+            }
+            continue;
+          }
+          if ("MovedTo".equals(typeStr)) {
+            final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
+            final String oldPath = oldRepoParentPath + "/" + misc1;
+            final String newPath = myPathHistory.getNewPath(misc2);
+            final boolean isFile = isFile(misc2, newPath, version);
+            if (isFile) {
+              pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
+              pushChange(changes, item.GetActionString(), mi, oldPath, REMOVED);
+            } else {
+              addFolderContent(newPath, changes, item.GetActionString(), mi);
+              pushChange(changes, item.GetActionString(), mi, oldPath, DIRECTORY_REMOVED);
+            }
+            myPathHistory.move(oldRepoParentPath, VaultConnection.getRepoParentPath(misc2), misc1);
+            continue;
+          }
+          if ("SharedTo".equals(typeStr)) {
+            final String newPath = myPathHistory.getNewPath(misc2);
+            final boolean isFile = isFile(misc2, newPath, version);
+            if (isFile) {
+              pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
+            } else {
+              addFolderContent(newPath, changes, item.GetActionString(), mi);
+            }
+            mySharedPaths.add(newPath);
+            continue;
+          }
+          if ("CheckIn".equals(typeStr)) {
+            pushChange(changes, item.GetActionString(), mi, myPathHistory.getOldPath(repoPath), CHANGED);
+            continue;
+          }
+          final String oldPath = myPathHistory.getOldPath(repoPath);
+          changes.push(new ChangeInfo(item.GetActionString(), oldPath, mi, getType(typeStr, oldPath, version)));
         }
-        continue;
+      } finally {
+        VaultConnection.disconnect();
       }
-      if ("MovedTo".equals(typeStr)) {
-        final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
-        final String oldPath = oldRepoParentPath + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(misc2);
-        final boolean isFile = isFile(misc2, newPath, version);
-        if (isFile) {
-          pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
-          pushChange(changes, item.GetActionString(), mi, oldPath, REMOVED);
-        } else {
-          addFolderContent(newPath, changes, item.GetActionString(), mi);
-          pushChange(changes, item.GetActionString(), mi, oldPath, DIRECTORY_REMOVED);
-        }
-        myPathHistory.move(oldRepoParentPath, VaultConnection.getRepoParentPath(misc2), misc1);
-        continue;
-      }
-      if ("SharedTo".equals(typeStr)) {
-        final String newPath = myPathHistory.getNewPath(misc2);
-        final boolean isFile = isFile(misc2, newPath, version);
-        if (isFile) {
-          pushChange(changes, item.GetActionString(), mi, misc2, ADDED);
-        } else {
-          addFolderContent(newPath, changes, item.GetActionString(), mi);
-        }
-        mySharedPaths.add(newPath);
-        continue;
-      }
-      if ("CheckIn".equals(typeStr)) {
-        pushChange(changes, item.GetActionString(), mi, myPathHistory.getOldPath(repoPath), CHANGED);
-        continue;
-      }
-      final String oldPath = myPathHistory.getOldPath(repoPath);
-      changes.push(new ChangeInfo(item.GetActionString(), oldPath, mi, getType(typeStr, oldPath, version)));
     }
     return changes;
   }
 
   private void pushChange(@NotNull Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
     if (isSharedPath(path)) {
-      return;      
+      return;
     }
     changes.push(new ChangeInfo(actionString, path, mi, type));
   }
@@ -280,10 +286,10 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return myObjectTypesCache.get(newRepoPath);
     }
     Boolean isFile;
-    if (myConnection.objectExists(newRepoPath)) {
-      isFile = myConnection.isFileForExistingObject(newRepoPath);
+    if (VaultConnection.objectExists(newRepoPath)) {
+      isFile = VaultConnection.isFileForExistingObject(newRepoPath);
     } else {
-      isFile = myConnection.isFileForUnxistingObject(repoPath, version);
+      isFile = VaultConnection.isFileForUnxistingObject(repoPath, version);
     }
     myObjectTypesCache.put(newRepoPath, isFile);
     return isFile;
@@ -304,40 +310,47 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   private static class ChangeInfo {
-    @NotNull private final String myChangeName;
-    @NotNull private final String myRepoPath;
-    @NotNull private final ModificationInfo myModificationInfo;
-    @NotNull private final VcsChangeInfo.Type myChangeType;
+    @NotNull
+    private final String myChangeName;
+    @NotNull
+    private final String myRepoPath;
+    @NotNull
+    private final ModificationInfo myModificationInfo;
+    @NotNull
+    private final VcsChangeInfo.Type myChangeType;
 
     public ChangeInfo(@NotNull String changeName,
-                       @NotNull String repoPath,
-                       @NotNull ModificationInfo modificationInfo,
-                       @NotNull VcsChangeInfo.Type changeType) {
+                      @NotNull String repoPath,
+                      @NotNull ModificationInfo modificationInfo,
+                      @NotNull VcsChangeInfo.Type changeType) {
       myChangeName = changeName;
       myRepoPath = repoPath;
       myModificationInfo = modificationInfo;
       myChangeType = changeType;
     }
 
-    @NotNull public String getChangeName() {
+    @NotNull
+    public String getChangeName() {
       return myChangeName;
     }
 
-    @NotNull public String getRepoPath() {
+    @NotNull
+    public String getRepoPath() {
       return myRepoPath;
     }
 
-    @NotNull public ModificationInfo getModificationInfo() {
+    @NotNull
+    public ModificationInfo getModificationInfo() {
       return myModificationInfo;
     }
 
-    @NotNull public VcsChangeInfo.Type getChangeType() {
+    @NotNull
+    public VcsChangeInfo.Type getChangeType() {
       return myChangeType;
     }
   }
 
   public void dispose() throws VcsException {
-    VaultConnection.disconnect();
   }
 
   private void addFolderContent(@NotNull String repoFolderPath,
@@ -346,17 +359,17 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                                 @NotNull ModificationInfo mi) throws VcsException {
     changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
 
-    if (!myConnection.objectExists(repoFolderPath, mi.getVersion())) {
+    if (!VaultConnection.objectExists(repoFolderPath, mi.getVersion())) {
       return;
     }
 
-    final VaultClientFolder fold = myConnection.listFolder(repoFolderPath);
+    final VaultClientFolder fold = VaultConnection.listFolder(repoFolderPath);
 
     final VaultClientFileColl files = fold.get_Files();
     for (int i = 0; i < files.get_Count(); ++i) {
       final String fileRepoPath = repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name();
       final String oldFileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
-      if (!myConnection.objectExists(fileRepoPath, mi.getVersion())) {
+      if (!VaultConnection.objectExists(fileRepoPath, mi.getVersion())) {
         continue;
       }
       changes.push(new ChangeInfo(actionString, oldFileRepoPath, mi, ADDED));
@@ -365,7 +378,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     final VaultClientFolderColl folders = fold.get_Folders();
     for (int i = 0; i < folders.get_Count(); ++i) {
       final String folderRepoPath = repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name();
-      if (!myConnection.objectExists(folderRepoPath, mi.getVersion())) {
+      if (!VaultConnection.objectExists(folderRepoPath, mi.getVersion())) {
         continue;
       }
       addFolderContent(folderRepoPath, changes, actionString, mi);
@@ -374,10 +387,14 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
 
   public static final class ModificationInfo {
-    @NotNull private final String myVersion;
-    @NotNull private final String myUser;
-    @NotNull private final String myComment;
-    @NotNull private final Date myDate;
+    @NotNull
+    private final String myVersion;
+    @NotNull
+    private final String myUser;
+    @NotNull
+    private final String myComment;
+    @NotNull
+    private final Date myDate;
 
     public ModificationInfo(@NotNull String version, @NotNull String user, @NotNull String comment, @NotNull Date date) {
       myVersion = version;
@@ -386,19 +403,23 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       myDate = date;
     }
 
-    @NotNull public String getVersion() {
+    @NotNull
+    public String getVersion() {
       return myVersion;
     }
 
-    @NotNull public String getUser() {
+    @NotNull
+    public String getUser() {
       return myUser;
     }
 
-    @NotNull public Date getDate() {
+    @NotNull
+    public Date getDate() {
       return myDate;
     }
 
-    @NotNull public String getComment() {
+    @NotNull
+    public String getComment() {
       return myComment;
     }
 

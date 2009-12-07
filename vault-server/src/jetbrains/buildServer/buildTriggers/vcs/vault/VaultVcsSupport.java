@@ -40,7 +40,6 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                                        TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
   private static final String HTTP_PEFIX = "http://";
-  public static final String NO_API_FOUND_MESSAGE = "Vault integration could not find Vault Java API jars.";
 
   private final VaultFileContentProvider myFileContentProvider;
 
@@ -99,9 +98,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(NO_API_FOUND_MESSAGE);
+      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
     }
-    return VaultConnection.getCurrentVersion(new VaultConnectionParameters(root));
+    return VaultConnection.getCurrentVersion(root.getProperties());
   }
 
   public boolean sourcesUpdatePossibleIfChangesNotFound(@NotNull VcsRoot root) {
@@ -144,7 +143,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String describeVcsRoot(VcsRoot vcsRoot) {
-    final String server = vcsRoot.getProperty(VaultConnectionParameters.SERVER); 
+    final String server = vcsRoot.getProperty(VaultUtil.SERVER); 
     return (server == null) ? "vault" : ("vault: " + server);
   }
 
@@ -175,7 +174,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                        @NotNull String fromVersion,
                                                        @Nullable String currentVersion) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(NO_API_FOUND_MESSAGE);
+      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
     }    
     return new VaultChangeCollector(root, fromVersion, currentVersion);
   }
@@ -201,19 +200,19 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   public Collection<InvalidProperty> process(Map<String, String> properties) {
     final List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
     String prop; 
-    prop = properties.get(VaultConnectionParameters.SERVER);
+    prop = properties.get(VaultUtil.SERVER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server URL must be specified"));
+      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must be specified"));
     } else if (!prop.startsWith(HTTP_PEFIX)) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.SERVER, "Vault server URL must have http://hostname[:port] structure"));
+      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must have http://hostname[:port] structure"));
     }
-    prop = properties.get(VaultConnectionParameters.REPO);
+    prop = properties.get(VaultUtil.REPO);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.REPO, "Repository name must be specified"));
+      invalids.add(new InvalidProperty(VaultUtil.REPO, "Repository name must be specified"));
     }
-    prop = properties.get(VaultConnectionParameters.USER);
+    prop = properties.get(VaultUtil.USER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultConnectionParameters.USER, "User name must be specified"));
+      invalids.add(new InvalidProperty(VaultUtil.USER, "User name must be specified"));
     }
     return invalids;
   }
@@ -226,9 +225,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(NO_API_FOUND_MESSAGE);
+      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
     }
-    VaultConnection.testConnection(new VaultConnectionParameters(vcsRoot.getProperties()));
+    VaultConnection.testConnection(vcsRoot.getProperties());
     return null;
   }
 
