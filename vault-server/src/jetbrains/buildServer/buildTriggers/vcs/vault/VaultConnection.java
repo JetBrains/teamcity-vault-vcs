@@ -55,6 +55,8 @@ public final class VaultConnection {
       try {
         connectNotForce(parameters);
         return;
+      } catch (NoClassDefFoundError e) {
+        throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
       } catch (Throwable e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
