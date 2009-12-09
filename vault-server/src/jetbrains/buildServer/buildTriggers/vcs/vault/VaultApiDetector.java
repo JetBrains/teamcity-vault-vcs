@@ -48,6 +48,8 @@ public class VaultApiDetector {
       }
     } catch (ClassNotFoundException e) {
       return false;
+    } catch (NoClassDefFoundError e) {
+      return false;
     }
     return true;
   }

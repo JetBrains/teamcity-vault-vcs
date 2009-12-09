@@ -56,7 +56,7 @@ public final class VaultConnection {
         connectNotForce(parameters);
         return;
       } catch (NoClassDefFoundError e) {
-        throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
+        throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE, e);
       } catch (Throwable e) {
         disconnect();
         if (i == CONNECTION_TRIES_NUMBER) {
@@ -101,9 +101,7 @@ public final class VaultConnection {
   public static void testConnection(@NotNull Map<String, String> parameters) throws VcsException {
     synchronized (LOCK) {
       try {
-        connectNotForce(parameters);
-      } catch (Throwable e) {
-        throw new VcsException(specifyMessage(e.getMessage()), e);
+        connect(parameters);
       } finally {
         disconnect();
       }
