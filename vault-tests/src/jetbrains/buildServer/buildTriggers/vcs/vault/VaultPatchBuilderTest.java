@@ -16,11 +16,11 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.patches.PatchTestCase;
 import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
 import jetbrains.buildServer.vcs.impl.SVcsRootImpl;
 import jetbrains.buildServer.vcs.IncludeRule;
-import jetbrains.buildServer.util.FileUtil;
 
 import java.io.File;
 import java.io.ByteArrayOutputStream;

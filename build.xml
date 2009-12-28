@@ -89,6 +89,7 @@
     </taskdef>
 
     <target name="test" depends="all, test-nofail, check_failures"/>
+    <target name="changes-patch-builder-test" depends="all, test-changes-patch-builder-nofail, test-changes-patch-builder-check_failures"/>
 
     <target name="test-nofail">
         <check.property name="vault.test.server"
@@ -97,8 +98,6 @@
                         fail-message="Vault test login is not specified in build.properties"/>
         <check.property name="vault.test.server"
                         fail-message="Vault test user password is not specified in build.properties"/>
-        <delete dir="test-reports" quiet="true"/>
-        <mkdir dir="test-reports"/>
         <testng failureproperty="failure_found">
             <jvmarg value="-Dvault.test.server=${vault.test.server}" />
             <jvmarg value="-Dvault.test.login=${vault.test.login}" />
@@ -114,5 +113,31 @@
 
     <target name="check_failures" if="failure_found">
         <fail message="Failures found"/>
+    </target>
+
+    <target name="test-changes-patch-builder-nofail">
+        <delete dir="test-reports" quiet="true"/>
+        <mkdir dir="test-reports"/>        
+        <junit printsummary="on"
+               fork="true"
+               haltonfailure="false"
+               haltonerror="false"
+               failureproperty="test-changes-patch-builder-failure_found"
+               showoutput="true">
+            <classpath>
+                <path refid="changes-patch-builder-test.runtime.module.classpath"/>
+            </classpath>
+            <!--<test name="jetbrains.buildServer.vcs.patches.AllTests" todir="vika"/>-->
+            <formatter type="xml"/>
+            <batchtest todir="test-reports">
+                <fileset  dir="${changes-patch-builder-test.testoutput.dir}">
+                    <include name="**/*Test.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="test-changes-patch-builder-check_failures" if="test-changes-patch-builder-failure_found">
+        <fail message="Failures found in changes patch builder test"/>
     </target>
 </project>

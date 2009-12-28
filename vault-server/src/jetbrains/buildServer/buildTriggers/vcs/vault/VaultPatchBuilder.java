@@ -18,6 +18,7 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.vcs.patches.PatchBuilder;
+import jetbrains.buildServer.vcs.patches.ChangesPatchBuilder;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,7 +69,25 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
       final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
-      patch(includeRule, modifications, builder);
+      final List<VcsChange> changes = new LinkedList<VcsChange>();
+      for (final List<VcsChange> l : modifications.values()) {
+        changes.addAll(l);
+      }
+      final IncludeRule finalIncludeRule = includeRule;
+      new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
+
+        public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
+          synchronized (VaultConnection.LOCK) {
+            try {
+              VaultConnection.connect(myRoot.getProperties());
+              return VaultConnection.getObject(getPathWithIncludeRule(finalIncludeRule, s), s1);
+            } finally {
+              VaultConnection.disconnect();
+            }                                                                                               
+          }
+        }
+      }, false);
+//      patch(includeRule, modifications, builder);
     }
     LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);

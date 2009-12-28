@@ -357,8 +357,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
                                 @NotNull Stack<ChangeInfo> changes,
                                 @NotNull String actionString,
                                 @NotNull ModificationInfo mi) throws VcsException {
-    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
-
     if (!VaultConnection.objectExists(repoFolderPath, mi.getVersion())) {
       return;
     }
@@ -383,6 +381,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       }
       addFolderContent(folderRepoPath, changes, actionString, mi);
     }
+
+    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
   }
 
 
