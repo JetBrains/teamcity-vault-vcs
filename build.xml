@@ -58,13 +58,15 @@
 
     <target name="dist" depends="all,package"/>
 
-    <target name="package" depends="define.version">
+    <target name="package" depends="define.version, artifact.changes-patch-builder">
         <package.teamcity.plugin name="${plugin.name}"
                                  server.output="${vault-server.output.dir}"
                                  out="dist"
                                  plugin.descriptor.file="${basedir}/teamcity-plugin.xml"
-                                 plugin.version="${plugin.version}"/>
-    </target>
+                                 plugin.version="${plugin.version}"
+                                 server.lib.dir="${artifact.output.changes-patch-builder}"
+                                 server.lib.includes="*.jar"/>
+        </target>
 
 
     <target name="define.version" depends="define.version.if.under.teamcity">
