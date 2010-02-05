@@ -80,7 +80,7 @@ public final class VaultConnection {
         ServerOperations.Logout();
       }
     } catch (Exception e) {
-      LOG.error("Exception occured when disconnecting from Vault server", e);
+      LOG.error("Exception occurred when disconnecting from Vault server", e);
     }
   }
 
