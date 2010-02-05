@@ -40,6 +40,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                                        TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
   private static final String HTTP_PEFIX = "http://";
+  private static final String HTTPS_PEFIX = "https://";
 
   private final VaultFileContentProvider myFileContentProvider;
 
@@ -203,8 +204,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     prop = properties.get(VaultUtil.SERVER);
     if ((prop == null) || ("".equals(prop))) {
       invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must be specified"));
-    } else if (!prop.startsWith(HTTP_PEFIX)) {
-      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must have http://hostname[:port] structure"));
+    } else if (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX)) {
+      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must have http://hostname[:port] or https://hostname[:port] structure"));
     }
     prop = properties.get(VaultUtil.REPO);
     if ((prop == null) || ("".equals(prop))) {
