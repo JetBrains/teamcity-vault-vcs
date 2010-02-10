@@ -53,16 +53,17 @@ public class ChangesPatchBuilder {
                          @NotNull FileContentProvider provider,
                          boolean strictErrorChecking)
     throws IOException, VcsException {
-    myStrict = strictErrorChecking;
+    LOG.debug("Start building minimal patch for collected changes");
 
-    Assert.isNotNull(changes, "Changes are null");
-    Assert.isNotNull(provider, "Provider is null");
+    myStrict = strictErrorChecking;
 
     final MemoryFileSystem positive = new MemoryFileSystem();
     final MemoryFileSystem negative = new MemoryFileSystem();
 
-    for (VcsChange change : changes) {
+    for (final VcsChange change : changes) {
       Assert.isNotNull(change, "Change is null");
+      LOG.debug("Vcs change" + change);
+
       final String path = change.getFileName();
       if (!MemoryFileSystem.checkPath(path))
         throw new VcsException((new StringBuilder()).append("Incorrect path ").append(path).toString());
@@ -157,16 +158,20 @@ public class ChangesPatchBuilder {
     negative.toCollections(deletedFiles, deletedFiles, deletedDirectories);
 
     for (String path : deletedFiles) {
+      LOG.debug("Delete file in patch: " + path);
       builder.deleteFile(new File(path), false);
     }
     for (String path : deletedDirectories) {
+      LOG.debug("Delete folder in patch: " + path);
       builder.deleteDirectory(new File(path), false);
     }
     for (String path : newDirectories) {
+      LOG.debug("Create folder in patch: " + path);
       builder.createDirectory(new File(path));
     }
     for (String path : newFiles) {
       final String version = myVersions.get(path);
+      LOG.debug("Create file in patch: " + path + " version: " + version);
       if (version == null)
         throw new VcsException((new StringBuilder()).append("Unexpected error: No version for ").append(path).append(" prepared").toString());
       final File content = provider.getFile(path, version);
@@ -174,6 +179,7 @@ public class ChangesPatchBuilder {
     }
     for (String path : modifiedFiles) {
       final String version = myVersions.get(path);
+      LOG.debug("Changed file in patch: " + path + " version: " + version);
       if (version == null)
         throw new VcsException((new StringBuilder()).append("Unexpected error: No version for ").append(path).append(" prepared").toString());
       final File content = provider.getFile(path, version);

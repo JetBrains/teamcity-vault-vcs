@@ -49,7 +49,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myToVersion = toVersion;
   }
 
-  public void buildPatch(@NotNull PatchBuilder builder, @NotNull IncludeRule includeRule) throws IOException, VcsException {
+  public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
     LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
     if (myFromVersion == null) {
@@ -70,17 +70,25 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
       final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
       final List<VcsChange> changes = new LinkedList<VcsChange>();
-      for (final List<VcsChange> l : modifications.values()) {
+      for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
+        LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
+        ", user=" + i.getUser() + ", comment=" + i.getComment());
+        final List<VcsChange> l = modifications.get(i);
+        for (final VcsChange c : l) {
+          LOG.debug("Vcs change: " + c);                    
+        }
         changes.addAll(l);
       }
-      final IncludeRule finalIncludeRule = includeRule;
+//      for (final List<VcsChange> l : modifications.values()) {
+//        changes.addAll(l);
+//      }
       new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
 
         public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
           synchronized (VaultConnection.LOCK) {
             try {
               VaultConnection.connect(myRoot.getProperties());
-              return VaultConnection.getObject(getPathWithIncludeRule(finalIncludeRule, s), s1);
+              return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
             } finally {
               VaultConnection.disconnect();
             }                                                                                               

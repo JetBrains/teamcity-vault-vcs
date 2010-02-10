@@ -144,6 +144,7 @@ public final class VaultConnection {
   }
 
   private static File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
+    LOG.debug("Getting repo object: " + repoPath + ", version: " + version + ", rec: " + recursive);
     if (objectExists(repoPath)) {
       long objVersion = getVersionByTxId(repoPath, version);
       long txId = version;

@@ -152,6 +152,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         VaultConnection.connect(myRoot.getProperties());
         
         for (final VaultHistoryItem item : items) {
+          LOG.debug("History item: name=" + item.get_Name() + ", type=" + item.get_Type() +
+          ", misc1=" + item.get_MiscInfo1() + ", misc2=" + item.get_MiscInfo2() +
+          ", txID=" + item.get_TxID() + ", txDate=" + item.get_TxDate() +
+          ", user=" + item.get_UserLogin() + ", action=" + item.GetActionString() +
+          ", comment=" + item.get_Comment());
 
           final int type = item.get_HistItemType();
           final String typeStr = VaultHistoryType.GetHistoryTypeName(type);

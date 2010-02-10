@@ -17,6 +17,7 @@
 package jetbrains.buildServer.vcs.patches.fs;
 
 import jetbrains.buildServer.vcs.patches.util.Assert;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
 
@@ -26,12 +27,14 @@ import java.util.Collection;
  * Time: 13:18:23
  */
 public class MemoryFileSystem {
+  private static final Logger LOG = Logger.getLogger(MemoryFileSystem.class);
 
   public MemoryFileSystem() {
     myImpl = new MemoryFileSystemImpl();
   }
 
   public void createFile(String path) {
+    LOG.debug("MemoryFileSystem create file: " + path);
     if (containsFile(path)) {
       throw new FileSystemException((new StringBuilder()).append("File ").append(path).append(" already exists").toString());
     } else {
@@ -40,14 +43,17 @@ public class MemoryFileSystem {
   }
 
   public void writeFile(String path) {
+    LOG.debug("MemoryFileSystem write file: " + path);
     Assert.assertFalse(myImpl.add(path, true, false), (new StringBuilder()).append("Path ").append(path).append(" already denotes a directory").toString());
   }
 
   public void deleteFile(String path) {
+    LOG.debug("MemoryFileSystem delete file: " + path);
     Assert.assertTrue(myImpl.remove(path, true));
   }
 
   public void createDirectory(String path) {
+    LOG.debug("MemoryFileSystem create folder: " + path);
     if (containsNode(path)) {
       throw new FileSystemException((new StringBuilder()).append("Directory ").append(path).append(" already exists").toString());
     } else {
@@ -56,6 +62,7 @@ public class MemoryFileSystem {
   }
 
   public void deleteDirectory(String path) {
+    LOG.debug("MemoryFileSystem delete folder: " + path);
     Assert.assertTrue(myImpl.remove(path, false));
   }
 
