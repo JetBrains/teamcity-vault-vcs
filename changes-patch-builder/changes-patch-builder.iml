@@ -7,9 +7,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Annotations" level="project" />
-    <orderEntry type="library" name="TeamCity-api" level="project" />
     <orderEntry type="library" name="Log4j" level="project" />
+    <orderEntry type="library" name="TeamCity-openapi" level="project" />
+    <orderEntry type="library" name="TeamCity-utils" level="project" />
   </component>
 </module>
 

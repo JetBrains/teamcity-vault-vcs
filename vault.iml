@@ -12,6 +12,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="vault-server" />
     <orderEntry type="module" module-name="vault-tests" />
+    <orderEntry type="module" module-name="changes-patch-builder" />
+    <orderEntry type="module" module-name="changes-patch-builder-test" />
   </component>
 </module>
 

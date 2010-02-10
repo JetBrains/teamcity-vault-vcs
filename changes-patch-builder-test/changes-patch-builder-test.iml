@@ -7,10 +7,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="JUnit" level="project" />
     <orderEntry type="module" module-name="changes-patch-builder" />
-    <orderEntry type="library" name="TeamCity-api" level="project" />
-    <orderEntry type="library" name="Annotations" level="project" />
+    <orderEntry type="library" name="JUnit" level="project" />
+    <orderEntry type="library" name="TeamCity-openapi" level="project" />
+    <orderEntry type="library" name="TeamCity-utils" level="project" />
   </component>
 </module>
 
