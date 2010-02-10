@@ -28,6 +28,8 @@ import jetbrains.buildServer.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import VaultClientOperationsLib.SetFileTimeType;
@@ -49,6 +51,8 @@ public final class VaultConnection {
   public static final String CURRENT = ".";
 
   private static final int CONNECTION_TRIES_NUMBER = 10;
+
+  private static final List<File> ourTempFiles = new ArrayList<File>();
 
   public static void connect(@NotNull Map<String, String> parameters) throws VcsException {
     for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
@@ -81,6 +85,8 @@ public final class VaultConnection {
       }
     } catch (Exception e) {
       LOG.error("Exception occurred when disconnecting from Vault server", e);
+    } finally {
+      removeTempFiles();
     }
   }
 
@@ -233,6 +239,7 @@ public final class VaultConnection {
   private static File getObjectToDirFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     try {
       final File destDir = FileUtil.createTempDirectory("vault_" + version + "_", "");
+      ourTempFiles.add(destDir);
       final GetOptions getOptions = new GetOptions();
       getOptions.Recursive = recursive;
       getOptions.SetFileTime = SetFileTimeType.Modification;
@@ -321,5 +328,12 @@ public final class VaultConnection {
 
   private static String specifyMessage(String message) {
     return "Exception occured while trying to connect to Vault server. See original message below:\n" + message;   
+  }
+
+  private static void removeTempFiles() {
+    for (final File f : ourTempFiles) {
+      FileUtil.delete(f);
+    }
+    ourTempFiles.clear();
   }
 }

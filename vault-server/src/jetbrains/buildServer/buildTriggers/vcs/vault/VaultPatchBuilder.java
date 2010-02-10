@@ -82,19 +82,22 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
 //      for (final List<VcsChange> l : modifications.values()) {
 //        changes.addAll(l);
 //      }
-      new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
+      synchronized (VaultConnection.LOCK) {
+        try {
+          VaultConnection.connect(myRoot.getProperties());
 
-        public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
-          synchronized (VaultConnection.LOCK) {
-            try {
-              VaultConnection.connect(myRoot.getProperties());
-              return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
-            } finally {
-              VaultConnection.disconnect();
-            }                                                                                               
-          }
+          new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
+
+            public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
+              synchronized (VaultConnection.LOCK) {
+                  return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
+              }
+            }
+          }, false);
+        } finally {
+          VaultConnection.disconnect();
         }
-      }, false);
+      }
 //      patch(includeRule, modifications, builder);
     }
     LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()

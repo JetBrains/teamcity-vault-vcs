@@ -43,14 +43,12 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
       try {
         VaultConnection.connect(root.getProperties());
         f = VaultConnection.getObject(path, version);
+        return FileUtil.loadFileBytes(f);
+      } catch (IOException e) {
+        throw new VcsException(e.getMessage(), e);
       } finally {
         VaultConnection.disconnect();
       }
-    }
-    try {
-      return FileUtil.loadFileBytes(f);
-    } catch (IOException e) {
-      throw new VcsException(e.getMessage(), e);
     }
   }
 }
