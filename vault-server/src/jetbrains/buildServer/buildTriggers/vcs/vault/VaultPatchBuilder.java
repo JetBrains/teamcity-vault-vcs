@@ -89,9 +89,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
           new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
 
             public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
-              synchronized (VaultConnection.LOCK) {
-                  return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
-              }
+              return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
             }
           }, false);
         } finally {

@@ -331,9 +331,21 @@ public final class VaultConnection {
   }
 
   private static void removeTempFiles() {
+    final List<File> toDelete = new ArrayList<File>();
     for (final File f : ourTempFiles) {
-      FileUtil.delete(f);
+      if (hardDelete(f)) {
+        toDelete.add(f);
+      }
     }
-    ourTempFiles.clear();
+    ourTempFiles.removeAll(toDelete);
+  }
+
+  private static boolean hardDelete(File f) {
+    for (int i = 0; i < 10; ++i) {
+      if (FileUtil.delete(f)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
