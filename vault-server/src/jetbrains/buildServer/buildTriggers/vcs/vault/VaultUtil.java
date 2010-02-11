@@ -16,6 +16,7 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.ContentHandler;
@@ -23,6 +24,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
@@ -33,6 +35,13 @@ import java.util.*;
  * Time: 19:32:05
  */
 public final class VaultUtil {
+  public static final File TEMP_DIR = new File(FileUtil.getTempDirectory(), "vault");
+
+  public static void createTempDir() {
+    FileUtil.delete(TEMP_DIR);
+    TEMP_DIR.mkdirs();
+  }
+
   public static final String SERVER = "vault.server";
   public static final String REPO = "vault.repo";
   public static final String USER = "vault.user";

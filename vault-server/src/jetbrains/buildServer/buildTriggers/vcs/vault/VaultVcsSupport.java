@@ -58,6 +58,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       LOG.debug("Vault plugin will not use cache");      
       VaultCache.enableCache(null);
     }
+    VaultUtil.createTempDir();
   }
 
 

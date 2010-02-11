@@ -238,7 +238,7 @@ public final class VaultConnection {
 
   private static File getObjectToDirFromVcs(@NotNull String repoPath, long version, boolean  recursive) throws VcsException {
     try {
-      final File destDir = FileUtil.createTempDirectory("vault_" + version + "_", "");
+      final File destDir = FileUtil.createTempDirectory("vault_", "", VaultUtil.TEMP_DIR);
       ourTempFiles.add(destDir);
       final GetOptions getOptions = new GetOptions();
       getOptions.Recursive = recursive;

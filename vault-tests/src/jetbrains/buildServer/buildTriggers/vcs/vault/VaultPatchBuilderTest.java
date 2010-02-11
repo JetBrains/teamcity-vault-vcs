@@ -110,6 +110,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     final File cache = FileUtil.createTempDirectory("vault", "");
     FileUtil.delete(cache);
     VaultCache.enableCache(cache);
+    VaultUtil.createTempDir();
 
     final String testName = getTestName();
     final File testDataSvn = TestUtil.getTestDataMayNotExist(testName + "_Vcs", null);
