@@ -71,7 +71,6 @@ public final class VaultUtil {
 //        public static final byte SnapshotItem = -54;
 //        public static final byte Undeleted = -46;
 //        public static final byte UnPinned = -36;
-    //TODO: process rollback
 //        public static final byte Rollback = -26;
 
   public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
@@ -98,8 +97,6 @@ public final class VaultUtil {
 
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShare");
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShareItem");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Rollback");
   }
 
   public static final Set<String> ADDED_CHANGE_TYPES =  new HashSet<String>();
@@ -122,6 +119,7 @@ public final class VaultUtil {
 
   static {
     CHANGED_CHANGE_TYPES.add("CheckIn");
+    CHANGED_CHANGE_TYPES.add("Rollback");
   }
 
   public static final Set<String> REMOVED_CHANGE_TYPES =  new HashSet<String>();
