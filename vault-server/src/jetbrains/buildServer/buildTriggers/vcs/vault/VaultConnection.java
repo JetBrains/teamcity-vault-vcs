@@ -152,6 +152,7 @@ public final class VaultConnection {
   private static File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
     LOG.debug("Getting repo object: " + repoPath + ", version: " + version + ", rec: " + recursive);
     if (objectExists(repoPath)) {
+      LOG.debug("Object: " + repoPath + "exists at version: " + version + ", getting obj version");
       long objVersion = getVersionByTxId(repoPath, version);
       long txId = version;
       while ((objVersion == 0) && (txId != 0)) {
@@ -161,8 +162,10 @@ public final class VaultConnection {
       if (txId == 0) {
         throw new VcsException("Unable to get existing object " + repoPath + " at version " + version);
       }
+      LOG.debug("Object: " + repoPath + "exists at obj version: " + objVersion);
       return getObjectItself(repoPath, objVersion, recursive);
     }
+    LOG.debug("Object: " + repoPath + "doesn't exist at version: " + version + ", getting from parent");
     final String name = getName(repoPath);
     final String parent = getRepoParentPath(repoPath);
 
