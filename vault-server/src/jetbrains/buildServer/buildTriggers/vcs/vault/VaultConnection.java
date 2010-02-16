@@ -275,7 +275,7 @@ public final class VaultConnection {
     return ROOT.equals(repoPath) ? ROOT : repoPath.substring(repoPath.lastIndexOf("/") + 1);
   }
 
-  private static String getRepoPathFromPath(@NotNull String path) {
+  public static String getRepoPathFromPath(@NotNull String path) {
     return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + SEPARATOR + path.replace("\\", SEPARATOR);
   }
 

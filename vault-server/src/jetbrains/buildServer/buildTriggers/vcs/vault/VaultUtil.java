@@ -17,7 +17,9 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.vcs.IncludeRule;
 import jetbrains.buildServer.vcs.VcsException;
+import jetbrains.buildServer.vcs.VcsRoot;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -133,6 +135,19 @@ public final class VaultUtil {
       return Long.parseLong(num);
     } catch (NumberFormatException e) {
       throw new VcsException(e);
+    }
+  }
+
+  public static void checkIncludeRule(VcsRoot root, IncludeRule includeRule) throws VcsException {
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(root.getProperties());
+        if (!VaultConnection.objectExists(VaultConnection.getRepoPathFromPath(includeRule.getFrom()))) {
+          throw new VcsException("Invalid rule " + includeRule.toDescriptiveString() + ", no such repository folder");          
+        }
+      } finally {
+        VaultConnection.disconnect();
+      }
     }
   }
 }

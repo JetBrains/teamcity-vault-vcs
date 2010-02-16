@@ -50,6 +50,8 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   }
 
   public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
+    VaultUtil.checkIncludeRule(myRoot, includeRule);
+    
     LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
     if (myFromVersion == null) {

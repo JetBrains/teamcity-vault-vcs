@@ -67,8 +67,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
+    VaultUtil.checkIncludeRule(myRoot, includeRule);
+
     LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion);
+
     final List<ModificationData> modifications = new LinkedList<ModificationData>();
     final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
     for (ModificationInfo mi : map.keySet()) {
@@ -147,12 +150,16 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       }
     }
 
+    if (items.length == 0) {
+      return changes;      
+    }
+
     synchronized (VaultConnection.LOCK) {
       try {
         VaultConnection.connect(myRoot.getProperties());
         
         for (final VaultHistoryItem item : items) {
-          LOG.debug("History item: name=" + item.get_Name() + ", type=" + item.get_Type() +
+          LOG.debug("History item: name=" + item.get_Name() + ", type=" + item.get_HistItemType() +
           ", misc1=" + item.get_MiscInfo1() + ", misc2=" + item.get_MiscInfo2() +
           ", txID=" + item.get_TxID() + ", txDate=" + item.get_TxDate() +
           ", user=" + item.get_UserLogin() + ", action=" + item.GetActionString() +
@@ -164,7 +171,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
             LOG.debug("Skipping " + typeStr + " command in history");
             continue;
           }
-          final String repoPath = item.get_Name().startsWith(ROOT) ? item.get_Name() : ROOT_PREFIX + item.get_Name();
+          final String repoPath = getFullPath(item.get_Name(), includeRule.getFrom());
           if (isSharedPath(repoPath)) {
             LOG.debug("Skipping " + typeStr + " command for " + repoPath + " in history, path is shared");
             continue;
@@ -268,6 +275,22 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       }
     }
     return changes;
+  }
+
+  private String getFullPath(String path, String includeRuleFrom) {
+    if (path.startsWith(ROOT)) {
+      return path;
+    }
+    includeRuleFrom = includeRuleFrom.replace('\\', '/');
+    if (includeRuleFrom.endsWith("/")) {
+      includeRuleFrom = includeRuleFrom.substring(0, includeRuleFrom.length() - 1);
+    }
+    if (includeRuleFrom.contains("/")) {
+      includeRuleFrom = includeRuleFrom.substring(0, includeRuleFrom.lastIndexOf("/") + 1);
+    } else {
+      includeRuleFrom = "";
+    }
+    return ROOT_PREFIX + includeRuleFrom + path;
   }
 
   private void pushChange(@NotNull Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
@@ -389,7 +412,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
     changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
   }
-
 
   public static final class ModificationInfo {
     @NotNull
