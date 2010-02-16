@@ -94,7 +94,7 @@ public final class VaultConnection {
     synchronized (LOCK) {
       connect(parameters);
       try {
-        final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
+        final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(ROOT, true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
         return "" + historyItems[0].get_TxID();
       } catch (Exception e) {
         throw new VcsException(specifyMessage(e.getMessage()), e);
@@ -152,7 +152,7 @@ public final class VaultConnection {
   private static File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
     LOG.debug("Getting repo object: " + repoPath + ", version: " + version + ", rec: " + recursive);
     if (objectExists(repoPath)) {
-      LOG.debug("Object: " + repoPath + "exists at version: " + version + ", getting obj version");
+      LOG.debug("Object: " + repoPath + " exists at version: " + version + ", getting obj version");
       long objVersion = getVersionByTxId(repoPath, version);
       long txId = version;
       while ((objVersion == 0) && (txId != 0)) {
@@ -162,7 +162,7 @@ public final class VaultConnection {
       if (txId == 0) {
         throw new VcsException("Unable to get existing object " + repoPath + " at version " + version);
       }
-      LOG.debug("Object: " + repoPath + "exists at obj version: " + objVersion);
+      LOG.debug("Object: " + repoPath + " exists at obj version: " + objVersion);
       return getObjectItself(repoPath, objVersion, recursive);
     }
     LOG.debug("Object: " + repoPath + "doesn't exist at version: " + version + ", getting from parent");
@@ -268,7 +268,7 @@ public final class VaultConnection {
   }
 
   public static String getRepoParentPath(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf("/"));
+    return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf(SEPARATOR));
   }
 
   public static String getName(@NotNull String repoPath) {
@@ -276,7 +276,7 @@ public final class VaultConnection {
   }
 
   private static String getRepoPathFromPath(@NotNull String path) {
-    return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + "/" + path.replace("\\", "/");
+    return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + SEPARATOR + path.replace("\\", SEPARATOR);
   }
 
   public static String getPathFromRepoPath(@NotNull String repoPath) {
