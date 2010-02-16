@@ -60,11 +60,11 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         try {
           VaultConnection.connect(myRoot.getProperties());
           root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
+          VcsSupportUtil.exportFilesFromDisk(builder, root);
         } finally {
           VaultConnection.disconnect();
         }
       }
-      VcsSupportUtil.exportFilesFromDisk(builder, root);
     } else {
       LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
         + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
