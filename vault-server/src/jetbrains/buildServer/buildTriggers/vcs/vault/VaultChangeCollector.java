@@ -268,7 +268,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return;
     }
     final String oldPath = myPathHistory.getOldPath(repoPath);
-    changes.push(new ChangeInfo(item.GetActionString(), oldPath, mi, getType(typeStr, oldPath, version)));
+    pushChange(changes, item.GetActionString(), mi, oldPath, getType(typeStr, oldPath, version));
   }
 
   private String getFullPath(String path, String includeRuleFrom) {

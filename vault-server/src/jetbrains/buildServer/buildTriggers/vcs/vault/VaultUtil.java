@@ -97,6 +97,7 @@ public final class VaultUtil {
 
     NOT_CHANGED_CHANGE_TYPES.add("Undeleted");
 
+    NOT_CHANGED_CHANGE_TYPES.add("BranchedFrom");
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShare");
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShareItem");
   }
@@ -106,7 +107,6 @@ public final class VaultUtil {
   static {
     ADDED_CHANGE_TYPES.add("Added");
 
-    ADDED_CHANGE_TYPES.add("BranchedFrom");
     ADDED_CHANGE_TYPES.add("BranchedFromItem");
 
     ADDED_CHANGE_TYPES.add("MovedTo");
