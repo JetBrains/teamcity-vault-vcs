@@ -43,10 +43,9 @@ import java.util.*;
 public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
 
-  private final VcsRoot myRoot;
-  private final String myFromVersion;
+  @NotNull private final VcsRoot myRoot;
+  @NotNull private final String myFromVersion;
   private String myCurrentVersion;
-
 
   private final VaultPathHistory myPathHistory;
   private final Map<String, Boolean> myObjectTypesCache;
@@ -65,56 +64,86 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     mySharedPaths = new ArrayList<String>();
   }
 
+  public void dispose() throws VcsException {
+  }  
+
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
     VaultUtil.checkIncludeRule(myRoot, includeRule);
 
-    LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myCurrentVersion);
+    logStartCollectingChanges(includeRule);
 
-    final List<ModificationData> modifications = new LinkedList<ModificationData>();
-    final Map<ModificationInfo, List<VcsChange>> map = collectModifications(includeRule);
-    for (ModificationInfo mi : map.keySet()) {
-      modifications.add(new ModificationData(mi.getDate(), map.get(mi), mi.getComment(), mi.getUser(), myRoot, mi.getVersion(), mi.getVersion()));
+    final List<ModificationData> changes = new LinkedList<ModificationData>();
+
+    final Map<ModificationInfo, List<VcsChange>> modifications = collectModifications(includeRule);
+    if (!modifications.isEmpty()) {
+      for (ModificationInfo mi : modifications.keySet()) {
+        changes.add(new ModificationData(mi.getDate(), modifications.get(mi), mi.getComment(), mi.getUser(), myRoot, mi.getVersion(), mi.getVersion()));
+      }
     }
 
-    LOG.debug("Finish collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myCurrentVersion);
-    return modifications;
+    logFinishCollectingChanges(includeRule);
+
+    return changes;
   }
 
   @NotNull
   public Map<ModificationInfo, List<VcsChange>> collectModifications(@NotNull IncludeRule includeRule) throws VcsException {
-    if (myCurrentVersion == null) {
-      LOG.debug("Current version for change collecting is null, so need to get current version");
-      myCurrentVersion = VaultConnection.getCurrentVersion(myRoot.getProperties());
+    prepareCurrentVersion();
+
+    if (myFromVersion.equals(myCurrentVersion)) {
+      logWillNotCollectChanges(includeRule);
+      return Collections.EMPTY_MAP;
     }
 
-    final Map<ModificationInfo, List<VcsChange>> map = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
+    final Map<ModificationInfo, List<VcsChange>> modifications = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
+    final Stack<ChangeInfo> changesStack = buildChangesStack(includeRule.getFrom());
 
-    if ((myCurrentVersion != null) && myCurrentVersion.equals(myFromVersion)) {
-      LOG.debug("Will not collect changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-        + " from version " + myFromVersion + " to version " + myCurrentVersion + ", from equals to");
-      return map;
-    }
-
-    final Stack<ChangeInfo> changeStack = buildChangesStack(includeRule.getFrom());
-
-    while (!changeStack.isEmpty()) {
-      final ChangeInfo ci = changeStack.pop();
+    while (!changesStack.isEmpty()) {
+      final ChangeInfo ci = changesStack.pop();
       final ModificationInfo mi = ci.getModificationInfo();
 
-      List<VcsChange> changes;
-      if (map.containsKey(mi)) {
-        changes = map.get(mi);
+      final List<VcsChange> changes;
+      if (modifications.containsKey(mi)) {
+        changes = modifications.get(mi);
       } else {
         changes = new LinkedList<VcsChange>();
       }
       collectChange(changes, ci.getRepoPath(), includeRule.getFrom(), mi.getVersion(), ci.getChangeName(), ci.getChangeType());
 
-      map.put(mi, changes);
+      modifications.put(mi, changes);
     }
-    return map;
+    return modifications;
+  }
+
+  private Stack<ChangeInfo> buildChangesStack(String includeRuleFrom) throws VcsException {
+    final VaultHistoryItem[] items;
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+        items = VaultConnection.collectChanges(includeRuleFrom, myFromVersion, myCurrentVersion);
+      } finally {
+        VaultConnection.disconnect();
+      }
+    }
+
+    final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
+    if (items.length == 0) {
+      return changes;
+    }
+    
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+        
+        for (final VaultHistoryItem item : items) {
+          processHistoryItem(changes, item, includeRuleFrom);
+        }
+      } finally {
+        VaultConnection.disconnect();
+      }
+    }
+    return changes;
   }
 
   private void collectChange(List<VcsChange> changes,
@@ -133,43 +162,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     changes.add(new VcsChange(type, changeName, relativePath, relativePath, "" + (VaultUtil.parseLong(version) - 1), version));
   }
 
-  private Stack<ChangeInfo> buildChangesStack(String includeRuleFrom) throws VcsException {
-    final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
-
-    final VaultHistoryItem[] items;
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-        items = VaultConnection.collectChanges(includeRuleFrom, myFromVersion, myCurrentVersion);
-      } finally {
-        VaultConnection.disconnect();
-      }
-    }
-
-    if (items.length == 0) {
-      return changes;      
-    }
-
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-        
-        for (final VaultHistoryItem item : items) {
-          processHistoryItem(changes, item, includeRuleFrom);
-        }
-      } finally {
-        VaultConnection.disconnect();
-      }
-    }
-    return changes;
-  }
-
   private void processHistoryItem(Stack<ChangeInfo> changes, VaultHistoryItem item, String includeRuleFrom) throws VcsException {
-    LOG.debug("History item: name=" + item.get_Name() + ", type=" + item.get_HistItemType() +
-    ", misc1=" + item.get_MiscInfo1() + ", misc2=" + item.get_MiscInfo2() +
-    ", txID=" + item.get_TxID() + ", txDate=" + item.get_TxDate() +
-    ", user=" + item.get_UserLogin() + ", action=" + item.GetActionString() +
-    ", comment=" + item.get_Comment());
+    logHistoryItem(item);
 
     final int type = item.get_HistItemType();
     final String typeStr = VaultHistoryType.GetHistoryTypeName(type);
@@ -293,17 +287,14 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return ROOT_PREFIX + includeRuleFrom + path;
   }
 
-  private void pushChange(@NotNull Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
-    if (ROOT.equals(path)) {
-      return;
-    }
-    if (isSharedPath(path)) {
+  private void pushChange(Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
+    if (ROOT.equals(path) || isSharedPath(path)) {
       return;
     }
     changes.push(new ChangeInfo(actionString, path, mi, type));
   }
 
-  private boolean isSharedPath(@NotNull String path) {
+  private boolean isSharedPath(String path) {
     for (final String s : mySharedPaths) {
       if (path.startsWith(s)) {
         return true;
@@ -312,7 +303,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return false;
   }
 
-  private boolean isFile(@NotNull String repoPath, @NotNull String newRepoPath, @NotNull String version) throws VcsException {
+  private boolean isFile(String repoPath, String newRepoPath, String version) throws VcsException {
     if (myObjectTypesCache.containsKey(newRepoPath)) {
       return myObjectTypesCache.get(newRepoPath);
     }
@@ -326,7 +317,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return isFile;
   }
 
-  private VcsChangeInfo.Type getType(@NotNull String typeStr, @NotNull String repoPath, @NotNull String version) throws VcsException {
+  private VcsChangeInfo.Type getType(String typeStr, String repoPath, String version) throws VcsException {
     final String newPath = myPathHistory.getNewPath(repoPath);
     if (ADDED_CHANGE_TYPES.contains(typeStr)) {
       return isFile(repoPath, newPath, version) ? ADDED : DIRECTORY_ADDED;
@@ -338,6 +329,72 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return CHANGED;
     }
     throw new VcsException("Couldn't reduce " + typeStr + " to one of types (ADDED, DIRECTORY_ADDED, REMOVED, DIRECTORY_REMOVED, CHANGED)");
+  }
+
+  private void addFolderContent(String repoFolderPath,
+                                Stack<ChangeInfo> changes,
+                                String actionString,
+                                ModificationInfo mi) throws VcsException {
+    if (!VaultConnection.objectExists(repoFolderPath, mi.getVersion())) {
+      return;
+    }
+
+    final VaultClientFolder fold = VaultConnection.listFolder(repoFolderPath);
+
+    final VaultClientFileColl files = fold.get_Files();
+    for (int i = 0; i < files.get_Count(); ++i) {
+      final String fileRepoPath = repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name();
+      final String oldFileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
+      if (!VaultConnection.objectExists(fileRepoPath, mi.getVersion())) {
+        continue;
+      }
+      changes.push(new ChangeInfo(actionString, oldFileRepoPath, mi, ADDED));
+    }
+
+    final VaultClientFolderColl folders = fold.get_Folders();
+    for (int i = 0; i < folders.get_Count(); ++i) {
+      final String folderRepoPath = repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name();
+      if (!VaultConnection.objectExists(folderRepoPath, mi.getVersion())) {
+        continue;
+      }
+      addFolderContent(folderRepoPath, changes, actionString, mi);
+    }
+
+    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
+  }
+
+  private void prepareCurrentVersion() throws VcsException {
+    if (myCurrentVersion == null) {
+      LOG.debug("Current version for change collecting is null, so need to get current version");
+      myCurrentVersion = VaultConnection.getCurrentVersion(myRoot.getProperties());
+    }
+  }
+
+  private void logFinishCollectingChanges(IncludeRule includeRule) {
+    LOG.debug("Finish collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+      + " from version " + myFromVersion + " to version " + myCurrentVersion);
+  }
+
+  private void logStartCollectingChanges(IncludeRule includeRule) {
+    LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+      + " from version " + myFromVersion + " to version " + myCurrentVersion);
+  }
+
+  private void logWillNotCollectChanges(IncludeRule includeRule) {
+    LOG.debug("Will not collect changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+      + " from version " + myFromVersion + " to version " + myCurrentVersion + ", from equals to");
+  }
+
+  private void logHistoryItem(VaultHistoryItem item) {
+    LOG.debug("History item: name=" + item.get_Name()
+      + ", type=" + item.get_HistItemType()
+      + ", misc1=" + item.get_MiscInfo1()
+      + ", misc2=" + item.get_MiscInfo2()
+      + ", txID=" + item.get_TxID()
+      + ", txDate=" + item.get_TxDate()
+      + ", user=" + item.get_UserLogin()
+      + ", action=" + item.GetActionString()
+      + ", comment=" + item.get_Comment());
   }
 
   private static class ChangeInfo {
@@ -379,41 +436,6 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     public VcsChangeInfo.Type getChangeType() {
       return myChangeType;
     }
-  }
-
-  public void dispose() throws VcsException {
-  }
-
-  private void addFolderContent(@NotNull String repoFolderPath,
-                                @NotNull Stack<ChangeInfo> changes,
-                                @NotNull String actionString,
-                                @NotNull ModificationInfo mi) throws VcsException {
-    if (!VaultConnection.objectExists(repoFolderPath, mi.getVersion())) {
-      return;
-    }
-
-    final VaultClientFolder fold = VaultConnection.listFolder(repoFolderPath);
-
-    final VaultClientFileColl files = fold.get_Files();
-    for (int i = 0; i < files.get_Count(); ++i) {
-      final String fileRepoPath = repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name();
-      final String oldFileRepoPath = myPathHistory.getOldPath(repoFolderPath + "/" + ((VaultClientFile) files.get_Item(i)).get_Name());
-      if (!VaultConnection.objectExists(fileRepoPath, mi.getVersion())) {
-        continue;
-      }
-      changes.push(new ChangeInfo(actionString, oldFileRepoPath, mi, ADDED));
-    }
-
-    final VaultClientFolderColl folders = fold.get_Folders();
-    for (int i = 0; i < folders.get_Count(); ++i) {
-      final String folderRepoPath = repoFolderPath + "/" + ((VaultClientFolder) folders.get_Item(i)).get_Name();
-      if (!VaultConnection.objectExists(folderRepoPath, mi.getVersion())) {
-        continue;
-      }
-      addFolderContent(folderRepoPath, changes, actionString, mi);
-    }
-
-    changes.push(new ChangeInfo(actionString, myPathHistory.getOldPath(repoFolderPath), mi, DIRECTORY_ADDED));
   }
 
   public static final class ModificationInfo {

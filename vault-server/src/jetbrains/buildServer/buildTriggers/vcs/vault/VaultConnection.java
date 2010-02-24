@@ -23,7 +23,6 @@ import VaultLib.VaultHistoryItem;
 import VaultLib.VaultDate;
 import VaultLib.VaultTxHistoryItem;
 import jetbrains.buildServer.vcs.VcsException;
-import jetbrains.buildServer.vcs.VcsRoot;
 import jetbrains.buildServer.util.FileUtil;
 
 import java.io.File;
@@ -50,12 +49,12 @@ public final class VaultConnection {
   public static final String SEPARATOR = "/";
   public static final String CURRENT = ".";
 
-  private static final int CONNECTION_TRIES_NUMBER = 10;
+  private static final int CONNECTION_ATTEMPTS_NUMBER = 10;
 
   private static final List<File> ourTempFiles = new ArrayList<File>();
 
   public static void connect(@NotNull Map<String, String> parameters) throws VcsException {
-    for (int i = 1; i <= CONNECTION_TRIES_NUMBER; ++i) {
+    for (int i = 1; i <= CONNECTION_ATTEMPTS_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
         return;
@@ -63,7 +62,7 @@ public final class VaultConnection {
         throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE, e);
       } catch (Throwable e) {
         disconnect();
-        if (i == CONNECTION_TRIES_NUMBER) {
+        if (i == CONNECTION_ATTEMPTS_NUMBER) {
           throw new VcsException(specifyMessage(e.getMessage()), e);
         }
       }
@@ -151,8 +150,10 @@ public final class VaultConnection {
 
   private static File getRepoObject(@NotNull String repoPath, long version, boolean recursive) throws VcsException {
     LOG.debug("Getting repo object: " + repoPath + ", version: " + version + ", rec: " + recursive);
+
     if (objectExists(repoPath)) {
       LOG.debug("Object: " + repoPath + " exists at version: " + version + ", getting obj version");
+
       long objVersion = getVersionByTxId(repoPath, version);
       long txId = version;
       while ((objVersion == 0) && (txId != 0)) {

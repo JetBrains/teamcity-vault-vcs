@@ -49,181 +49,62 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myToVersion = toVersion;
   }
 
-  public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
-    VaultUtil.checkIncludeRule(myRoot, includeRule);
-    
-    LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myToVersion);
-    if (myFromVersion == null) {
-      LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-        + " to version " + myToVersion);
-      final File root;
-      synchronized (VaultConnection.LOCK) {
-        try {
-          VaultConnection.connect(myRoot.getProperties());
-          root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
-          VcsSupportUtil.exportFilesFromDisk(builder, root);
-        } finally {
-          VaultConnection.disconnect();
-        }
-      }
-    } else {
-      LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-        + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
-      final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
-      final List<VcsChange> changes = new LinkedList<VcsChange>();
-      for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
-        LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
-        ", user=" + i.getUser() + ", comment=" + i.getComment());
-        final List<VcsChange> l = modifications.get(i);
-        for (final VcsChange c : l) {
-          LOG.debug("Vcs change: " + c);                    
-        }
-        changes.addAll(l);
-      }
-//      for (final List<VcsChange> l : modifications.values()) {
-//        changes.addAll(l);
-//      }
-      synchronized (VaultConnection.LOCK) {
-        try {
-          VaultConnection.connect(myRoot.getProperties());
-
-          new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
-
-            public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
-              return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
-            }
-          }, false);
-        } finally {
-          VaultConnection.disconnect();
-        }
-      }
-//      patch(includeRule, modifications, builder);
-    }
-    LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myToVersion);
-  }
-
   public void dispose() throws VcsException {
   }
 
-  private void patch(@NotNull IncludeRule includeRule, @NotNull Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications,
-                     @NotNull PatchBuilder builder) throws IOException, VcsException {
-    final Set<File> deletedFiles = new LinkedHashSet<File>();
-    final Set<File> deletedDirs = new LinkedHashSet<File>();
-    final Set<File> addedDirs = new LinkedHashSet<File>();
-    final Map<File, String> addedFiles = new LinkedHashMap<File, String>();
-    final Map<File, String> modifiedFiles = new LinkedHashMap<File, String>();
+  public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
+    VaultUtil.checkIncludeRule(myRoot, includeRule);
 
-    for (final VaultChangeCollector.ModificationInfo m : modifications.keySet()) {
-      for (final VcsChange c : modifications.get(m)) {
-        final File f = new File(c.getRelativeFileName());
-        final String version = c.getAfterChangeRevisionNumber();
-        final File addedAncestor = containsAncestor(addedDirs, f);
-        final File deletedAncestor = containsAncestor(deletedDirs, f);
+    logStartBuildingPatch(includeRule);
 
-        switch (c.getType()) {
-          case ADDED:
-            if ((addedAncestor == null) && (deletedAncestor != null)) {
-              throw new VcsException("Incorrect change set: the parent directory " + deletedAncestor + " has been deleted, " +
-                "can't create a file " + f + " there");
-            }
-            if (addedFiles.containsKey(f) || modifiedFiles.containsKey(f)) {
-              throw new VcsException("Incorrect change set: file " + f.getPath() + " has already been added, can't add a file again");
-            }
-            if (deletedFiles.contains(f)) {
-              deletedFiles.remove(f);
-              modifiedFiles.put(f, version);
-            } else {
-              addedFiles.put(f, version);
-            }
-            break;
-          case DIRECTORY_ADDED:
-            if ((addedAncestor == null) && (deletedAncestor != null)) {
-              throw new VcsException("Incorrect change set: the parent directory " + deletedAncestor + " has been deleted, " +
-                "can't create a directory " + f + " there");
-            }
-            if (addedDirs.contains(f)) {
-              throw new VcsException("Incorrect change set: directory " + f.getPath() + " has already been added, can't add a directory again");
-            }
-            if (deletedDirs.contains(f)) {
-              deletedDirs.remove(f);
-            } else {
-              addedDirs.add(f);
-            }
-            break;
-          case REMOVED:
-            if ((addedAncestor == null) && (deletedAncestor != null)) {
-              throw new VcsException("Incorrect change set: the parent directory " + deletedAncestor + " has been deleted, " +
-                "can't deleteFile it's child file " + f);
-            }
-            if (deletedFiles.contains(f)) {
-              throw new VcsException("Incorrect change set: file " + f.getPath() + " has already been deleted, can't delete a file again");
-            }
-            if (addedFiles.containsKey(f)) {
-              addedFiles.remove(f);
-            } else {
-              deletedFiles.add(f);
-            }
-            modifiedFiles.remove(f);
-            break;
-          case DIRECTORY_REMOVED:
-            if ((addedAncestor == null) && (deletedAncestor != null)) {
-              throw new VcsException("Incorrect change set: the parent directory " + deletedAncestor + " has been deleted, " +
-                "can't deleteFile it's child directory " + f);
-            }
-            if (deletedDirs.contains(f)) {
-              throw new VcsException("Incorrect change set: directory " + f.getPath() + " has already been deleted, can't delete a directory again");
-            }
-            if (addedDirs.contains(f)) {
-              addedDirs.remove(f);
-            } else {
-              deletedDirs.add(f);
-            }
-            deleteChildren(addedFiles, f);
-            deleteChildren(modifiedFiles, f);
-            deleteChildren(deletedFiles, f);
-            deleteChildren(addedDirs, f);
-            deleteChildren(deletedDirs, f);
-            break;
-          case CHANGED:
-            if ((addedAncestor == null) && (deletedAncestor != null)) {
-              throw new VcsException("Incorrect change set: the parent directory " + deletedAncestor + " has been deleted, " +
-                "can't modify it's child file " + f);
-            }
-            if (deletedFiles.contains(f)) {
-              throw new VcsException("Incorrect change set: file " + f.getPath() + " has already been deleted, can't modify a deleted file");
-            }
-            modifiedFiles.put(f, version);
-            break;
-          default:
-            throw new VcsException("Unable to add object " + f.getPath() + " to patch - uncknown type " + c.getType());
-        }
+    if (myFromVersion == null) {
+      buildCleanPatch(builder, includeRule);
+    } else {
+      buildIncrementalPatch(builder, includeRule);
+    }
+
+    logFinishBuildingPatch(includeRule);
+  }
+
+  private void buildCleanPatch(PatchBuilder builder, IncludeRule includeRule) throws VcsException, IOException {
+    logBuildCleanPatch(includeRule);
+
+    final File root;
+    synchronized (VaultConnection.LOCK) {
+      try {
+        VaultConnection.connect(myRoot.getProperties());
+        root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
+        VcsSupportUtil.exportFilesFromDisk(builder, root);
+      } finally {
+        VaultConnection.disconnect();
       }
     }
+  }
 
-    for (final File f : deletedFiles) {
-      builder.deleteFile(f, false);
-    }
-    for (final File d : deletedDirs) {
-      builder.deleteDirectory(d, false);
-    }
-    for (final File d : addedDirs) {
-      builder.createDirectory(d);
+  private void buildIncrementalPatch(PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
+    logBuildIncrementalPatch(includeRule);
+
+    final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
+    final List<VcsChange> changes = new LinkedList<VcsChange>();
+    for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
+      LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
+      ", user=" + i.getUser() + ", comment=" + i.getComment());
+      final List<VcsChange> l = modifications.get(i);
+      for (final VcsChange c : l) {
+        LOG.debug("Vcs change: " + c);
+      }
+      changes.addAll(l);
     }
 
     synchronized (VaultConnection.LOCK) {
       try {
         VaultConnection.connect(myRoot.getProperties());
 
-        for (final File f : addedFiles.keySet()) {
-            final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), addedFiles.get(f));
-            builder.createBinaryFile(f, null, new FileInputStream(content), content.length());
+        new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
+          public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
+            return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
           }
-        for (final File f : modifiedFiles.keySet()) {
-            final File content = VaultConnection.getObject(getPathWithIncludeRule(includeRule, f.getPath()), modifiedFiles.get(f));
-            builder.changeOrCreateBinaryFile(f, null, new FileInputStream(content), content.length());
-          }
+        }, false);
       } finally {
         VaultConnection.disconnect();
       }
@@ -234,34 +115,23 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     return "".equals(includeRule.getFrom()) ? path : includeRule.getFrom() + "/" + path;
   }
 
-  private File containsAncestor(@NotNull Set<File> files, @NotNull File f) {
-    File parent = f.getParentFile();
-    while (parent != null) {
-      if (files.contains(parent)) {
-        return parent;
-      }
-      parent = parent.getParentFile();
-    }
-    return null;
+  private void logFinishBuildingPatch(IncludeRule includeRule) {
+    LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+      + " from version " + myFromVersion + " to version " + myToVersion);
   }
 
-  private void deleteChildren(@NotNull Set<File> files, @NotNull File f) {
-    files.removeAll(collectChildren(files, f));
+  private void logStartBuildingPatch(IncludeRule includeRule) {
+    LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+      + " from version " + myFromVersion + " to version " + myToVersion);
   }
 
-  private void deleteChildren(@NotNull Map<File, String> files, @NotNull File f) {
-    for (final File c : collectChildren(files.keySet(), f)) {
-      files.remove(c);
-    }
-  }
+  private void logBuildCleanPatch(IncludeRule includeRule) {
+    LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    + " to version " + myToVersion);
+  }  
 
-  private Set<File> collectChildren(@NotNull Set<File> files, @NotNull File f) {
-    final Set<File> toDelete = new HashSet<File>();
-    for (final File c : files) {
-      if (c.getPath().startsWith(f.getPath()) && !c.getPath().equals(f.getPath())) {
-        toDelete.add(c);
-      }
-    }
-    return toDelete;
-  }
+  private void logBuildIncrementalPatch(IncludeRule includeRule) {
+    LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
+  }  
 }
