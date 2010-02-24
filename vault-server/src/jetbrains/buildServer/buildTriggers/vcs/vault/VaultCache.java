@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 
 import jetbrains.buildServer.vcs.VcsException;
+import org.jetbrains.annotations.Nullable;
+
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT_PREFIX;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.SEPARATOR;
@@ -35,7 +37,7 @@ public class VaultCache {
 
   private static File ourCachesDir = null;
 
-  public static void enableCache(File cachesDir) {
+  public static void enableCache(@Nullable File cachesDir) {
     ourCachesDir = cachesDir;
   }
 
