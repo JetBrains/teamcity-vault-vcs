@@ -39,6 +39,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                                        PropertiesProcessor,
                                                                        TestConnectionSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
+
   private static final String HTTP_PEFIX = "http://";
   private static final String HTTPS_PEFIX = "https://";
 
@@ -46,7 +47,15 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   public VaultVcsSupport(@NotNull ServerPaths serverPaths) {
     LOG.debug("Vault plugin is working");
+
     myFileContentProvider = new VaultFileContentProvider();
+
+    setUpCache(serverPaths);
+
+    VaultUtil.createTempDir();
+  }
+
+  private void setUpCache(ServerPaths serverPaths) {
     final File cache = new File(serverPaths.getCachesDir(), "vault");
     if (FileUtil.delete(cache)) {
       LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
@@ -55,12 +64,10 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
       LOG.debug("Vault plugin will store cache under " + cache.getAbsolutePath());
       VaultCache.enableCache(cache);
     } else {
-      LOG.debug("Vault plugin will not use cache");      
+      LOG.debug("Vault plugin will not use cache");
       VaultCache.enableCache(null);
     }
-    VaultUtil.createTempDir();
   }
-
 
   //-------------------------------------------------------------------------------
   // from VcsSupportContext
@@ -204,9 +211,11 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     String prop; 
     prop = properties.get(VaultUtil.SERVER);
     if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must be specified"));
+      invalids.add(new InvalidProperty(VaultUtil.SERVER,
+        "Vault server URL must be specified"));
     } else if (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX)) {
-      invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must have http://hostname[:port] or https://hostname[:port] structure"));
+      invalids.add(new InvalidProperty(VaultUtil.SERVER,
+        "Vault server URL must have http://hostname[:port] or https://hostname[:port] structure"));
     }
     prop = properties.get(VaultUtil.REPO);
     if ((prop == null) || ("".equals(prop))) {
