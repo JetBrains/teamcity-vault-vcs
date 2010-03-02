@@ -49,8 +49,8 @@ public final class VaultUtil {
   public static final String USER = "vault.user";
   public static final String PASSWORD = "secure:vault.password";
 
-  public static final String NO_API_FOUND_MESSAGE = "Vault integration could not find some of Vault Java API jars.";
-  
+  public static final VcsException NO_API_FOUND_EXCEPTION = new VcsException("Vault integration could not find some of Vault Java API jars.");
+
 //        public static final byte Added = 10;
 //        public static final byte BranchedFrom = 20;
 //        public static final byte BranchedFromItem = 30;

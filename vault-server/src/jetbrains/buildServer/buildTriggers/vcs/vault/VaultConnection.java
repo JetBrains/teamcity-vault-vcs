@@ -59,7 +59,7 @@ public final class VaultConnection {
         connectNotForce(parameters);
         return;
       } catch (NoClassDefFoundError e) {
-        throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE, e);
+        throw VaultUtil.NO_API_FOUND_EXCEPTION;
       } catch (Throwable th) {
         disconnect();
         if (i == CONNECTION_ATTEMPTS_NUMBER) {

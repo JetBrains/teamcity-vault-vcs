@@ -112,7 +112,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
+      throw VaultUtil.NO_API_FOUND_EXCEPTION;
     }
     return VaultConnection.getCurrentVersion(root.getProperties());
   }
@@ -188,7 +188,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
                                                        @NotNull String fromVersion,
                                                        @Nullable String currentVersion) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
+      throw VaultUtil.NO_API_FOUND_EXCEPTION;
     }    
     return new VaultChangeCollector(root, fromVersion, currentVersion);
   }
@@ -241,7 +241,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE);
+      throw VaultUtil.NO_API_FOUND_EXCEPTION;
     }
     VaultConnection.testConnection(vcsRoot.getProperties());
     return null;
