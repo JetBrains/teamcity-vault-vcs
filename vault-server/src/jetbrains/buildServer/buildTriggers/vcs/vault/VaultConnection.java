@@ -60,10 +60,10 @@ public final class VaultConnection {
         return;
       } catch (NoClassDefFoundError e) {
         throw new VcsException(VaultUtil.NO_API_FOUND_MESSAGE, e);
-      } catch (Throwable e) {
+      } catch (Throwable th) {
         disconnect();
         if (i == CONNECTION_ATTEMPTS_NUMBER) {
-          throw new VcsException(specifyMessage(e.getMessage()), e);
+          throw new VcsException(specifyMessage(th.getMessage()), th);
         }
       }
     }
@@ -82,8 +82,8 @@ public final class VaultConnection {
       if (ServerOperations.isConnected()) {
         ServerOperations.Logout();
       }
-    } catch (Exception e) {
-      LOG.error("Exception occurred when disconnecting from Vault server", e);
+    } catch (Throwable th) {
+      LOG.error("Exception occurred when disconnecting from Vault server", th);
     } finally {
       removeTempFiles();
     }
@@ -95,8 +95,8 @@ public final class VaultConnection {
       try {
         final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(ROOT, true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
         return "" + historyItems[0].get_TxID();
-      } catch (Exception e) {
-        throw new VcsException(specifyMessage(e.getMessage()), e);
+      } catch (Throwable th) {
+        throw new VcsException(specifyMessage(th.getMessage()), th);
       } finally {
         VaultConnection.disconnect();
       }
@@ -116,8 +116,8 @@ public final class VaultConnection {
   public static boolean objectExists(@NotNull String repoPath) throws VcsException {
     try {
       return RepositoryUtil.PathExists(repoPath);
-    } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+    } catch (Throwable th) {
+      throw new VcsException(th.getMessage(), th);
     }
   }
 
@@ -129,7 +129,7 @@ public final class VaultConnection {
     try {
       RepositoryUtil.FindVaultFileAtReposOrLocalPath(repoPath);
       return true;
-    } catch (Exception e) {
+    } catch (Throwable th) {
       return false;
     }
 }
@@ -250,8 +250,8 @@ public final class VaultConnection {
       getOptions.SetFileTime = SetFileTimeType.Modification;
       GetOperations.ProcessCommandGetVersionToLocationOutsideWorkingFolder(repoPath, (int) version, getOptions, destDir.getAbsolutePath());
       return destDir;
-    } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+    } catch (Throwable th) {
+      throw new VcsException(th.getMessage(), th);
     }
   }
 
@@ -306,15 +306,15 @@ public final class VaultConnection {
           }
         }
       }
-    } catch (Exception e) {
-      throw new VcsException(e.getMessage(), e);
+    } catch (Throwable th) {
+      throw new VcsException(th.getMessage(), th);
     }
     return 0;
   }
 
   public static VaultHistoryItem[] collectChanges(@NotNull String path,
-                                           @NotNull String fromVersion,
-                                           @NotNull String toVersion) throws VcsException {
+                                                  @NotNull String fromVersion,
+                                                  @NotNull String toVersion) throws VcsException {
     final String repoPath = path.startsWith(ROOT_PREFIX) ? path : getRepoPathFromPath(path);
     final long objectFromVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(fromVersion)) + 1;
     final long objectToVersion = getVersionByTxId(repoPath, VaultUtil.parseLong(toVersion));
@@ -325,6 +325,21 @@ public final class VaultConnection {
                                                   null, null/*"label,obliterate,pin,propertychange"*/ ,
                                                   null, null, null, null,
                                                   objectFromVersion, objectToVersion, 1000);
+  }
+
+  public static void label(@NotNull String path, @NotNull String label, @NotNull String version,
+                             @NotNull Map<String, String> parameters) throws VcsException {
+    final String repoPath = getRepoPathFromPath(path);
+    synchronized (LOCK) {
+      connect(parameters);
+      try {
+        ServerOperations.ProcessCommandLabel(repoPath, label, getVersionByTxId(repoPath, VaultUtil.parseLong(version)));
+      } catch (Exception e) {
+        throw new VcsException(specifyMessage(e.getMessage()), e);
+      } finally {
+        VaultConnection.disconnect();
+      }
+    }
   }
 
   public static VaultClientFolder listFolder(@NotNull String repoPath) {

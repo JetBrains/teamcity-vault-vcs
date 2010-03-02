@@ -37,7 +37,8 @@ import java.io.File;
 public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules,
                                                                        BuildPatchByIncludeRules,
                                                                        PropertiesProcessor,
-                                                                       TestConnectionSupport {
+                                                                       TestConnectionSupport,
+                                                                       LabelingSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
 
   private static final String HTTP_PEFIX = "http://";
@@ -92,8 +93,12 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return this;
   }
 
+  @Nullable
+  public LabelingSupport getLabelingSupport() {
+    return this;
+  }
+
 //  VcsSupportCore 	getCore(); default this
-//  LabelingSupport 	getLabelingSupport(); default null
 //  VcsPersonalSupport 	getPersonalSupport(); default null
 //  RootMerger 	getRootMerger(); default null
 
@@ -243,5 +248,24 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   // end from TestConnectionSupport
+  //-------------------------------------------------------------------------------
+
+  //-------------------------------------------------------------------------------
+  // from LabelingSupport
+
+  public String label(@NotNull String label,
+                      @NotNull String version,
+                      @NotNull VcsRoot root,
+                      @NotNull CheckoutRules checkoutRules) throws VcsException {
+    if ("".equals(label)) {
+      throw new VcsException("Label is empty");
+    }
+    for (final IncludeRule rule : checkoutRules.getIncludeRules()) {
+      VaultConnection.label(rule.getFrom(), label, version, root.getProperties());
+    }
+    return label;
+  }
+
+  // end from LabelingSupport
   //-------------------------------------------------------------------------------
 }
