@@ -212,7 +212,8 @@ public class VaultPathHistory {
 
     public void removeChild(@NotNull String name) {
       if (!myChildren.containsKey(name)) {
-        throw new RuntimeException("Unable to remove child node for name " + name + ", child node with this name doesn't exist");
+        throw new RuntimeException("Unable to remove child node for name " + name
+          + ", child node with this name doesn't exist");
       }
       myChildren.remove(name);
     }
@@ -220,14 +221,16 @@ public class VaultPathHistory {
     public void addChild(@NotNull Node child) {
       final String name = child.getName();
       if (myChildren.containsKey(name)) {
-        throw new RuntimeException("Unable to add child node for name " + name + ", child node with this name already exists");
+        throw new RuntimeException("Unable to add child node for name " + name
+          + ", child node with this name already exists");
       }
       myChildren.put(name, child);
     }
 
     public void childRenamed(@NotNull String oldName, @NotNull String newName) {
       if (!myChildren.containsKey(oldName)) {
-        throw new RuntimeException("Unable to rename child node for name " + oldName + ", child node with this name doesn't exist");
+        throw new RuntimeException("Unable to rename child node for name " + oldName
+          + ", child node with this name doesn't exist");
       }
       myChildren.put(newName, myChildren.get(oldName));
       myChildren.remove(oldName);

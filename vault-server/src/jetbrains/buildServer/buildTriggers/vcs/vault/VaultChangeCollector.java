@@ -173,7 +173,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     }
     final String repoPath = getFullPath(item.get_Name(), includeRuleFrom);
     if (isSharedPath(repoPath)) {
-      LOG.debug("Skipping " + typeStr + " command for " + repoPath + " in history, path is shared");
+      LOG.debug("Skipping " + typeStr + " command for " + repoPath
+        + " in history, path " + repoPath + " is shared");
       return;
     }
     final String misc1 = item.get_MiscInfo1();

@@ -143,7 +143,8 @@ public final class VaultUtil {
       try {
         VaultConnection.connect(root.getProperties());
         if (!VaultConnection.objectExists(VaultConnection.getRepoPathFromPath(includeRule.getFrom()))) {
-          throw new VcsException("Invalid rule " + includeRule.toDescriptiveString() + ", no such repository folder");          
+          throw new VcsException("Invalid rule " + includeRule.toDescriptiveString()
+            + ", no such repository folder");          
         }
       } finally {
         VaultConnection.disconnect();

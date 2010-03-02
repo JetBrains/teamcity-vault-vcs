@@ -86,9 +86,10 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
 
     final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
     final List<VcsChange> changes = new LinkedList<VcsChange>();
+
     for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
-      LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
-      ", user=" + i.getUser() + ", comment=" + i.getComment());
+      logModificationInfo(i);
+
       final List<VcsChange> l = modifications.get(i);
       for (final VcsChange c : l) {
         LOG.debug("Vcs change: " + c);
@@ -134,4 +135,9 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
     + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
   }  
+
+  private void logModificationInfo(VaultChangeCollector.ModificationInfo i) {
+    LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
+    ", user=" + i.getUser() + ", comment=" + i.getComment());
+  }
 }
