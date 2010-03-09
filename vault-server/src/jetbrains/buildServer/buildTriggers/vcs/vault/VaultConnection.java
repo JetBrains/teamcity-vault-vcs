@@ -65,7 +65,7 @@ public final class VaultConnection {
       } catch (Throwable th) {
         throw new VcsException(th);
       } finally {
-        VaultConnection.disconnect();
+        disconnect();
       }
     }
   }
@@ -115,7 +115,7 @@ public final class VaultConnection {
       } catch (Throwable th) {
         throw new VcsException(specifyMessage(th.getMessage()), th);
       } finally {
-        VaultConnection.disconnect();
+        disconnect();
       }
     }
   }
