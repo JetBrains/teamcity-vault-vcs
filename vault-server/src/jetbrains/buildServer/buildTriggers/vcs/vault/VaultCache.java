@@ -23,9 +23,9 @@ import java.io.File;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.Nullable;
 
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT_PREFIX;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.SEPARATOR;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT_PREFIX;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.SEPARATOR;
 
 /**
  * User: vbedrosova

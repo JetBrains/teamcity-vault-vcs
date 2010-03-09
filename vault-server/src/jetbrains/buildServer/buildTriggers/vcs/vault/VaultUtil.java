@@ -37,6 +37,11 @@ import java.util.*;
  * Time: 19:32:05
  */
 public final class VaultUtil {
+  public static final String ROOT = "$";
+  public static final String ROOT_PREFIX = "$/";
+  public static final String SEPARATOR = "/";
+  public static final String CURRENT = ".";  
+
   public static final File TEMP_DIR = new File(FileUtil.getTempDirectory(), "vault");
 
   public static void createTempDir() {
@@ -141,11 +146,27 @@ public final class VaultUtil {
   public static void checkIncludeRule(VcsRoot root, final IncludeRule includeRule) throws VcsException {
     VaultConnection.doInConnection(root.getProperties(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
-        if (!VaultConnection.objectExists(VaultConnection.getRepoPathFromPath(includeRule.getFrom()))) {
+        if (!VaultConnection.objectExists(getRepoPathFromPath(includeRule.getFrom()))) {
           throw new VcsException("Invalid rule " + includeRule.toDescriptiveString()
             + ", no such repository folder");
         }
       }
     });
+  }
+
+  public static String getRepoParentPath(@NotNull String repoPath) {
+    return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf(SEPARATOR));
+  }
+
+  public static String getName(@NotNull String repoPath) {
+    return ROOT.equals(repoPath) ? ROOT : repoPath.substring(repoPath.lastIndexOf("/") + 1);
+  }
+
+  public static String getRepoPathFromPath(@NotNull String path) {
+    return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + SEPARATOR + path.replace("\\", SEPARATOR);
+  }
+
+  public static String getPathFromRepoPath(@NotNull String repoPath) {
+    return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
   }
 }

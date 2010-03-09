@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class VaultPathHistory {
   private final Map<String, Node> myPathMap = new HashMap<String, Node>();
-  private final Node myRoot = new Node(VaultConnection.ROOT, VaultConnection.ROOT, null);
+  private final Node myRoot = new Node(VaultUtil.ROOT, VaultUtil.ROOT, null);
 
   public void rename(@NotNull String parent, @NotNull String fromName, @NotNull String toName) {
     final String from = parent + "/" + fromName;
@@ -92,7 +92,7 @@ public class VaultPathHistory {
   public String getNewPath(@NotNull String oldPath) {
     final String[] components = oldPath.split("/");
     Node node = myRoot;
-    String newPath = VaultConnection.ROOT;
+    String newPath = VaultUtil.ROOT;
     for (int i = 1; i < components.length; ++i) {
       final String name = components[i];
       if (node == null || !node.hasChild(name)) {
@@ -123,7 +123,7 @@ public class VaultPathHistory {
   private Node addTreeNode(@NotNull String oldPath, @NotNull String newPath) {
     final String[] components = oldPath.split("/");
     Node node = myRoot;
-    String np = VaultConnection.ROOT;
+    String np = VaultUtil.ROOT;
     for (int i = 1; i < components.length; ++i) {
       final String name = components[i];
       if (!node.hasChild(name)) {

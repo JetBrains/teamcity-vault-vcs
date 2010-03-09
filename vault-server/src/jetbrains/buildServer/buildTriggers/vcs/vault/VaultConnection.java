@@ -25,6 +25,8 @@ import VaultLib.VaultTxHistoryItem;
 import jetbrains.buildServer.vcs.VcsException;
 import jetbrains.buildServer.util.FileUtil;
 
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,11 +43,6 @@ import VaultClientOperationsLib.VaultClientFolder;
  */
 public final class VaultConnection {
   private static final Logger LOG = Logger.getLogger(VaultConnection.class);
-
-  public static final String ROOT = "$";
-  public static final String ROOT_PREFIX = "$/";
-  public static final String SEPARATOR = "/";
-  public static final String CURRENT = ".";
 
   private static final int CONNECTION_ATTEMPTS_NUMBER = 10;
 
@@ -282,22 +279,6 @@ public final class VaultConnection {
       throw new VcsException("Unable to get " + name + " at version "  + version + " from parent " + parent);
     }
     return f;
-  }
-
-  public static String getRepoParentPath(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf(SEPARATOR));
-  }
-
-  public static String getName(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? ROOT : repoPath.substring(repoPath.lastIndexOf("/") + 1);
-  }
-
-  public static String getRepoPathFromPath(@NotNull String path) {
-    return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + SEPARATOR + path.replace("\\", SEPARATOR);
-  }
-
-  public static String getPathFromRepoPath(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
   }
 
   private static long getVersionByTxId(@NotNull String repoPath, long txId) throws VcsException {

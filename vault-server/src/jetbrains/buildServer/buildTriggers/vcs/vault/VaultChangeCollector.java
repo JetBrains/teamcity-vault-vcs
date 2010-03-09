@@ -23,8 +23,6 @@ import VaultClientOperationsLib.VaultClientFolderColl;
 import VaultLib.VaultDateTime;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection.ROOT_PREFIX;
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import jetbrains.buildServer.vcs.*;
 import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
@@ -134,7 +132,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private void collectChange(List<VcsChange> changes,
                              String repoPath, String includeRuleFrom,
                              String version, String changeName, VcsChangeInfo.Type type) throws VcsException {
-    String relativePath = VaultConnection.getPathFromRepoPath(repoPath);
+    String relativePath = getPathFromRepoPath(repoPath);
 
     if (!"".equals(includeRuleFrom)) {
       if (relativePath.startsWith(includeRuleFrom)) {
@@ -192,7 +190,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       return;
     }
     if ("Renamed".equals(typeStr)) {
-      final String oldRepoParentPath = VaultConnection.getRepoParentPath(myPathHistory.getOldPath(repoPath));
+      final String oldRepoParentPath = getRepoParentPath(myPathHistory.getOldPath(repoPath));
       final String oldPath = oldRepoParentPath + "/" + misc1;
       final String newPath = myPathHistory.getNewPath(oldPath);
       final boolean isFile = isFile(oldPath, newPath, version);
@@ -235,7 +233,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         addFolderContent(newPath, changes, item.GetActionString(), mi);
         pushChange(changes, item.GetActionString(), mi, oldPath, DIRECTORY_REMOVED);
       }
-      myPathHistory.move(oldRepoParentPath, VaultConnection.getRepoParentPath(misc2), misc1);
+      myPathHistory.move(oldRepoParentPath, getRepoParentPath(misc2), misc1);
       return;
     }
     if ("SharedTo".equals(typeStr)) {
