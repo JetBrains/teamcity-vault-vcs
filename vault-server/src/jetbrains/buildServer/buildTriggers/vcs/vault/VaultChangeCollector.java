@@ -116,33 +116,18 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return modifications;
   }
 
-  private Stack<ChangeInfo> buildChangesStack(String includeRuleFrom) throws VcsException {
-    final VaultHistoryItem[] items;
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-        items = VaultConnection.collectChanges(includeRuleFrom, myFromVersion, myCurrentVersion);
-      } finally {
-        VaultConnection.disconnect();
-      }
-    }
-
+  private Stack<ChangeInfo> buildChangesStack(final String includeRuleFrom) throws VcsException {
     final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
-    if (items.length == 0) {
-      return changes;
-    }
-    
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-        
+
+    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+      public void process() throws Throwable {
+        final VaultHistoryItem[] items= VaultConnection.collectChanges(includeRuleFrom, myFromVersion, myCurrentVersion);
         for (final VaultHistoryItem item : items) {
           processHistoryItem(changes, item, includeRuleFrom);
         }
-      } finally {
-        VaultConnection.disconnect();
       }
-    }
+    });
+
     return changes;
   }
 

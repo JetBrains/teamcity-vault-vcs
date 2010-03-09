@@ -138,17 +138,14 @@ public final class VaultUtil {
     }
   }
 
-  public static void checkIncludeRule(VcsRoot root, IncludeRule includeRule) throws VcsException {
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(root.getProperties());
+  public static void checkIncludeRule(VcsRoot root, final IncludeRule includeRule) throws VcsException {
+    VaultConnection.doInConnection(root.getProperties(), new VaultConnection.InConnectionProcessor() {
+      public void process() throws Throwable {
         if (!VaultConnection.objectExists(VaultConnection.getRepoPathFromPath(includeRule.getFrom()))) {
           throw new VcsException("Invalid rule " + includeRule.toDescriptiveString()
-            + ", no such repository folder");          
+            + ", no such repository folder");
         }
-      } finally {
-        VaultConnection.disconnect();
       }
-    }
+    });
   }
 }

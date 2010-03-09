@@ -38,15 +38,31 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
 
   @NotNull
   public byte[] getContent(@NotNull String path, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(root.getProperties());
-        return FileUtil.loadFileBytes(VaultConnection.getObject(path, version));
-      } catch (IOException e) {
-        throw new VcsException(e.getMessage(), e);
-      } finally {
-        VaultConnection.disconnect();
-      }
+    final GetObjectProcessor processor = new GetObjectProcessor(path, version);
+    VaultConnection.doInConnection(root.getProperties(), processor);
+    try {
+      return FileUtil.loadFileBytes(processor.getObject());
+    } catch (IOException e) {
+      throw new VcsException(e);
+    }
+  }
+
+  private static final class GetObjectProcessor implements VaultConnection.InConnectionProcessor {
+    private final String myPath;
+    private final String myVersion;
+    private File myObject;
+
+    private GetObjectProcessor(String path, String version) {
+      myPath = path;
+      myVersion = version;
+    }
+
+    public void process() throws Throwable {
+      myObject = VaultConnection.getObject(myPath, myVersion);
+    }
+
+    public File getObject() {
+      return myObject;
     }
   }
 }

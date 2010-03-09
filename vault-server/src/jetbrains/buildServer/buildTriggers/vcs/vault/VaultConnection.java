@@ -40,8 +40,6 @@ import VaultClientOperationsLib.VaultClientFolder;
  * Time: 14:18:44
  */
 public final class VaultConnection {
-  public static final Object LOCK = new Object();
-
   private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
   public static final String ROOT = "$";
@@ -51,10 +49,12 @@ public final class VaultConnection {
 
   private static final int CONNECTION_ATTEMPTS_NUMBER = 10;
 
+  private static final Object LOCK = new Object();
+
   private static final List<File> ourTempFiles = new ArrayList<File>();
 
-  public static abstract class InConnectionProcessor {
-    public abstract void process() throws Throwable;
+  public static interface InConnectionProcessor {
+    void process() throws Throwable;
   }
 
   public static void doInConnection(@NotNull Map<String, String> parameters,
@@ -66,14 +66,14 @@ public final class VaultConnection {
       } catch (VcsException e) {
         throw e;
       } catch (Throwable th) {
-        throw new VcsException(specifyMessage(th.getMessage()), th);
+        throw new VcsException(th);
       } finally {
         VaultConnection.disconnect();
       }
     }
   }
 
-  public static void connect(@NotNull Map<String, String> parameters) throws VcsException {
+  private static void connect(@NotNull Map<String, String> parameters) throws VcsException {
     for (int i = 1; i <= CONNECTION_ATTEMPTS_NUMBER; ++i) {
       try {
         connectNotForce(parameters);
@@ -97,7 +97,7 @@ public final class VaultConnection {
     ServerOperations.Login();
   }
 
-  public static void disconnect() {
+  private static void disconnect() {
     try {
       if (ServerOperations.isConnected()) {
         ServerOperations.Logout();
@@ -124,13 +124,9 @@ public final class VaultConnection {
   }
 
   public static void testConnection(@NotNull Map<String, String> parameters) throws VcsException {
-    synchronized (LOCK) {
-      try {
-        connect(parameters);
-      } finally {
-        disconnect();
-      }
-    }
+    doInConnection(parameters, new InConnectionProcessor() {
+      public void process() throws Throwable {/* do nothing */}
+    });
   }
 
   public static boolean objectExists(@NotNull String repoPath) throws VcsException {
@@ -354,7 +350,6 @@ public final class VaultConnection {
 
     final String repoPath = getRepoPathFromPath(path);
     doInConnection(parameters, new InConnectionProcessor() {
-      @Override
       public void process() throws Throwable {
         deleteLabel(repoPath, label);
         ServerOperations.ProcessCommandLabel(repoPath, label, getVersionByTxId(repoPath, VaultUtil.parseLong(version)));

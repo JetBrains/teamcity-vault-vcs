@@ -66,22 +66,18 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     logFinishBuildingPatch(includeRule);
   }
 
-  private void buildCleanPatch(PatchBuilder builder, IncludeRule includeRule) throws VcsException, IOException {
+  private void buildCleanPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
     logBuildCleanPatch(includeRule);
 
-    final File root;
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-        root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
+    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+      public void process() throws Throwable {
+        final File root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
         VcsSupportUtil.exportFilesFromDisk(builder, root);
-      } finally {
-        VaultConnection.disconnect();
       }
-    }
+    });
   }
 
-  private void buildIncrementalPatch(PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
+  private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
     logBuildIncrementalPatch(includeRule);
 
     final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
@@ -97,19 +93,15 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       changes.addAll(l);
     }
 
-    synchronized (VaultConnection.LOCK) {
-      try {
-        VaultConnection.connect(myRoot.getProperties());
-
+    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+      public void process() throws Throwable {
         new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
           public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
             return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
           }
         }, false);
-      } finally {
-        VaultConnection.disconnect();
       }
-    }
+    });
   }
 
   private String getPathWithIncludeRule(@NotNull IncludeRule includeRule, @NotNull String path) {
