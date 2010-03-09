@@ -53,6 +53,26 @@ public final class VaultConnection {
 
   private static final List<File> ourTempFiles = new ArrayList<File>();
 
+  public static abstract class InConnectionProcessor {
+    public abstract void process() throws Throwable;
+  }
+
+  public static void doInConnection(@NotNull Map<String, String> parameters,
+                                    @NotNull InConnectionProcessor processor) throws VcsException {
+    synchronized (LOCK) {
+      connect(parameters);
+      try {
+        processor.process();
+      } catch (VcsException e) {
+        throw e;
+      } catch (Throwable th) {
+        throw new VcsException(specifyMessage(th.getMessage()), th);
+      } finally {
+        VaultConnection.disconnect();
+      }
+    }
+  }
+
   public static void connect(@NotNull Map<String, String> parameters) throws VcsException {
     for (int i = 1; i <= CONNECTION_ATTEMPTS_NUMBER; ++i) {
       try {
@@ -117,7 +137,7 @@ public final class VaultConnection {
     try {
       return RepositoryUtil.PathExists(repoPath);
     } catch (Throwable th) {
-      throw new VcsException(th.getMessage(), th);
+      throw new VcsException(th);
     }
   }
 
@@ -205,7 +225,7 @@ public final class VaultConnection {
     try {
       FileUtil.copy(getFile, cachedFile);
     } catch (IOException e) {
-      throw new VcsException(e.getMessage(), e);
+      throw new VcsException(e);
     }
     return cachedFile;
   }
@@ -227,7 +247,7 @@ public final class VaultConnection {
     try {
       FileUtil.copyDir(getFolder, cachedFolder);
     } catch (IOException e) {
-      throw new VcsException(e.getMessage(), e);
+      throw new VcsException(e);
     }
     return cachedFolder ;
   }
@@ -251,7 +271,7 @@ public final class VaultConnection {
       GetOperations.ProcessCommandGetVersionToLocationOutsideWorkingFolder(repoPath, (int) version, getOptions, destDir.getAbsolutePath());
       return destDir;
     } catch (Throwable th) {
-      throw new VcsException(th.getMessage(), th);
+      throw new VcsException(th);
     }
   }
 
@@ -307,7 +327,7 @@ public final class VaultConnection {
         }
       }
     } catch (Throwable th) {
-      throw new VcsException(th.getMessage(), th);
+      throw new VcsException(th);
     }
     return 0;
   }
@@ -327,18 +347,29 @@ public final class VaultConnection {
                                                   objectFromVersion, objectToVersion, 1000);
   }
 
-  public static void label(@NotNull String path, @NotNull String label, @NotNull String version,
-                             @NotNull Map<String, String> parameters) throws VcsException {
+  public static void label(@NotNull String path,
+                           @NotNull final String label,
+                           @NotNull final String version,
+                           @NotNull Map<String, String> parameters) throws VcsException {
+
     final String repoPath = getRepoPathFromPath(path);
-    synchronized (LOCK) {
-      connect(parameters);
-      try {
+    doInConnection(parameters, new InConnectionProcessor() {
+      @Override
+      public void process() throws Throwable {
+        deleteLabel(repoPath, label);
         ServerOperations.ProcessCommandLabel(repoPath, label, getVersionByTxId(repoPath, VaultUtil.parseLong(version)));
-      } catch (Exception e) {
-        throw new VcsException(specifyMessage(e.getMessage()), e);
-      } finally {
-        VaultConnection.disconnect();
       }
+    });
+  }
+
+  private static void deleteLabel(String repoPath, String label) throws VcsException {
+    try {
+      ServerOperations.ProcessCommandDeleteLabel(repoPath, label);
+    } catch (Exception e) {
+      if ((e.getMessage() != null) && e.getMessage().contains("Could not find label")) {
+        return;
+      }
+      throw new VcsException(e);
     }
   }
 
