@@ -48,7 +48,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   private static final String USER = System.getProperty("vault.test.login");
   private static final String PASWORD = System.getProperty("vault.test.password");
 
-  {
+  static {
     if (SERVER_URL == null) {
       fail("Vault test server URL is not specified in JVM arguments." +
         "Use -Dvault.test.server=\"...\" jvm option to specify Vault test server URL");
