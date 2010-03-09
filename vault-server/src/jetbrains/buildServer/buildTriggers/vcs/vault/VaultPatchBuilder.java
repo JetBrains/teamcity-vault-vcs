@@ -85,19 +85,14 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
 
     for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
       logModificationInfo(i);
-
-      final List<VcsChange> l = modifications.get(i);
-      for (final VcsChange c : l) {
-        LOG.debug("Vcs change: " + c);
-      }
-      changes.addAll(l);
+      changes.addAll(modifications.get(i));
     }
 
     VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
         new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
-          public File getFile(@NotNull String s, @NotNull String s1) throws VcsException {
-            return VaultConnection.getObject(getPathWithIncludeRule(includeRule, s), s1);
+          public File getFile(@NotNull String path, @NotNull String version) throws VcsException {
+            return VaultConnection.getObject(getPathWithIncludeRule(includeRule, path), version);
           }
         }, false);
       }

@@ -33,7 +33,7 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
   public byte[] getContent(@NotNull VcsModification vcsModification, @NotNull VcsChangeInfo change, @NotNull VcsChangeInfo.ContentType contentType, @NotNull VcsRoot vcsRoot) throws VcsException {
     return getContent(change.getRelativeFileName(), vcsRoot,
       contentType == VcsChangeInfo.ContentType.BEFORE_CHANGE ? change.getBeforeChangeRevisionNumber()
-        : change.getAfterChangeRevisionNumber());
+                                                             : change.getAfterChangeRevisionNumber());
   }
 
   @NotNull

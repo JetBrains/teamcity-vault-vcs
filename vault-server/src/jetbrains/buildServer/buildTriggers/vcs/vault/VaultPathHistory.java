@@ -28,7 +28,12 @@ import java.util.Map;
  */
 public class VaultPathHistory {
   private final Map<String, Node> myPathMap = new HashMap<String, Node>();
-  private final Node myRoot = new Node(VaultUtil.ROOT, VaultUtil.ROOT, null);
+  private Node myRoot = new Node(VaultUtil.ROOT, VaultUtil.ROOT, null);
+
+  public void clear() {
+    myPathMap.clear();
+    myRoot = new Node(VaultUtil.ROOT, VaultUtil.ROOT, null);
+  }
 
   public void rename(@NotNull String parent, @NotNull String fromName, @NotNull String toName) {
     final String from = parent + "/" + fromName;
