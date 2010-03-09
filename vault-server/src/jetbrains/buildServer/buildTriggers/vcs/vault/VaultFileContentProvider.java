@@ -38,12 +38,10 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
 
   @NotNull
   public byte[] getContent(@NotNull String path, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
-    final File f;
     synchronized (VaultConnection.LOCK) {
       try {
         VaultConnection.connect(root.getProperties());
-        f = VaultConnection.getObject(path, version);
-        return FileUtil.loadFileBytes(f);
+        return FileUtil.loadFileBytes(VaultConnection.getObject(path, version));
       } catch (IOException e) {
         throw new VcsException(e.getMessage(), e);
       } finally {
