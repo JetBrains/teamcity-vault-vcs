@@ -354,7 +354,7 @@ public final class VaultConnection {
   }
 
   private static String specifyMessage(String message) {
-    return "Exception occured while trying to connect to Vault server. See original message below:\n" + message;   
+    return "Exception occurred while trying to connect to Vault server. See original message below:\n" + message;   
   }
 
   private static void removeTempFiles() {
