@@ -309,7 +309,7 @@ public final class VaultConnection {
     return 0;
   }
 
-  public static VaultHistoryItem[] collectChanges(@NotNull String path,
+  public static VaultHistoryItem[] collectHistory(@NotNull String path,
                                                   @NotNull String fromVersion,
                                                   @NotNull String toVersion) throws VcsException {
     final String repoPath = path.startsWith(ROOT_PREFIX) ? path : getRepoPathFromPath(path);

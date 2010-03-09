@@ -119,7 +119,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
     VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
-        final VaultHistoryItem[] items= VaultConnection.collectChanges(includeRuleFrom, myFromVersion, myCurrentVersion);
+        final VaultHistoryItem[] items= VaultConnection.collectHistory(includeRuleFrom, myFromVersion, myCurrentVersion);
         for (final VaultHistoryItem item : items) {
           processHistoryItem(changes, item, includeRuleFrom);
         }
