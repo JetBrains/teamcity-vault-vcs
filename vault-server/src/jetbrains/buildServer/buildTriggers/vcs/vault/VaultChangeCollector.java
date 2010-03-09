@@ -63,7 +63,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   public void dispose() throws VcsException {
-  }  
+  }
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
@@ -81,6 +81,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     }
 
     logFinishCollectingChanges(includeRule);
+
+    clear();
 
     return changes;
   }
@@ -380,6 +382,12 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       + ", action=" + item.GetActionString()
       + ", comment=" + item.get_Comment());
   }
+
+  private void clear() {
+    myPathHistory.clear();
+    myObjectTypesCache.clear();
+    mySharedPaths.clear();
+  }  
 
   private static class ChangeInfo {
     @NotNull
