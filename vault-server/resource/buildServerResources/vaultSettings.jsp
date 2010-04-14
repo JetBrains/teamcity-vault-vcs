@@ -31,16 +31,16 @@
             <tr>
                 <td colspan="2">
                     <div class="attentionComment">
-                        <font color="red">Vault integration could not find Vault Java API jars.</font>
+                        <font color="red">SourceGear Vault integration could not find Vault Java API jars.</font>
                         <br><br>
                         These files can be found at Vault Java Command Line Client under <strong>vaultJavaCLC##</strong>${fileSeparator}lib
-                        directory where <strong>##</strong> are digits corresponding Vault version.
+                        directory where <strong>##</strong> are digits corresponding to Vault version.
                         Copy these files into '${libDir}' folder and restart TeamCity.
+                        <br><br>
+                        Please, note that some of the jars may be of the same name as jars bundled with TeamCity under
+                        '${libDir}' folder, so proper renaming must be performed.
                         <br>
-                        Please, note that some of them may be of the same name as bundled TeamCity library jars under
-                        '${libDir}' folder (still both jars are necessary) so proper renaming must be performed.
-                        <br>
-                        For example, when copying util.jar from Java Command Line client to '${libDir}' rename it to util_1.jar.
+                        For example, when copying util.jar from Java Command Line client to '${libDir}' rename it to util_vault.jar.
                         <br><br>
                         If you have no Vault Java Command Line Client you can find the related information on SourceGear Vault
                         <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>.

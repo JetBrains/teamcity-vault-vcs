@@ -89,11 +89,13 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return this;
   }
 
+  @Override
   @Nullable
   public TestConnectionSupport getTestConnectionSupport() {
     return this;
   }
 
+  @Override
   @Nullable
   public LabelingSupport getLabelingSupport() {
     return this;
@@ -122,10 +124,12 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return false; //TODO: false for now till labeling not supported
   }
 
+  @Override
   public boolean isCurrentVersionExpensive() {
     return true;
   }
 
+  @Override
   public boolean allowSourceCaching() {
     return false;
   }
@@ -144,7 +148,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getDisplayName() {
-    return "Vault";
+    return "SourceGear Vault (experimental)";
   }
 
   public PropertiesProcessor getVcsPropertiesProcessor() {

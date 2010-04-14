@@ -247,9 +247,11 @@
     <echo message="Copying plugin descriptor file '${source}' to '${dest}'."/>
     <copy file="${source}" tofile="${dest}" failonerror="false"/>
 
-    <echo message="Replacing '@version@' on '${plugin.version}' in the copied plugin descriptor file."/>
+    <echo message="Replacing '@Plugin_Version@' on '${plugin.version}' in the copied plugin descriptor file."/>
     <replace file="${dest}" value="${plugin.version}">
-      <replacetoken><![CDATA[@version@]]></replacetoken>
+      <replacefilter token="@Plugin_Version@" value="${plugin.version}"/>
+      <replacefilter token="@Plugin_Vendor@" value="JetBrains, s.r.o."/>
+      <replacefilter token="@Plugin_Vendor_Url@" value="http://www.jetbrains.com"/>
     </replace>
   </target>
 
