@@ -55,7 +55,8 @@ public final class VaultConnection {
   }
 
   public static void doInConnection(@NotNull Map<String, String> parameters,
-                                    @NotNull InConnectionProcessor processor) throws VcsException {
+                                    @NotNull InConnectionProcessor processor,
+                                    boolean preserveTempFiles) throws VcsException {
     synchronized (LOCK) {
       connect(parameters);
       try {
@@ -65,7 +66,7 @@ public final class VaultConnection {
       } catch (Throwable th) {
         throw new VcsException(th);
       } finally {
-        disconnect();
+        disconnect(preserveTempFiles);
       }
     }
   }
@@ -78,7 +79,7 @@ public final class VaultConnection {
       } catch (NoClassDefFoundError e) {
         throw VaultUtil.NO_API_FOUND_EXCEPTION;
       } catch (Throwable th) {
-        disconnect();
+        disconnect(false);
         if (i == CONNECTION_ATTEMPTS_NUMBER) {
           throw new VcsException(specifyMessage(th.getMessage()), th);
         }
@@ -94,7 +95,7 @@ public final class VaultConnection {
     ServerOperations.Login();
   }
 
-  private static void disconnect() {
+  private static void disconnect(boolean preserveTempFiles) {
     try {
       if (ServerOperations.isConnected()) {
         ServerOperations.Logout();
@@ -102,7 +103,9 @@ public final class VaultConnection {
     } catch (Throwable th) {
       LOG.error("Exception occurred when disconnecting from Vault server", th);
     } finally {
-      removeTempFiles();
+      if (!preserveTempFiles) {
+        removeTempFiles();
+      }
     }
   }
 
@@ -116,7 +119,7 @@ public final class VaultConnection {
       } catch (Throwable th) {
         throw new VcsException(specifyMessage(th.getMessage()), th);
       } finally {
-        disconnect();
+        disconnect(false);
       }
     }
   }
@@ -124,7 +127,7 @@ public final class VaultConnection {
   public static void testConnection(@NotNull Map<String, String> parameters) throws VcsException {
     doInConnection(parameters, new InConnectionProcessor() {
       public void process() throws Throwable {/* do nothing */}
-    });
+    }, false);
   }
 
   public static boolean objectExists(@NotNull String repoPath) throws VcsException {
@@ -336,7 +339,7 @@ public final class VaultConnection {
         deleteLabel(repoPath, label);
         ServerOperations.ProcessCommandLabel(repoPath, label, getVersionByTxId(repoPath, VaultUtil.parseLong(version)));
       }
-    });
+    }, false);
   }
 
   private static void deleteLabel(String repoPath, String label) throws VcsException {

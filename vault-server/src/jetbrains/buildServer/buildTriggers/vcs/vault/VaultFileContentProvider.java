@@ -39,7 +39,7 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
   @NotNull
   public byte[] getContent(@NotNull String path, @NotNull VcsRoot root, @NotNull String version) throws VcsException {
     final GetObjectProcessor processor = new GetObjectProcessor(path, version);
-    VaultConnection.doInConnection(root.getProperties(), processor);
+    VaultConnection.doInConnection(root.getProperties(), processor, true);
     try {
       return FileUtil.loadFileBytes(processor.getObject());
     } catch (IOException e) {

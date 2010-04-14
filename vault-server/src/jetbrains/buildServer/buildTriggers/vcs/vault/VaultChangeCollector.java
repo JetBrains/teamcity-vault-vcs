@@ -126,7 +126,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
           processHistoryItem(changes, item, includeRuleFrom);
         }
       }
-    });
+    }, false);
 
     return changes;
   }

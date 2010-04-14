@@ -151,7 +151,7 @@ public final class VaultUtil {
             + ", no such repository folder");
         }
       }
-    });
+    }, false);
   }
 
   public static String getRepoParentPath(@NotNull String repoPath) {

@@ -74,7 +74,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
         final File root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
         VcsSupportUtil.exportFilesFromDisk(builder, root);
       }
-    });
+    }, false);
   }
 
   private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
@@ -96,7 +96,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
           }
         }, false);
       }
-    });
+    }, false);
   }
 
   private String getPathWithIncludeRule(@NotNull IncludeRule includeRule, @NotNull String path) {
