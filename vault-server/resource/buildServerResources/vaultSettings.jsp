@@ -24,6 +24,7 @@
 
 <table class="runnerFormTable">
     <c:set var="vaultApiPresent"><%=VaultApiDetector.detectApi()%></c:set>
+    <c:set var="dataDirPath"><%=VaultApiDetector.getDataDirectoryPath()%></c:set>
     <c:set var="fileSeparator"><%=File.separator%></c:set>
     
     <l:settingsGroup title="Vault Settings">
@@ -31,19 +32,16 @@
             <tr>
                 <td colspan="2">
                     <div class="attentionComment">
-                        <font color="red">SourceGear Vault integration could not find Vault Java API jars.</font>
-                        <br><br>
-                        These files can be found at Vault Java Command Line Client under <strong>vaultJavaCLC##</strong>${fileSeparator}lib
-                        directory where <strong>##</strong> are digits corresponding to Vault version.
-                        Copy these files into '${libDir}' folder and restart TeamCity.
-                        <br><br>
-                        Please, note that some of the jars may be of the same name as jars bundled with TeamCity under
-                        '${libDir}' folder, so proper renaming must be performed.
-                        <br>
-                        For example, when copying util.jar from Java Command Line client to '${libDir}' rename it to util_vault.jar.
-                        <br><br>
-                        If you have no Vault Java Command Line Client you can find the related information on SourceGear Vault
-                        <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>.
+                      <font color="red">SourceGear Vault integration could not find Vault Java API jars.</font>
+                      <br><br>
+                      These files can be found at Vault Java Command Line Client under <strong>vaultJavaCLC##</strong>${fileSeparator}lib
+                      directory where <strong>##</strong> are digits corresponding to Vault version.
+                      <br><br>
+                      To install these files, create directory <strong>${dataDirPath}${fileSeparator}plugins${fileSeparator}VaultAPI</strong>
+                      and put all of the *.jar files from the Java Command Line Client to this directory. Then restart the server.
+                      <br><br>
+                      If you have no Vault Java Command Line Client you can find the related information on SourceGear Vault
+                      <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>.
                     </div>
                 </td>
             </tr>

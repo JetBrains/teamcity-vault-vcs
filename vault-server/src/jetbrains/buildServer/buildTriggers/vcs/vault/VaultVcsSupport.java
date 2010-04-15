@@ -55,6 +55,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     setUpCache(serverPaths);
 
     VaultUtil.createTempDir();
+
+    VaultApiDetector.setServerPaths(serverPaths);
   }
 
   private void setUpCache(ServerPaths serverPaths) {

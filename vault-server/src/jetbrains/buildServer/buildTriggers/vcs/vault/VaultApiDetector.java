@@ -16,11 +16,9 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import VaultClientNetLib.VaultConnection;
-
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.net.URL;
+import jetbrains.buildServer.serverSide.ServerPaths;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * User: vbedrosova
@@ -30,6 +28,15 @@ import java.net.URL;
 public class VaultApiDetector {
   private static boolean ourInited = false;
   private static boolean ourApiPresent = false;
+  private static ServerPaths ourServerPaths;
+
+  static void setServerPaths(@NotNull ServerPaths serverPaths) {
+    ourServerPaths = serverPaths;
+  }
+
+  public static String getDataDirectoryPath() {
+    return ourServerPaths.getDataDirectory().getAbsolutePath();
+  }
 
   public static boolean detectApi() {
     if(!ourInited) {
