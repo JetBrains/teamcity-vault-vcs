@@ -18,6 +18,7 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.net.URL;
 import jetbrains.buildServer.serverSide.ServerPaths;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -26,6 +27,8 @@ import org.jetbrains.annotations.NotNull;
  * Time: 16:09:01
  */
 public class VaultApiDetector {
+  private static final Logger LOG = Logger.getLogger(VaultApiDetector.class);
+
   private static boolean ourInited = false;
   private static boolean ourApiPresent = false;
   private static ServerPaths ourServerPaths;
@@ -54,8 +57,10 @@ public class VaultApiDetector {
         return false;       
       }
     } catch (ClassNotFoundException e) {
+      LOG.warn(e.getMessage(), e);
       return false;
     } catch (NoClassDefFoundError e) {
+      LOG.warn(e.getMessage(), e);
       return false;
     }
     return true;
