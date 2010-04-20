@@ -262,6 +262,7 @@ public final class VaultConnection {
       VaultUtil.TEMP_DIR.mkdirs();
       final File destDir = FileUtil.createTempDirectory("vault_", "", VaultUtil.TEMP_DIR);
       ourTempFiles.add(destDir);
+      LOG.debug("Getting object: " + repoPath + " to " + destDir.getAbsolutePath());
       final GetOptions getOptions = new GetOptions();
       getOptions.Recursive = recursive;
       getOptions.SetFileTime = SetFileTimeType.Modification;
