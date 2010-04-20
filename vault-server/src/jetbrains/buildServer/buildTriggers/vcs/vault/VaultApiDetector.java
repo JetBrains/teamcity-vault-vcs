@@ -57,10 +57,10 @@ public class VaultApiDetector {
         return false;       
       }
     } catch (ClassNotFoundException e) {
-      LOG.warn(e.getMessage(), e);
+      LOG.debug(e.getMessage(), e);
       return false;
     } catch (NoClassDefFoundError e) {
-      LOG.warn(e.getMessage(), e);
+      LOG.debug(e.getMessage(), e);
       return false;
     }
     return true;
