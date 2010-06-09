@@ -20,7 +20,6 @@
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
 <%@ taglib prefix="bs" tagdir="/WEB-INF/tags" %>
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
-<c:set var="libDir" value='<%=application.getRealPath("WEB-INF/lib")%>'/>
 
 <table class="runnerFormTable">
     <c:set var="vaultApiPresent"><%=VaultApiDetector.detectApi()%></c:set>
