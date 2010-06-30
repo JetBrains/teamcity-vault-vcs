@@ -76,7 +76,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     final Map<ModificationInfo, List<VcsChange>> modifications = collectModifications(includeRule);
     if (!modifications.isEmpty()) {
       for (ModificationInfo mi : modifications.keySet()) {
-        changes.add(new ModificationData(mi.getDate(), modifications.get(mi), mi.getComment(), mi.getUser(), myRoot, mi.getVersion(), mi.getVersion()));
+        changes.add(new ModificationData(mi.getDate(), modifications.get(mi), mi.getComment(), mi.getUser(),
+          myRoot, mi.getVersion(), VaultConnection.getDisplayVersion(mi.getVersion(), myRoot.getProperties())));
       }
     }
 

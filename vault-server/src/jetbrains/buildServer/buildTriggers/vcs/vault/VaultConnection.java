@@ -124,6 +124,19 @@ public final class VaultConnection {
     }
   }
 
+  public static String getDisplayVersion(@NotNull String version, @NotNull Map<String, String> parameters) throws VcsException {
+    synchronized (LOCK) {
+      connect(parameters);
+      try {
+        return "" + getVersionByTxIdForFolder(ROOT, VaultUtil.parseLong(version));
+      } catch (Throwable th) {
+        throw new VcsException(specifyMessage(th.getMessage()), th);
+      } finally {
+        disconnect(false);
+      }
+    }
+  }
+
   public static void testConnection(@NotNull Map<String, String> parameters) throws VcsException {
     doInConnection(parameters, new InConnectionProcessor() {
       public void process() throws Throwable {/* do nothing */}
@@ -292,24 +305,33 @@ public final class VaultConnection {
         return 0;
       }
       if (isFileForExistingObject(repoPath)) {
-        final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
-                                                null, null, null, null, null, null, -1, -1, 1000);
-
-        for (final VaultHistoryItem i : historyItems) {
-          if (i.get_TxID() <= txId) {
-            return i.get_Version(); // TODO: int - long
-          }
-        }
+        return getVersionByTxIdForFile(repoPath, txId);
       } else {
-        final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(repoPath, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1000);
-        for (final VaultTxHistoryItem i : txHistoryItems) {
-          if (i.get_TxID() <= txId) {
-            return i.get_Version(); // TODO: int - long
-          }
-        }
+        return getVersionByTxIdForFolder(repoPath, txId);
       }
     } catch (Throwable th) {
       throw new VcsException(th);
+    }
+  }
+
+  private static long getVersionByTxIdForFile(@NotNull String repoPath, long txId) {
+    final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(repoPath, true, DateSortOption.desc,
+                                            null, null, null, null, null, null, -1, -1, 1000);
+
+    for (final VaultHistoryItem i : historyItems) {
+      if (i.get_TxID() <= txId) {
+        return i.get_Version(); // TODO: int - long
+      }
+    }
+    return 0;
+  }
+
+  private static long getVersionByTxIdForFolder(@NotNull String repoPath, long txId) {
+    final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(repoPath, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1000);
+    for (final VaultTxHistoryItem i : txHistoryItems) {
+      if (i.get_TxID() <= txId) {
+        return i.get_Version(); // TODO: int - long
+      }
     }
     return 0;
   }
