@@ -570,18 +570,4 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
   }
-
-  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testAddDir() throws Exception {
-    final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
-    final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-
-    try {
-      patchBuilder.deleteDirectory(new File("dir"), false);
-      patchBuilder.createDirectory(new File("dir"));
-    } finally {
-      patchBuilder.close();
-    }
-    checkPatchResult(outputBuffer.toByteArray());
-  }
 }
