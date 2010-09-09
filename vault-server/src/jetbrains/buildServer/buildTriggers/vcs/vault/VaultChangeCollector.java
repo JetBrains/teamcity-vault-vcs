@@ -23,14 +23,15 @@ import VaultClientOperationsLib.VaultClientFolderColl;
 import VaultLib.VaultDateTime;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import jetbrains.buildServer.vcs.*;
-import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
+import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 
 
 /**
@@ -142,6 +143,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
         relativePath = relativePath.substring(includeRuleFrom.length() + 1);
       } else {
         LOG.debug("Relative path " + relativePath + " in repo doesn't start with include rule \"from\" " + includeRuleFrom);
+         return;
       }
     }
 
