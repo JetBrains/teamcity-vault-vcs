@@ -16,16 +16,16 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import org.jetbrains.annotations.NotNull;
-import org.apache.log4j.Logger;
 import VaultClientIntegrationLib.*;
-import VaultLib.VaultHistoryItem;
+import VaultClientOperationsLib.SetFileTimeType;
+import VaultClientOperationsLib.VaultClientFolder;
 import VaultLib.VaultDate;
+import VaultLib.VaultHistoryItem;
 import VaultLib.VaultTxHistoryItem;
-import jetbrains.buildServer.vcs.VcsException;
 import jetbrains.buildServer.util.FileUtil;
-
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
+import jetbrains.buildServer.vcs.VcsException;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import VaultClientOperationsLib.SetFileTimeType;
-import VaultClientOperationsLib.VaultClientFolder;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 
 /**
  * User: vbedrosova
@@ -196,7 +195,7 @@ public final class VaultConnection {
       LOG.debug("Object: " + repoPath + " exists at obj version: " + objVersion);
       return getObjectItself(repoPath, objVersion, recursive);
     }
-    LOG.debug("Object: " + repoPath + "doesn't exist at version: " + version + ", getting from parent");
+    LOG.debug("Object: " + repoPath + " doesn't exist at version: " + version + ", getting from parent");
     final String name = getName(repoPath);
     final String parent = getRepoParentPath(repoPath);
 
