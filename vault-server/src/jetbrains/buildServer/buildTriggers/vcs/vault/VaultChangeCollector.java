@@ -174,7 +174,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     }
 
     final VaultDateTime txDate = item.get_TxDate();
-    final Date date = new GregorianCalendar(txDate.get_Year(), txDate.get_Month(),
+    final Date date = new GregorianCalendar(txDate.get_Year(), txDate.get_Month() - 1,
       txDate.get_Day(), txDate.get_Hour(),
       txDate.get_Minute(), txDate.get_Second()).getTime();
     final String version = "" + item.get_TxID();
