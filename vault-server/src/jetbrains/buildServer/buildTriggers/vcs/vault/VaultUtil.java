@@ -21,15 +21,10 @@ import jetbrains.buildServer.vcs.IncludeRule;
 import jetbrains.buildServer.vcs.VcsException;
 import jetbrains.buildServer.vcs.VcsRoot;
 import org.jetbrains.annotations.NotNull;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: vbedrosova
@@ -100,8 +95,6 @@ public final class VaultUtil {
     NOT_CHANGED_CHANGE_TYPES.add("SnapshotFrom");
     NOT_CHANGED_CHANGE_TYPES.add("SnapshotItem");
 
-    NOT_CHANGED_CHANGE_TYPES.add("Undeleted");
-
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFrom");
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShare");
     NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShareItem");
@@ -120,6 +113,8 @@ public final class VaultUtil {
     ADDED_CHANGE_TYPES.add("RenamedItem");
 
     ADDED_CHANGE_TYPES.add("SharedTo");
+
+    ADDED_CHANGE_TYPES.add("Undeleted");
   }
 
   public static final Set<String> CHANGED_CHANGE_TYPES =  new HashSet<String>();

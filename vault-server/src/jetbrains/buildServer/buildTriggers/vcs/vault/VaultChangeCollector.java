@@ -95,7 +95,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
     if (myFromVersion.equals(myCurrentVersion)) {
       logWillNotCollectChanges(includeRule);
-      return Collections.EMPTY_MAP;
+      return Collections.emptyMap();
     }
 
     final Map<ModificationInfo, List<VcsChange>> modifications = new LinkedHashMap<ModificationInfo, List<VcsChange>>();
@@ -254,6 +254,11 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     }
     if ("CheckIn".equals(typeStr)) {
       pushChange(changes, item.GetActionString(), mi, myPathHistory.getOldPath(repoPath), CHANGED);
+      return;
+    }
+    if ("Undeleted".equals(typeStr)) {
+      final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+      pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, myPathHistory.getNewPath(oldPath), version) ? ADDED : DIRECTORY_ADDED);
       return;
     }
     final String oldPath = myPathHistory.getOldPath(repoPath);
