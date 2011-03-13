@@ -16,27 +16,25 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.vcs.patches.PatchTestCase;
-import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
-import jetbrains.buildServer.vcs.impl.SVcsRootImpl;
-import jetbrains.buildServer.vcs.IncludeRule;
-
-import java.io.File;
-import java.io.ByteArrayOutputStream;
-
-import org.testng.annotations.Test;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.AfterMethod;
-import org.jetbrains.annotations.NotNull;
-import VaultClientIntegrationLib.ServerOperations;
 import VaultClientIntegrationLib.DateSortOption;
 import VaultClientIntegrationLib.GetOptions;
+import VaultClientIntegrationLib.ServerOperations;
 import VaultClientIntegrationLib.UnchangedHandler;
-import VaultLib.VaultHistoryItem;
-import VaultClientOperationsLib.LocalCopyType;
 import VaultClientOperationsLib.ChangeSetItemColl;
+import VaultClientOperationsLib.LocalCopyType;
+import VaultLib.VaultHistoryItem;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.vcs.IncludeRule;
+import jetbrains.buildServer.vcs.impl.VcsRootImpl;
+import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
+import jetbrains.buildServer.vcs.patches.PatchTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
 
 /**
  * User: vbedrosova
@@ -156,7 +154,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   private void runTest(String fromVersion, @NotNull String toVersion) throws Exception {
-    final SVcsRootImpl root = new SVcsRootImpl("vault");
+    final VcsRootImpl root = new VcsRootImpl(-1, "vault");
     root.addProperty("vault.server", SERVER_URL);
     root.addProperty("vault.user", USER);
     root.addProperty("secure:vault.password", PASWORD);
