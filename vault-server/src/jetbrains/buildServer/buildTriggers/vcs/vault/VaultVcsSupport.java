@@ -16,6 +16,7 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import jetbrains.buildServer.buildTriggers.vcs.AbstractVcsPropertiesProcessor;
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
@@ -36,7 +37,6 @@ import java.io.File;
  */
 public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules,
                                                                        BuildPatchByIncludeRules,
-                                                                       PropertiesProcessor,
                                                                        TestConnectionSupport,
                                                                        LabelingSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
@@ -154,7 +154,28 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   public PropertiesProcessor getVcsPropertiesProcessor() {
-    return this;
+    return new AbstractVcsPropertiesProcessor() {
+      public Collection<InvalidProperty> process(final Map<String, String> properties) {
+        final List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
+        String prop;
+        prop = properties.get(VaultUtil.SERVER);
+        if (isEmpty(prop)) {
+          invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must be specified"));
+        } else if (!mayContainReference(prop) && (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX) || !prop.endsWith(VAULT_SERVICE_SUFFIX))) {
+          invalids.add(new InvalidProperty(VaultUtil.SERVER,
+            "Vault server URL must have http://hostname[:port]/VaultService or https://hostname[:port]/VaultService structure"));
+        }
+        prop = properties.get(VaultUtil.REPO);
+        if (isEmpty(prop)) {
+          invalids.add(new InvalidProperty(VaultUtil.REPO, "Repository name must be specified"));
+        }
+        prop = properties.get(VaultUtil.USER);
+        if (isEmpty(prop)) {
+          invalids.add(new InvalidProperty(VaultUtil.USER, "User name must be specified"));
+        }
+        return invalids;
+      }
+    };
   }
 
   @NotNull
@@ -214,32 +235,6 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   // end from BuildPatchByIncludeRules
   //-------------------------------------------------------------------------------
-
-  //-------------------------------------------------------------------------------
-  // from PropertiesProcessor
-
-  public Collection<InvalidProperty> process(Map<String, String> properties) {
-    final List<InvalidProperty> invalids = new ArrayList<InvalidProperty>();
-    String prop; 
-    prop = properties.get(VaultUtil.SERVER);
-    if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultUtil.SERVER,
-        "Vault server URL must be specified"));
-    } else if (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX) ||
-               !prop.endsWith(VAULT_SERVICE_SUFFIX)) {
-      invalids.add(new InvalidProperty(VaultUtil.SERVER,
-        "Vault server URL must have http://hostname[:port]/VaultService or https://hostname[:port]/VaultService structure"));
-    }
-    prop = properties.get(VaultUtil.REPO);
-    if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultUtil.REPO, "Repository name must be specified"));
-    }
-    prop = properties.get(VaultUtil.USER);
-    if ((prop == null) || ("".equals(prop))) {
-      invalids.add(new InvalidProperty(VaultUtil.USER, "User name must be specified"));
-    }
-    return invalids;
-  }
 
   // end from PropertiesProcessor
   //-------------------------------------------------------------------------------
