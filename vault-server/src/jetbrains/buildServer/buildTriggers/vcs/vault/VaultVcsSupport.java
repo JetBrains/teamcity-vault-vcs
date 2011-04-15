@@ -16,18 +16,18 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import java.io.File;
+import java.util.*;
 import jetbrains.buildServer.buildTriggers.vcs.AbstractVcsPropertiesProcessor;
+import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
-import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.vcs.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
-import java.io.File;
 
 
 /**
@@ -161,7 +161,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
         prop = properties.get(VaultUtil.SERVER);
         if (isEmpty(prop)) {
           invalids.add(new InvalidProperty(VaultUtil.SERVER, "Vault server URL must be specified"));
-        } else if (!mayContainReference(prop) && (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX) || !prop.endsWith(VAULT_SERVICE_SUFFIX))) {
+        } else if (!ReferencesResolverUtil.mayContainReference(prop) && (!prop.startsWith(HTTP_PEFIX) && !prop.startsWith(HTTPS_PEFIX) || !prop.endsWith(VAULT_SERVICE_SUFFIX))) {
           invalids.add(new InvalidProperty(VaultUtil.SERVER,
             "Vault server URL must have http://hostname[:port]/VaultService or https://hostname[:port]/VaultService structure"));
         }
