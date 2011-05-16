@@ -66,6 +66,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   private long myBeginTx;
 
+  @Override
   protected String getTestDataPath() {
     return "vault-tests" + File.separator + "testData";
   }
