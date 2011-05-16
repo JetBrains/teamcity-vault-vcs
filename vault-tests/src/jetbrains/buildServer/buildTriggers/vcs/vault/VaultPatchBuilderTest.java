@@ -103,6 +103,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     return historyItems[0].get_TxID();
   }
 
+  @Override
   @BeforeMethod
   protected void setUp() throws Exception {
     super.setUp();
@@ -148,6 +149,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
   }
 
+  @Override
   @AfterMethod
   protected void tearDown() throws Exception {
 //    Thread.sleep(2000);
