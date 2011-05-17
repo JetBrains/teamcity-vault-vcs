@@ -290,7 +290,7 @@
     </library>
     <library name="Patch-testing">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/vault-tests/lib/patches-test.jar!/" />
+        <root url="jar://$TeamCityDistribution$/devPackage/patches-test.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
