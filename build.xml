@@ -56,7 +56,7 @@
         <echo message="Vault API prepared in ${path.variable.vaultapi}"/>
     </target>
 
-    <target name="dist" depends="all,package"/>
+    <target name="dist" depends="package"/>
 
     <target name="package" depends="define.version, artifact.changes-patch-builder">
         <package.teamcity.plugin name="${plugin.name}"
@@ -90,7 +90,7 @@
         </classpath>
     </taskdef>
 
-    <target name="test" depends="all, test-nofail, check_failures"/>
+    <target name="test" depends="test-nofail, check_failures"/>
     <target name="changes-patch-builder-test" depends="all, test-changes-patch-builder-nofail, test-changes-patch-builder-check_failures"/>
 
     <target name="test-nofail">
