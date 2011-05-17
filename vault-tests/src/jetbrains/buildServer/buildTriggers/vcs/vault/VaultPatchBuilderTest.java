@@ -31,10 +31,7 @@ import jetbrains.buildServer.vcs.impl.VcsRootImpl;
 import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
 import jetbrains.buildServer.vcs.patches.PatchTestCase;
 import org.jetbrains.annotations.NotNull;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 /**
  * User: vbedrosova
@@ -65,14 +62,17 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   private long myBeginTx;
+  private File myRepoContent;
+  private File myCache;
+  private File myTestData;
 
   @Override
   protected String getTestDataPath() {
-    return "vault-tests" + File.separator + "testData";
+    return myTestData.getAbsolutePath();
   }
 
   private String getObjectPathForRepo(@NotNull String path) {
-    return getTestDataPath() + File.separator + "repoContent" + File.separator + path;
+    return new File(myRepoContent, path).getAbsolutePath();
   }
 
   private File getBeforeFolder() {
@@ -91,16 +91,23 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.client.AutoCommit = true;
 
     final File testDataSvn = TestUtil.getTestData("repoContent_Vcs", null);
-    final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
-    FileUtil.createDir(testDataNoSvn);
-    FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
-    FileUtil.createDir(new File(testDataNoSvn, "fold1"));
-    FileUtil.createDir(new File(testDataNoSvn, "fold2"));
+
+    myRepoContent = FileUtil.createTempDirectory("vault_repo", "");
+
+    FileUtil.copyDir(testDataSvn, myRepoContent, false);
+
+    FileUtil.createDir(new File(myRepoContent, "fold1"));
+    FileUtil.createDir(new File(myRepoContent, "fold2"));
   }
 
   private long getBeginTx() throws Exception {
     final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory("$", true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
     return historyItems[0].get_TxID();
+  }
+
+  @AfterSuite
+  protected void tearDownSuite() throws Exception {
+    FileUtil.delete(myRepoContent);
   }
 
   @Override
@@ -110,15 +117,16 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
 //    Thread.sleep(2000);
 
-    final File cache = FileUtil.createTempDirectory("vault", "");
-    FileUtil.delete(cache);
-    VaultCache.enableCache(cache);
+    myCache = FileUtil.createTempDirectory("vault_cache", "");
+    VaultCache.enableCache(myCache);
     VaultUtil.createTempDir();
+
+    myTestData = FileUtil.createTempDirectory("vault_testData", "");
 
     final String testName = getTestName();
     final File testDataSvn = TestUtil.getTestDataMayNotExist(testName + "_Vcs", null);
-    final File testDataNoSvn = new File(testDataSvn.getAbsolutePath().replace("_Vcs", ""));
-    FileUtil.createDir(testDataNoSvn);
+    final File testDataNoSvn = new File(myTestData, testName);
+
     if (testDataSvn.isDirectory()) {
       FileUtil.copyDir(testDataSvn, testDataNoSvn, false);
     } else {
@@ -154,7 +162,11 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   protected void tearDown() throws Exception {
 //    Thread.sleep(2000);
     ServerOperations.ProcessCommandDeleteRepository(getTestName());
+    FileUtil.delete(myCache);
+    FileUtil.delete(myTestData);
   }
+
+
 
   private void runTest(String fromVersion, @NotNull String toVersion) throws Exception {
     final VcsRootImpl root = new VcsRootImpl(-1, "vault");
