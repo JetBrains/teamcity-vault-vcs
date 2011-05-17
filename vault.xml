@@ -80,7 +80,7 @@
   </path>
   
   <path id="library.patch-testing.classpath">
-    <pathelement location="${basedir}/vault-tests/lib/patches-test.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/devPackage/tests/patches-test.jar"/>
   </path>
   
   <path id="library.teamcity-openapi.classpath">
