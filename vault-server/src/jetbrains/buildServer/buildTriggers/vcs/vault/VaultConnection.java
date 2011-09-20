@@ -318,7 +318,7 @@ public final class VaultConnection {
                                             null, null, null, null, null, null, -1, -1, 1000);
 
     for (final VaultHistoryItem i : historyItems) {
-      if (i.get_TxID() <= txId) {
+      if (i.get_TxID() > 0 &&  i.get_TxID() <= txId) {
         return i.get_Version(); // TODO: int - long
       }
     }
@@ -328,7 +328,7 @@ public final class VaultConnection {
   private static long getVersionByTxIdForFolder(@NotNull String repoPath, long txId) {
     final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(repoPath, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1000);
     for (final VaultTxHistoryItem i : txHistoryItems) {
-      if (i.get_TxID() <= txId) {
+      if (i.get_TxID() > 0 &&  i.get_TxID() <= txId) {
         return i.get_Version(); // TODO: int - long
       }
     }

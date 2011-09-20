@@ -583,4 +583,22 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.Logout();
     runTest("" + myBeginTx, "" + (myBeginTx + 9));
   }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  // TW-18188
+  public void testLabelNotBreakHistory() throws Exception {
+    final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
+    final String[] toAdd1 = {getObjectPathForRepo("file1")};
+    final String[] toCheckoutAndCommit = {"$/file1"};
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd1);
+    ServerOperations.SetWorkingFolder("$", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toCheckoutAndCommit, true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toCheckoutAndCommit);
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.ProcessCommandLabel("$", "label_name", -1); // label latest version;
+    ServerOperations.Logout();
+    runTest("" + (myBeginTx + 1), "" + (myBeginTx + 2));
+  }
 }
