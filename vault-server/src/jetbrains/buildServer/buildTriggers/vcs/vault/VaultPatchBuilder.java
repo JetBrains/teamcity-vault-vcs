@@ -72,8 +72,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
 
     VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
-        final File root = VaultConnection.getObject(includeRule.getFrom(), myToVersion);
-        VcsSupportUtil.exportFilesFromDisk(builder, root);
+        VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection.getObject(includeRule.getFrom(), myToVersion));
       }
     }, false);
   }
