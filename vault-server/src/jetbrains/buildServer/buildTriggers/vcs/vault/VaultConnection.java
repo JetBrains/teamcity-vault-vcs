@@ -112,8 +112,7 @@ public final class VaultConnection {
     synchronized (LOCK) {
       connect(parameters);
       try {
-//        final VaultHistoryItem[] historyItems = ServerOperations.ProcessCommandHistory(ROOT, true, DateSortOption.desc, null, null, null, null, null, null, -1, -1, 1);
-        final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(ROOT, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1);        
+        final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(ROOT, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1);
         return "" + txHistoryItems[0].get_TxID();
       } catch (Throwable th) {
         throw new VcsException(specifyMessage(th.getMessage()), th);
