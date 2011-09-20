@@ -50,8 +50,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     myToVersion = toVersion;
   }
 
-  public void dispose() throws VcsException {
-  }
+  public void dispose() {}
 
   public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
     VaultUtil.checkIncludeRule(myRoot, includeRule);
@@ -67,7 +66,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     logFinishBuildingPatch(includeRule);
   }
 
-  private void buildCleanPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
+  private void buildCleanPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
     logBuildCleanPatch(includeRule);
 
     VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
@@ -77,7 +76,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
     }, false);
   }
 
-  private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException, IOException {
+  private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
     logBuildIncrementalPatch(includeRule);
 
     final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
