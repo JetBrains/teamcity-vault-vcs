@@ -31,9 +31,7 @@ import java.io.File;
 public final class VaultFileContentProvider implements VcsFileContentProvider {
   @NotNull
   public byte[] getContent(@NotNull VcsModification vcsModification, @NotNull VcsChangeInfo change, @NotNull VcsChangeInfo.ContentType contentType, @NotNull VcsRoot vcsRoot) throws VcsException {
-    return getContent(change.getRelativeFileName(), vcsRoot,
-      contentType == VcsChangeInfo.ContentType.BEFORE_CHANGE ? change.getBeforeChangeRevisionNumber()
-                                                             : change.getAfterChangeRevisionNumber());
+    return getContent(change.getRelativeFileName(), vcsRoot, getVersion(change, contentType));
   }
 
   @NotNull
@@ -45,6 +43,11 @@ public final class VaultFileContentProvider implements VcsFileContentProvider {
     } catch (IOException e) {
       throw new VcsException(e);
     }
+  }
+
+  @NotNull
+  private static String getVersion(@NotNull VcsChangeInfo change, @NotNull VcsChangeInfo.ContentType contentType) {
+    return contentType == VcsChangeInfo.ContentType.BEFORE_CHANGE ? change.getBeforeChangeRevisionNumber() : change.getAfterChangeRevisionNumber();
   }
 
   private static final class GetObjectProcessor implements VaultConnection.InConnectionProcessor {
