@@ -16,6 +16,7 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.vcs.patches.PatchBuilder;
 import jetbrains.buildServer.vcs.patches.ChangesPatchBuilder;
@@ -100,7 +101,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   }
 
   private String getPathWithIncludeRule(@NotNull IncludeRule includeRule, @NotNull String path) {
-    return "".equals(includeRule.getFrom()) ? path : includeRule.getFrom() + "/" + path;
+    return StringUtil.isEmpty(includeRule.getFrom()) ? path : includeRule.getFrom() + "/" + path;
   }
 
   private void logFinishBuildingPatch(IncludeRule includeRule) {
