@@ -33,15 +33,15 @@ public class VaultApiDetector {
   private static boolean ourApiPresent = false;
   private static ServerPaths ourServerPaths;
 
-  static void setServerPaths(@NotNull ServerPaths serverPaths) {
+  static synchronized void setServerPaths(@NotNull ServerPaths serverPaths) {
     ourServerPaths = serverPaths;
   }
 
-  public static String getDataDirectoryPath() {
+  public synchronized static String getDataDirectoryPath() {
     return ourServerPaths.getDataDirectory().getAbsolutePath();
   }
 
-  public static boolean detectApi() {
+  public synchronized static boolean detectApi() {
     if(!ourInited) {
       ourApiPresent = detect();
       ourInited = true;
