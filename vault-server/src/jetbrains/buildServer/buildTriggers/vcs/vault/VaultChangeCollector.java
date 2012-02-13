@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2011 JetBrains s.r.o.
+ * Copyright 2000-2012 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,11 @@ import VaultClientOperationsLib.VaultClientFolderColl;
 import VaultLib.VaultDateTime;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
+import java.util.*;
 import jetbrains.buildServer.vcs.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
 
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;

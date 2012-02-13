@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2011 JetBrains s.r.o.
+ * Copyright 2000-2012 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,13 @@
 
 package jetbrains.buildServer.vcs.patches;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import jetbrains.buildServer.vcs.VcsChange;
 import jetbrains.buildServer.vcs.VcsChangeInfo;
 import jetbrains.buildServer.vcs.VcsException;
@@ -25,11 +32,6 @@ import jetbrains.buildServer.vcs.patches.util.Assert;
 import jetbrains.buildServer.vcs.patches.util.AssertionFailedException;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * User: vbedrosova

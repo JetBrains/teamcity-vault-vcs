@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2011 JetBrains s.r.o.
+ * Copyright 2000-2012 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,15 @@ import VaultClientOperationsLib.VaultClientFolder;
 import VaultLib.VaultDate;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultTxHistoryItem;
-import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.vcs.VcsException;
-import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.vcs.VcsException;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 

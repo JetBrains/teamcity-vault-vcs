@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2011 JetBrains s.r.o.
+ * Copyright 2000-2012 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,12 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
-
 import jetbrains.buildServer.vcs.VcsException;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT_PREFIX;
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.SEPARATOR;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
 
 /**
  * User: vbedrosova

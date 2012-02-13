@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2011 JetBrains s.r.o.
+ * Copyright 2000-2012 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.IncludeRule;
 import jetbrains.buildServer.vcs.VcsException;
 import jetbrains.buildServer.vcs.VcsRoot;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * User: vbedrosova
