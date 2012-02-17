@@ -43,7 +43,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   @NotNull private final VcsRoot myRoot;
   @NotNull private final String myFromVersion;
-  private String myCurrentVersion;
+  @Nullable private String myCurrentVersion;
 
   private final VaultPathHistory myPathHistory;
   private final Map<String, Boolean> myObjectTypesCache;
@@ -62,6 +62,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     mySharedPaths = new ArrayList<String>();
   }
 
+  @SuppressWarnings("RedundantThrowsDeclaration")
   public void dispose() throws VcsException {
   }
 
@@ -122,6 +123,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
     VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
+        @SuppressWarnings("ConstantConditions")
         final VaultHistoryItem[] items= VaultConnection.collectHistory(includeRuleFrom, myFromVersion, myCurrentVersion);
         for (final VaultHistoryItem item : items) {
           processHistoryItem(changes, item, includeRuleFrom);
@@ -280,7 +282,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     return ROOT_PREFIX + includeRuleFrom + path;
   }
 
-  private void pushChange(Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) throws VcsException {
+  private void pushChange(Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) {
     if (ROOT.equals(path) || isSharedPath(path)) {
       return;
     }
