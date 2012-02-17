@@ -46,7 +46,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   @Nullable private String myCurrentVersion;
 
   private final VaultPathHistory myPathHistory;
-  private final Map<String, Boolean> myObjectTypesCache;
+  private final Map<String, Boolean> myIsFileCache;
 
   private final List<String> mySharedPaths;
 
@@ -58,7 +58,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     myCurrentVersion = currentVersion;
 
     myPathHistory = new VaultPathHistory();
-    myObjectTypesCache = new HashMap<String, Boolean>();
+    myIsFileCache = new HashMap<String, Boolean>();
     mySharedPaths = new ArrayList<String>();
   }
 
@@ -185,7 +185,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
       final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
       final String newPath = myPathHistory.getNewPath(repoPath + "/" + misc1);
       pushChange(changes, item.GetActionString(), mi, oldPath, isFile(oldPath, newPath, version) ? ADDED : DIRECTORY_ADDED);
-      myObjectTypesCache.remove(newPath);
+      myIsFileCache.remove(newPath);
       myPathHistory.delete(oldPath + "/" + misc1);
       mySharedPaths.remove(newPath);
       return;
@@ -299,8 +299,8 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   }
 
   private boolean isFile(String repoPath, String newRepoPath, String version) throws VcsException {
-    if (myObjectTypesCache.containsKey(newRepoPath)) {
-      return myObjectTypesCache.get(newRepoPath);
+    if (myIsFileCache.containsKey(newRepoPath)) {
+      return myIsFileCache.get(newRepoPath);
     }
     Boolean isFile;
     if (VaultConnection.objectExists(newRepoPath)) {
@@ -308,7 +308,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     } else {
       isFile = VaultConnection.isFileForUnxistingObject(repoPath, version);
     }
-    myObjectTypesCache.put(newRepoPath, isFile);
+    myIsFileCache.put(newRepoPath, isFile);
     return isFile;
   }
 
@@ -394,7 +394,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   private void clear() {
     myPathHistory.clear();
-    myObjectTypesCache.clear();
+    myIsFileCache.clear();
     mySharedPaths.clear();
   }  
 
