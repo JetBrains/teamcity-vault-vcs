@@ -193,6 +193,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     return new HashMap<String, String>();
   }
 
+  @NotNull
   public String getVersionDisplayName(@NotNull String version, @NotNull VcsRoot root) throws VcsException {
     return VaultConnection.getDisplayVersion(version, root.getProperties());
   }
