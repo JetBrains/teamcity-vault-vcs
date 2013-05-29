@@ -15,6 +15,7 @@
     <orderEntry type="library" name="testng" level="project" />
     <orderEntry type="module" module-name="vault-server-internal" />
     <orderEntry type="module" module-name="patches-tests" />
+    <orderEntry type="module" module-name="test-api" scope="TEST" />
   </component>
 </module>
 
