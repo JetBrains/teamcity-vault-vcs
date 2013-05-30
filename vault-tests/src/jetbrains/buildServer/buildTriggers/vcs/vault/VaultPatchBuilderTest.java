@@ -26,7 +26,6 @@ import VaultLib.VaultHistoryItem;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.util.TestFor;
 import jetbrains.buildServer.vcs.IncludeRule;
 import jetbrains.buildServer.vcs.impl.VcsRootImpl;
 import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
@@ -586,7 +585,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  @TestFor(issues = "TW-18188")
+  // TW-18188
   public void testLabelNotBreakHistory() throws Exception {
     final File workingFolder = FileUtil.createTempDirectory("vault_test", "");
     final String[] toAdd1 = {getObjectPathForRepo("file1")};
