@@ -167,11 +167,11 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
         }
         prop = properties.get(VaultUtil.REPO);
         if (isEmpty(prop)) {
-          invalids.add(new InvalidProperty(VaultUtil.REPO, "Repository name must be specified"));
+          invalids.add(new InvalidProperty(VaultUtil.REPO, "The repository name must be specified"));
         }
         prop = properties.get(VaultUtil.USER);
         if (isEmpty(prop)) {
-          invalids.add(new InvalidProperty(VaultUtil.USER, "User name must be specified"));
+          invalids.add(new InvalidProperty(VaultUtil.USER, "The user name must be specified"));
         }
         return invalids;
       }
