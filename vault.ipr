@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AntConfiguration">
-    <defaultAnt bundledAnt="true" />
     <buildFile url="file://$PROJECT_DIR$/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
       <maximumStackSize value="32" />
-      <properties />
     </buildFile>
   </component>
   <component name="ArtifactManager">
@@ -44,7 +38,11 @@
       <entry name="?*.tld" />
       <entry name="?*.jsp" />
     </wildcardResourcePatterns>
-    <annotationProcessing enabled="false" useClasspath="true" />
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+    </annotationProcessing>
   </component>
   <component name="CopyrightManager" default="">
     <module2copyright />
@@ -237,7 +235,7 @@
       <module fileurl="file://$PROJECT_DIR$/vault-tests/vault-tests.iml" filepath="$PROJECT_DIR$/vault-tests/vault-tests.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.5" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="ResourceManagerContainer">
@@ -291,6 +289,7 @@
     <library name="Patch-testing">
       <CLASSES>
         <root url="jar://$TeamCityDistribution$/devPackage/tests/patches-test.jar!/" />
+        <root url="jar://$TeamCityDistribution$/devPackage/tests/tests-support.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

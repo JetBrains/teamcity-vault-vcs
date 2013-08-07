@@ -6,9 +6,6 @@
 
     <property name="plugin.name" value="vault-vcs"/>
 
-    <property name="vault.java.clc.url"
-              value="http://download-us.sourcegear.com/Vault/5.0.1.18729/vaultJavaCLC_5_0_1_18729.zip"/>
-
     <import file="${basedir}/teamcity-common.xml"/>
 
     <property environment="env"/>
@@ -38,20 +35,36 @@
       <antcall target="get.vault.api"/>
     </target>
 
-    <target name="get.vault.api">
+    <target name="check.vault.java.clc.url" description="checks whether vault.java.clc.url property specified">
+      <check.property name="vault.java.clc.url"
+                      fail-message="Please define 'vault.java.clc.url' property (e.g. in build.properties file). The property should contain url for downloading suitable version of Vault Java CLC zip archive (e.g from http://www.sourcegear.com/vault/downloads.html)."
+          />
+      <echo message="Using ${vault.java.clc.url} to download Vault Java CLC" />
+    </target>
+
+    <target name="get.vault.api" depends="check.vault.java.clc.url">
         <echo message="Downloading Vault API from SourceGear site, this can take a while..."/>
-        <property name="vault.java.clc.zip" value="${env.TEMP}/vault_java_clc.zip"/>
-        <property name="vault.java.clc" value="${env.TEMP}/vault_java_clc"/>
-        <delete file="${vault.java.clc.zip}"/>
+
+        <property name="vault.java.clc" value="${basedir}/vault_java_clc"/>
         <delete dir="${vault.java.clc}"/>
-        <get src="${vault.java.clc.url}" dest="${vault.java.clc.zip}" verbose="true"/>
-        <unzip src="${vault.java.clc.zip}" dest="${env.TEMP}/vault_java_clc"/>
-        <copy todir="${path.variable.vaultapi}" overwrite="true">
-            <fileset dir="${vault.java.clc}/vaultJavaCLC/lib">
-                <include name="*.jar"/>
+        <mkdir dir="${vault.java.clc}"/>
+
+        <get dest="${vault.java.clc}" verbose="true">
+            <url url="${vault.java.clc.url}"/>
+        </get>
+
+        <unzip dest="${vault.java.clc}">
+            <fileset dir="${vault.java.clc}">
+                <include name="*.zip"/>
+            </fileset>
+        </unzip>
+
+        <copy todir="${path.variable.vaultapi}" overwrite="true" flatten="true">
+            <fileset dir="${vault.java.clc}">
+                <include name="*/lib/*.jar"/>
             </fileset>
         </copy>
-        <delete file="${vault.java.clc.zip}"/>
+
         <delete dir="${vault.java.clc}"/>
         <echo message="Vault API prepared in ${path.variable.vaultapi}"/>
     </target>
@@ -101,7 +114,7 @@
                         fail-message="Vault test login is not specified in build.properties"/>
         <check.property name="vault.test.server"
                         fail-message="Vault test user password is not specified in build.properties"/>
-        <testng failureproperty="failure_found">
+        <testng failureproperty="failure_found" dumpcommand="true" haltonfailure="false" verbose="2">
             <jvmarg value="-Dvault.test.server=${vault.test.server}" />
             <jvmarg value="-Dvault.test.login=${vault.test.login}" />
             <jvmarg value="-Dvault.test.password=${vault.test.password}" />

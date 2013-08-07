@@ -39,12 +39,16 @@ import org.testng.annotations.*;
  * Time: 18:29:44
  */
 
+@Test
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = System.getProperty("vault.test.server");
-  private static final String USER = System.getProperty("vault.test.login");
-  private static final String PASWORD = System.getProperty("vault.test.password");
+  private static final String SERVER_URL = "http://vault-server.labs.intellij.net/VaultService";
+  private static final String USER = "vault-admin";
+  private static final String PASWORD = "wuaEtESawETA";
+  //private static final String SERVER_URL = System.getProperty("vault.test.server");
+  //private static final String USER = System.getProperty("vault.test.login");
+  //private static final String PASWORD = System.getProperty("vault.test.password");
 
   static {
     if (SERVER_URL == null) {
@@ -187,7 +191,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     checkPatchResult(outputBuffer.toByteArray());
   }
 
-  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  @Test
   public void testEmptyRepoCleanPatch() throws Exception {
     runTest(null, "" + myBeginTx);
   }
