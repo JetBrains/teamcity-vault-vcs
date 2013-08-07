@@ -191,7 +191,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     checkPatchResult(outputBuffer.toByteArray());
   }
 
-  @Test
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testEmptyRepoCleanPatch() throws Exception {
     runTest(null, "" + myBeginTx);
   }
