@@ -3,8 +3,9 @@
   
   
   <property file="vault.properties"/>
+  <property name="javac2.home" value="${basedir}/lib-compile"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
-  <!-- 
+  <!--
   <property name="skip.tests" value="true"/>
    -->
   
