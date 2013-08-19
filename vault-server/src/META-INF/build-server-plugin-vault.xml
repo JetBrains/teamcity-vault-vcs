@@ -19,4 +19,5 @@
 
 <beans default-autowire="constructor">
   <bean id="vaultVcsSupport" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultVcsSupport" />
+  <bean id="vaultConnectionFactory" class="jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl" />
 </beans>
