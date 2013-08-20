@@ -24,6 +24,7 @@ import VaultLib.VaultDateTime;
 import VaultLib.VaultHistoryItem;
 import VaultLib.VaultHistoryType;
 import java.util.*;
+import jetbrains.buildServer.buildTriggers.vcs.vault.impl.EternalVaultConnection1;
 import jetbrains.buildServer.vcs.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
 
-  @NotNull private final VcsRoot myRoot;
+  @NotNull private final VaultConnection1 myConnection;
   @NotNull private final String myFromVersion;
   @Nullable private String myCurrentVersion;
 
@@ -50,10 +51,10 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   private final List<String> mySharedPaths;
 
-  public VaultChangeCollector(@NotNull VcsRoot root,
+  public VaultChangeCollector(@NotNull VaultConnection1 connection,
                               @NotNull String fromVersion,
                               @Nullable String currentVersion) {
-    myRoot = root;
+    myConnection = connection;
     myFromVersion = fromVersion;
     myCurrentVersion = currentVersion;
 
@@ -68,7 +69,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
 
   @NotNull
   public List<ModificationData> collectChanges(@NotNull IncludeRule includeRule) throws VcsException {
-    VaultUtil.checkIncludeRule(myRoot, includeRule);
+    VaultUtil.checkIncludeRule(myConnection.getParameters(), includeRule);
 
     logStartCollectingChanges(includeRule);
 
@@ -78,7 +79,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
     if (!modifications.isEmpty()) {
       for (ModificationInfo mi : modifications.keySet()) {
         changes.add(new ModificationData(mi.getDate(), modifications.get(mi), mi.getComment(), mi.getUser(),
-          myRoot, mi.getVersion(), VaultConnection.getDisplayVersion(mi.getVersion(), myRoot.getProperties())));
+          myConnection.getParameters().getVcsRoot(), mi.getVersion(), VaultConnection.getDisplayVersion(mi.getVersion(), myConnection.getParameters().asMap())));
       }
     }
 
@@ -121,7 +122,7 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private Stack<ChangeInfo> buildChangesStack(final String includeRuleFrom) throws VcsException {
     final Stack<ChangeInfo> changes = new Stack<ChangeInfo>();
 
-    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+    VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
         @SuppressWarnings("ConstantConditions")
         final VaultHistoryItem[] items= VaultConnection.collectHistory(includeRuleFrom, myFromVersion, myCurrentVersion);
@@ -361,22 +362,27 @@ public final class VaultChangeCollector implements IncludeRuleChangeCollector {
   private void prepareCurrentVersion() throws VcsException {
     if (myCurrentVersion == null) {
       LOG.debug("Current version for change collecting is null, so need to get current version");
-      myCurrentVersion = VaultConnection.getCurrentVersion(myRoot.getProperties());
+      myCurrentVersion = VaultConnection.getCurrentVersion(myConnection.getParameters().asMap());
     }
   }
 
   private void logFinishCollectingChanges(IncludeRule includeRule) {
-    LOG.debug("Finish collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Finish collecting changes for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion);
   }
 
+  @NotNull
+  private String getRootName() {
+    return myConnection.getParameters().getStringRepresentation();
+  }
+
   private void logStartCollectingChanges(IncludeRule includeRule) {
-    LOG.debug("Start collecting changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Start collecting changes for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion);
   }
 
   private void logWillNotCollectChanges(IncludeRule includeRule) {
-    LOG.debug("Will not collect changes for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Will not collect changes for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myCurrentVersion + ", from equals to");
   }
 

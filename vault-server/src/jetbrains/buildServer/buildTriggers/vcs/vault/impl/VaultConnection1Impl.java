@@ -1,8 +1,8 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
+import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -17,7 +17,11 @@ class VaultConnection1Impl implements VaultConnection1 {
   }
 
   @NotNull
-  public VaultConnection getStaticConnection() {
-    return new VaultConnection();
+  public VaultConnectionParameters getParameters() {
+    return myParameters;
+  }
+
+  public boolean isAlive() throws VcsException {
+    return false;
   }
 }

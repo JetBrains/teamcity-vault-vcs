@@ -19,7 +19,7 @@ public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
   private static final ReentrantReadWriteLock CONNECTIONS_LOCK = new ReentrantReadWriteLock();
 
   @NotNull
-  public VaultConnection1 getOrCreateConnection(@NotNull final VaultConnectionParameters parameters) throws VcsException {
+  public VaultConnection1 getOrCreateConnection(@NotNull final VaultConnectionParameters parameters) {
     CONNECTIONS_LOCK.readLock().lock();
     try {
       if (myConnections.containsKey(parameters)) {
@@ -45,7 +45,17 @@ public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
   }
 
   @NotNull
-  private static VaultConnection1 createConnection(@NotNull final VaultConnectionParameters parameters) {
-    return new VaultConnection1Impl(parameters);
+  private VaultConnection1 createConnection(@NotNull final VaultConnectionParameters parameters) {
+    return makeSyncronized(makeEternal(new VaultConnection1Impl(parameters)));
+  }
+
+  @NotNull
+  private SynchronizedVaultConnection makeSyncronized(@NotNull VaultConnection1 connection) {
+    return new SynchronizedVaultConnection(connection);
+  }
+
+  @NotNull
+  private EternalVaultConnection1 makeEternal(@NotNull VaultConnection1 connection) {
+    return new EternalVaultConnection1(connection, this);
   }
 }

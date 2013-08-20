@@ -7,5 +7,5 @@ import org.jetbrains.annotations.NotNull;
  * Created by Victory.Bedrosova on 8/19/13.
  */
 public interface VaultConnectionFactory {
-  @NotNull VaultConnection1 getOrCreateConnection(@NotNull VaultConnectionParameters parameters) throws VcsException;
+  @NotNull VaultConnection1 getOrCreateConnection(@NotNull VaultConnectionParameters parameters);
 }

@@ -45,9 +45,13 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   private static final String HTTPS_PEFIX = "https://";
   private static final String VAULT_SERVICE_SUFFIX = "/VaultService";
 
+  @NotNull
+  private final VaultConnectionFactory myConnectionFactory;
+  @NotNull
   private final VaultFileContentProvider myFileContentProvider;
 
-  public VaultVcsSupport(@NotNull ServerPaths serverPaths) {
+  public VaultVcsSupport(@NotNull ServerPaths serverPaths, @NotNull VaultConnectionFactory connectionFactory) {
+    myConnectionFactory = connectionFactory;
     LOG.debug("Vault plugin is working");
 
     myFileContentProvider = new VaultFileContentProvider();
@@ -219,7 +223,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
     if (!VaultApiDetector.detectApi()) {
       throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
     }    
-    return new VaultChangeCollector(root, fromVersion, currentVersion);
+    return new VaultChangeCollector(getOrCreateConnection(root), fromVersion, currentVersion);
   }
 
   // end from CollectChangesByIncludeRules
@@ -231,7 +235,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public IncludeRulePatchBuilder getPatchBuilder(@NotNull VcsRoot root, @Nullable String fromVersion, @NotNull String toVersion) {
-    return new VaultPatchBuilder(root, fromVersion, toVersion);
+    return new VaultPatchBuilder(getOrCreateConnection(root), fromVersion, toVersion);
   }
 
   // end from BuildPatchByIncludeRules
@@ -272,4 +276,9 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   // end from LabelingSupport
   //-------------------------------------------------------------------------------
+
+  @NotNull
+  private VaultConnection1 getOrCreateConnection(@NotNull VcsRoot root) {
+    return myConnectionFactory.getOrCreateConnection(new VaultConnectionParameters(root));
+  }
 }

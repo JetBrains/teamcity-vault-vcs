@@ -137,8 +137,8 @@ public final class VaultUtil {
     }
   }
 
-  public static void checkIncludeRule(VcsRoot root, final IncludeRule includeRule) throws VcsException {
-    VaultConnection.doInConnection(root.getProperties(), new VaultConnection.InConnectionProcessor() {
+  public static void checkIncludeRule(VaultConnectionParameters connectionParameters, final IncludeRule includeRule) throws VcsException {
+    VaultConnection.doInConnection(connectionParameters.asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
         if (!VaultConnection.objectExists(getRepoPathFromPath(includeRule.getFrom()))) {
           throw new VcsException("Invalid rule " + includeRule.toDescriptiveString()

@@ -25,6 +25,7 @@ import VaultClientOperationsLib.LocalCopyType;
 import VaultLib.VaultHistoryItem;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.IncludeRule;
 import jetbrains.buildServer.vcs.impl.VcsRootImpl;
@@ -181,7 +182,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(root, fromVersion, toVersion);
+    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnectionFactoryImpl().getOrCreateConnection(new VaultConnectionParameters(root)), fromVersion, toVersion);
 
     try {
       vaultPatchBuilder.buildPatch(patchBuilder, IncludeRule.createDefaultInstance());

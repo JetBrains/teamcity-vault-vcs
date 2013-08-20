@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import jetbrains.buildServer.buildTriggers.vcs.vault.impl.EternalVaultConnection1;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.vcs.patches.ChangesPatchBuilder;
@@ -37,15 +38,15 @@ import org.jetbrains.annotations.Nullable;
 public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private static final Logger LOG = Logger.getLogger(VaultPatchBuilder.class);
 
-  private final VcsRoot myRoot;
-  private final String myFromVersion;
-  private final String myToVersion;
+  @NotNull private final VaultConnection1 myConnection;
+  @Nullable private final String myFromVersion;
+  @NotNull private final String myToVersion;
 
-  public VaultPatchBuilder(@NotNull VcsRoot root,
+  public VaultPatchBuilder(@NotNull VaultConnection1 connection,
                            @Nullable String fromVersion,
                            @NotNull String toVersion) {
+    myConnection = connection;
 
-    myRoot = root;
     myFromVersion = fromVersion;
     myToVersion = toVersion;
   }
@@ -53,7 +54,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   public void dispose() {}
 
   public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
-    VaultUtil.checkIncludeRule(myRoot, includeRule);
+    VaultUtil.checkIncludeRule(myConnection.getParameters(), includeRule);
 
     logStartBuildingPatch(includeRule);
 
@@ -69,7 +70,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private void buildCleanPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
     logBuildCleanPatch(includeRule);
 
-    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+    VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
         VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection.getObject(includeRule.getFrom(), myToVersion));
       }
@@ -79,7 +80,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
     logBuildIncrementalPatch(includeRule);
 
-    final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myRoot, myFromVersion, myToVersion).collectModifications(includeRule);
+    final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myConnection, myFromVersion, myToVersion).collectModifications(includeRule);
     final List<VcsChange> changes = new LinkedList<VcsChange>();
 
     for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
@@ -87,7 +88,7 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
       changes.addAll(modifications.get(i));
     }
 
-    VaultConnection.doInConnection(myRoot.getProperties(), new VaultConnection.InConnectionProcessor() {
+    VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
         new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
           public File getFile(@NotNull String path, @NotNull String version) throws VcsException {
@@ -103,24 +104,29 @@ public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
   }
 
   private void logFinishBuildingPatch(IncludeRule includeRule) {
-    LOG.debug("Finish building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Finish building patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
   }
 
   private void logStartBuildingPatch(IncludeRule includeRule) {
-    LOG.debug("Start building patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Start building patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
       + " from version " + myFromVersion + " to version " + myToVersion);
   }
 
   private void logBuildCleanPatch(IncludeRule includeRule) {
-    LOG.debug("Perform clean patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Perform clean patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
     + " to version " + myToVersion);
   }  
 
   private void logBuildIncrementalPatch(IncludeRule includeRule) {
-    LOG.debug("Perform incremental patch for root " + myRoot + " for rule " + includeRule.toDescriptiveString()
+    LOG.debug("Perform incremental patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
     + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
-  }  
+  }
+
+  @NotNull
+  private String getRootName() {
+    return myConnection.getParameters().getStringRepresentation();
+  }
 
   private void logModificationInfo(VaultChangeCollector.ModificationInfo i) {
     LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
