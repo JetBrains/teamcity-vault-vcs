@@ -261,6 +261,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   //-------------------------------------------------------------------------------
   // from LabelingSupport
 
+  @NotNull
   public String label(@NotNull String label,
                       @NotNull String version,
                       @NotNull VcsRoot root,
