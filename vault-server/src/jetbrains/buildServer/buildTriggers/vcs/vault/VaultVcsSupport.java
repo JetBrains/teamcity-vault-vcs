@@ -17,6 +17,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import jetbrains.buildServer.buildTriggers.vcs.AbstractVcsPropertiesProcessor;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
@@ -49,14 +50,10 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   private final VaultConnectionFactory myConnectionFactory;
-  @NotNull
-  private final VaultFileContentProvider myFileContentProvider;
 
   public VaultVcsSupport(@NotNull ServerPaths serverPaths, @NotNull VaultConnectionFactory connectionFactory) {
     myConnectionFactory = connectionFactory;
     LOG.debug("Vault plugin is working");
-
-    myFileContentProvider = new VaultFileContentProvider();
 
     setUpCache(serverPaths);
 
@@ -84,7 +81,27 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public VcsFileContentProvider getContentProvider() {
-    return myFileContentProvider;
+    return new VcsFileContentProvider() {
+      @NotNull
+      public byte[] getContent(@NotNull VcsModification vcsModification, @NotNull VcsChangeInfo change, @NotNull VcsChangeInfo.ContentType contentType, @NotNull VcsRoot vcsRoot) throws VcsException {
+        return getContent(change.getRelativeFileName(), vcsRoot, contentType == VcsChangeInfo.ContentType.BEFORE_CHANGE ? change.getBeforeChangeRevisionNumber() : change.getAfterChangeRevisionNumber());
+      }
+
+      @NotNull
+      public byte[] getContent(@NotNull final String filePath, @NotNull VcsRoot versionedRoot, @NotNull final String version) throws VcsException {
+        final File[] f = new File[1];
+        VaultConnection.doInConnection(getOrCreateConnection(versionedRoot).getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
+          public void process() throws Throwable {
+            f[0] = VaultConnection.getObject(filePath, version);
+          }
+        }, true);
+        try {
+          return FileUtil.loadFileBytes(f[0]);
+        } catch (IOException e) {
+          throw new VcsException(e);
+        }
+      }
+    };
   }
 
   @NotNull
