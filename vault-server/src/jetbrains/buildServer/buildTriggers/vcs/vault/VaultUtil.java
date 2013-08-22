@@ -161,6 +161,7 @@ public final class VaultUtil {
   }
 
   public static String getRepoPathFromPath(@NotNull String path) {
+    if (path.startsWith(ROOT)) return path;
     return ("".equals(path) || CURRENT.equals(path)) ? ROOT : ROOT + SEPARATOR + path.replace("\\", SEPARATOR);
   }
 

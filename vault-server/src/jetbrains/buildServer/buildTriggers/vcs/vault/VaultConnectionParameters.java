@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-public class VaultConnectionParameters {
+public final class VaultConnectionParameters {
   @NotNull
   private final String myURL;
   @NotNull
@@ -20,30 +20,24 @@ public class VaultConnectionParameters {
   @NotNull
   private final String myStringRepresentation;
 
-  // TODO: remove it from here
-  @NotNull
-  private final VcsRoot myVcsRoot;
-
-  public VaultConnectionParameters(@NotNull final Map<String, String> parameters, @NotNull final String stringRepresentation, @NotNull VcsRoot vcsRoot) {
-    this(parameters.get(VaultUtil.SERVER), parameters.get(VaultUtil.REPO), parameters.get(VaultUtil.USER), parameters.get(VaultUtil.PASSWORD), stringRepresentation, vcsRoot);
+  public VaultConnectionParameters(@NotNull final Map<String, String> parameters, @NotNull final String stringRepresentation) {
+    this(parameters.get(VaultUtil.SERVER), parameters.get(VaultUtil.REPO), parameters.get(VaultUtil.USER), parameters.get(VaultUtil.PASSWORD), stringRepresentation);
   }
 
   public VaultConnectionParameters(@NotNull final VcsRoot vcsRoot) {
-    this(vcsRoot.getProperties(), vcsRoot.toString(), vcsRoot);
+    this(vcsRoot.getProperties(), vcsRoot.toString());
   }
 
   public VaultConnectionParameters(@NotNull String URL,
                                    @NotNull String repository,
                                    @NotNull String user,
                                    @NotNull String password,
-                                   @NotNull String stringRepresentation,
-                                   @NotNull VcsRoot vcsRoot) {
+                                   @NotNull String stringRepresentation) {
     myURL = URL;
     myRepository = repository;
     myUser = user;
     myPassword = password;
     myStringRepresentation = stringRepresentation;
-    myVcsRoot = vcsRoot;
   }
 
   @NotNull
@@ -85,11 +79,27 @@ public class VaultConnectionParameters {
     return map;
   }
 
-  /**
-   * For backward compatibility
-   */
-  @NotNull
-  public VcsRoot getVcsRoot() {
-    return myVcsRoot;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    VaultConnectionParameters that = (VaultConnectionParameters) o;
+
+    if (!myPassword.equals(that.myPassword)) return false;
+    if (!myRepository.equals(that.myRepository)) return false;
+    if (!myURL.equals(that.myURL)) return false;
+    if (!myUser.equals(that.myUser)) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = myURL.hashCode();
+    result = 31 * result + myRepository.hashCode();
+    result = 31 * result + myUser.hashCode();
+    result = 31 * result + myPassword.hashCode();
+    return result;
   }
 }
