@@ -18,12 +18,16 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.FileUtil;
-import jetbrains.buildServer.vcs.IncludeRule;
-import jetbrains.buildServer.vcs.VcsException;
-import jetbrains.buildServer.vcs.VcsRoot;
+import jetbrains.buildServer.util.StringUtil;
+import jetbrains.buildServer.vcs.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * User: vbedrosova
@@ -162,5 +166,62 @@ public final class VaultUtil {
 
   public static String getPathFromRepoPath(@NotNull String repoPath) {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
+  }
+
+  @NotNull
+  public static List<ModificationData> groupChanges(@NotNull final VcsRoot root, @NotNull List<ChangeInfo> changes) {
+    return CollectionsUtil.convertCollection(CollectionsUtil.groupBy(changes, new Converter<ModificationInfo, ChangeInfo>() {
+      public ModificationInfo createFrom(@NotNull final ChangeInfo source) {
+        return source.getModificationInfo();
+      }
+    }).entrySet(), new Converter<ModificationData, Map.Entry<ModificationInfo, List<ChangeInfo>>>() {
+      public ModificationData createFrom(@NotNull final Map.Entry<ModificationInfo, List<ChangeInfo>> source) {
+        final ModificationInfo mi = source.getKey();
+        return new ModificationData(mi.getDate(), toVcsChanges(source.getValue()), mi.getComment(), mi.getUser(), root, mi.getVersion(), mi.getDisplayVersion());
+      }
+    });
+  }
+
+  @NotNull
+  public static List<VcsChange> toVcsChanges(@NotNull List<ChangeInfo> changes) {
+    return CollectionsUtil.convertCollection(changes, new Converter<VcsChange, ChangeInfo>() {
+      public VcsChange createFrom(@NotNull final ChangeInfo source) {
+        final ModificationInfo mi = source.getModificationInfo();
+        return new VcsChange(source.getChangeType(), source.getChangeName(), source.getRelativePath(), source.getRelativePath(), mi.getPrevVersion(), mi.getVersion());
+      }
+    });
+  }
+
+  @NotNull
+  public static String getFullRepoPath(@NotNull String path, @NotNull String targetPath) {
+    if (path.startsWith(ROOT)) {
+      return path;
+    }
+    return ROOT_PREFIX + getFullPath(path, targetPath);
+  }
+
+  @NotNull
+  public static String getFullPath(@NotNull String path, @NotNull String targetPath) {
+    targetPath = targetPath.replace('\\', '/');
+    if (targetPath.endsWith("/")) {
+      targetPath = targetPath.substring(0, targetPath.length() - 1);
+    }
+    if (targetPath.contains("/")) {
+      targetPath = targetPath.substring(0, targetPath.lastIndexOf("/") + 1);
+    } else {
+      targetPath = "";
+    }
+    return targetPath + path;
+  }
+
+  @Nullable
+  public static String getRelativePath(@NotNull String path, @NotNull String targetPath) {
+    final String relativePath = getPathFromRepoPath(path);
+
+    if (StringUtil.isNotEmpty(targetPath)) {
+      return relativePath.startsWith(targetPath) ? relativePath.substring(targetPath.length() + 1) : null;
+    }
+
+    return relativePath;
   }
 }

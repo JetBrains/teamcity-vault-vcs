@@ -17,7 +17,7 @@ public class SynchronizedVaultConnection implements VaultConnection1 {
   }
 
   @NotNull
-  public synchronized VaultConnectionParameters getParameters() {
+  public VaultConnectionParameters getParameters() {
     return myConnection.getParameters();
   }
 

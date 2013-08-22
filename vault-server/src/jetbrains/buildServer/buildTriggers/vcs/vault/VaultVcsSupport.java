@@ -24,7 +24,9 @@ import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
+import jetbrains.buildServer.vcs.patches.PatchBuilder;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -217,13 +219,31 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from CollectChangesByIncludeRules
 
   @NotNull
-  public IncludeRuleChangeCollector getChangeCollector(@NotNull VcsRoot root,
-                                                       @NotNull String fromVersion,
-                                                       @Nullable String currentVersion) throws VcsException {
+  public IncludeRuleChangeCollector getChangeCollector(@NotNull final VcsRoot root,
+                                                       @NotNull final String fromVersion,
+                                                       @Nullable final String currentVersion) throws VcsException {
     if (!VaultApiDetector.detectApi()) {
       throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
-    }    
-    return new VaultChangeCollector(getOrCreateConnection(root), fromVersion, currentVersion);
+    }
+
+    return new IncludeRuleChangeCollector() {
+      @NotNull
+      public List<ModificationData> collectChanges(@NotNull final IncludeRule includeRule) throws VcsException {
+        final VaultConnection1 connection = getOrCreateConnection(root);
+
+        VaultUtil.checkIncludeRule(connection.getParameters(), includeRule);
+
+        final String toVersion = currentVersion == null ? getCurrentVersion(root) : currentVersion;
+
+        if (fromVersion.equals(toVersion)) {
+          return Collections.emptyList();
+        }
+
+        return VaultUtil.groupChanges(root, new VaultChangeCollector(connection, fromVersion, toVersion, includeRule.getFrom()).collectChanges());
+      }
+
+      public void dispose() { }
+    };
   }
 
   // end from CollectChangesByIncludeRules
@@ -234,8 +254,27 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from BuildPatchByIncludeRules
 
   @NotNull
-  public IncludeRulePatchBuilder getPatchBuilder(@NotNull VcsRoot root, @Nullable String fromVersion, @NotNull String toVersion) {
-    return new VaultPatchBuilder(getOrCreateConnection(root), fromVersion, toVersion);
+  public IncludeRulePatchBuilder getPatchBuilder(@NotNull final VcsRoot root, @Nullable final String fromVersion, @NotNull final String toVersion) {
+    return new IncludeRulePatchBuilder() {
+      public void buildPatch(@NotNull final PatchBuilder builder, @NotNull final IncludeRule includeRule) throws VcsException {
+        final VaultConnection1 connection = getOrCreateConnection(root);
+
+        VaultUtil.checkIncludeRule(connection.getParameters(), includeRule);
+
+        final VaultPatchBuilder patchBuilder = new VaultPatchBuilder(connection, builder, includeRule.getFrom());
+
+        if (StringUtil.isNotEmpty(fromVersion)) {
+          //noinspection ConstantConditions
+          if (!fromVersion.equals(toVersion)) {
+           patchBuilder.buildIncrementalPatch(fromVersion, toVersion);
+          }
+        } else {
+          patchBuilder.buildCleanPatch(toVersion);
+        }
+      }
+
+      public void dispose() { }
+    };
   }
 
   // end from BuildPatchByIncludeRules

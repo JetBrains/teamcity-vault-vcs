@@ -323,7 +323,7 @@ public final class VaultConnection {
     return 0;
   }
 
-  private static long getVersionByTxIdForFolder(@NotNull String repoPath, long txId) {
+  public static long getVersionByTxIdForFolder(@NotNull String repoPath, long txId) {
     final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(repoPath, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1000);
     for (final VaultTxHistoryItem i : txHistoryItems) {
       if (i.get_TxID() > 0 &&  i.get_TxID() <= txId) {

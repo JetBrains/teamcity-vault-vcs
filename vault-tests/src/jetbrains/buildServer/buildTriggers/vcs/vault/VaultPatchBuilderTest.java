@@ -182,10 +182,15 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnectionFactoryImpl().getOrCreateConnection(new VaultConnectionParameters(root)), fromVersion, toVersion);
 
+    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnectionFactoryImpl().getOrCreateConnection(new VaultConnectionParameters(root)), patchBuilder, null);
     try {
-      vaultPatchBuilder.buildPatch(patchBuilder, IncludeRule.createDefaultInstance());
+      if (fromVersion == null) {
+        vaultPatchBuilder.buildCleanPatch(toVersion);
+      } else {
+        vaultPatchBuilder.buildIncrementalPatch(fromVersion, toVersion);
+      }
+
     } finally {
       patchBuilder.close();
     }

@@ -17,16 +17,11 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import jetbrains.buildServer.buildTriggers.vcs.vault.impl.EternalVaultConnection1;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
 import jetbrains.buildServer.vcs.patches.ChangesPatchBuilder;
 import jetbrains.buildServer.vcs.patches.PatchBuilder;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,101 +30,38 @@ import org.jetbrains.annotations.Nullable;
  * Date: 03.07.2009
  * Time: 13:33:39
  */
-public final class VaultPatchBuilder implements IncludeRulePatchBuilder {
-  private static final Logger LOG = Logger.getLogger(VaultPatchBuilder.class);
-
+public final class VaultPatchBuilder {
   @NotNull private final VaultConnection1 myConnection;
-  @Nullable private final String myFromVersion;
-  @NotNull private final String myToVersion;
+  @NotNull private final PatchBuilder myPatchBuilder;
+  @NotNull private final String myTargetPath;
 
-  public VaultPatchBuilder(@NotNull VaultConnection1 connection,
-                           @Nullable String fromVersion,
-                           @NotNull String toVersion) {
+  public VaultPatchBuilder(@NotNull final VaultConnection1 connection,
+                           @NotNull final PatchBuilder patchBuilder,
+                           @Nullable final String targetPath) {
     myConnection = connection;
-
-    myFromVersion = fromVersion;
-    myToVersion = toVersion;
+    myPatchBuilder = patchBuilder;
+    myTargetPath = StringUtil.notNullize(targetPath);
   }
 
-  public void dispose() {}
-
-  public void buildPatch(@NotNull PatchBuilder builder, final @NotNull IncludeRule includeRule) throws IOException, VcsException {
-    VaultUtil.checkIncludeRule(myConnection.getParameters(), includeRule);
-
-    logStartBuildingPatch(includeRule);
-
-    if (myFromVersion == null) {
-      buildCleanPatch(builder, includeRule);
-    } else {
-      buildIncrementalPatch(builder, includeRule);
-    }
-
-    logFinishBuildingPatch(includeRule);
-  }
-
-  private void buildCleanPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
-    logBuildCleanPatch(includeRule);
-
+  public void buildCleanPatch(@NotNull final String toVersion) throws VcsException {
     VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
-        VcsSupportUtil.exportFilesFromDisk(builder, VaultConnection.getObject(includeRule.getFrom(), myToVersion));
+        VcsSupportUtil.exportFilesFromDisk(myPatchBuilder, VaultConnection.getObject(myTargetPath, toVersion));
       }
     }, false);
   }
 
-  private void buildIncrementalPatch(final PatchBuilder builder, final IncludeRule includeRule) throws VcsException {
-    logBuildIncrementalPatch(includeRule);
-
-    final Map<VaultChangeCollector.ModificationInfo, List<VcsChange>> modifications = new VaultChangeCollector(myConnection, myFromVersion, myToVersion).collectModifications(includeRule);
-    final List<VcsChange> changes = new LinkedList<VcsChange>();
-
-    for (final VaultChangeCollector.ModificationInfo i : modifications.keySet()) {
-      logModificationInfo(i);
-      changes.addAll(modifications.get(i));
-    }
+  public void buildIncrementalPatch(@NotNull final String fromVersion, @NotNull final String toVersion) throws VcsException {
+    final List<ChangeInfo> changes = new VaultChangeCollector(myConnection, fromVersion, toVersion, myTargetPath).collectChanges();
 
     VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
       public void process() throws Throwable {
-        new ChangesPatchBuilder().buildPatch(builder, changes, new ChangesPatchBuilder.FileContentProvider() {
+        new ChangesPatchBuilder().buildPatch(myPatchBuilder, VaultUtil.toVcsChanges(changes), new ChangesPatchBuilder.FileContentProvider() {
           public File getFile(@NotNull String path, @NotNull String version) throws VcsException {
-            return VaultConnection.getObject(getPathWithIncludeRule(includeRule, path), version);
+            return VaultConnection.getObject(VaultUtil.getFullPath(path, myTargetPath), version);
           }
         }, false);
       }
     }, false);
-  }
-
-  private String getPathWithIncludeRule(@NotNull IncludeRule includeRule, @NotNull String path) {
-    return StringUtil.isEmpty(includeRule.getFrom()) ? path : includeRule.getFrom() + "/" + path;
-  }
-
-  private void logFinishBuildingPatch(IncludeRule includeRule) {
-    LOG.debug("Finish building patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myToVersion);
-  }
-
-  private void logStartBuildingPatch(IncludeRule includeRule) {
-    LOG.debug("Start building patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
-      + " from version " + myFromVersion + " to version " + myToVersion);
-  }
-
-  private void logBuildCleanPatch(IncludeRule includeRule) {
-    LOG.debug("Perform clean patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
-    + " to version " + myToVersion);
-  }  
-
-  private void logBuildIncrementalPatch(IncludeRule includeRule) {
-    LOG.debug("Perform incremental patch for root " + getRootName() + " for rule " + includeRule.toDescriptiveString()
-    + " from version " + myFromVersion + " to version " + myToVersion + " by collecting changes");
-  }
-
-  @NotNull
-  private String getRootName() {
-    return myConnection.getParameters().getStringRepresentation();
-  }
-
-  private void logModificationInfo(VaultChangeCollector.ModificationInfo i) {
-    LOG.debug("Modification info: version=" + i.getVersion() + ", date=" + i.getDate() +
-    ", user=" + i.getUser() + ", comment=" + i.getComment());
   }
 }
