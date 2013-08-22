@@ -50,6 +50,7 @@ public final class VaultChangeCollector {
 
   @NotNull private final VaultPathHistory myPathHistory;
   @NotNull private final Map<String, Boolean> myIsFileCache;
+  @NotNull private final Map<String, String> myDisplayVersionCache;
 
   @NotNull private final List<String> mySharedPaths;
 
@@ -64,6 +65,7 @@ public final class VaultChangeCollector {
 
     myPathHistory = new VaultPathHistory();
     myIsFileCache = new HashMap<String, Boolean>();
+    myDisplayVersionCache = new HashMap<String, String>();
     mySharedPaths = new ArrayList<String>();
   }
 
@@ -119,7 +121,7 @@ public final class VaultChangeCollector {
       txDate.get_Day(), txDate.get_Hour(),
       txDate.get_Minute(), txDate.get_Second()).getTime();
     final String version = "" + item.get_TxID();
-    final ModificationInfo mi = new ModificationInfo(version, String.valueOf(VaultConnection.getVersionByTxIdForFolder(ROOT, VaultUtil.parseLong(version))), item.get_UserLogin(), comment, date);
+    final ModificationInfo mi = new ModificationInfo(version, getDisplayVersion(version), item.get_UserLogin(), comment, date);
 
     if ("Added".equals(typeStr)) {
       final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
@@ -204,6 +206,16 @@ public final class VaultChangeCollector {
     }
     final String oldPath = myPathHistory.getOldPath(repoPath);
     pushChange(changes, item.GetActionString(), mi, oldPath, getType(typeStr, oldPath, version));
+  }
+
+  @NotNull
+  private String getDisplayVersion(@NotNull String version) throws VcsException {
+    String displayVersion = myDisplayVersionCache.get(version);
+    if (StringUtil.isEmpty(displayVersion)) {
+      displayVersion = String.valueOf(VaultConnection.getVersionByTxIdForFolder(ROOT, VaultUtil.parseLong(version)));
+      myDisplayVersionCache.put(version, displayVersion);
+    }
+    return displayVersion;
   }
 
   private void pushChange(Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) {
