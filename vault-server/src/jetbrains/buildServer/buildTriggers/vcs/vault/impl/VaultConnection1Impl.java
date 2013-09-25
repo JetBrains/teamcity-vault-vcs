@@ -2,21 +2,19 @@ package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
 import VaultClientIntegrationLib.*;
 import VaultClientOperationsLib.SetFileTimeType;
-import VaultLib.VaultDate;
-import VaultLib.VaultHistoryItem;
-import VaultLib.VaultTxHistoryItem;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil;
+import VaultLib.*;
+import jetbrains.buildServer.buildTriggers.vcs.vault.*;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.FileUtil;
+import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.VcsException;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT;
+import java.util.*;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
@@ -41,7 +39,7 @@ class VaultConnection1Impl implements VaultConnection1 {
     return myParameters;
   }
 
-  public boolean isAlive() throws VcsException {
+  public boolean isAlive() {
     return ServerOperations.isConnected();
   }
 
@@ -49,43 +47,65 @@ class VaultConnection1Impl implements VaultConnection1 {
     FileUtil.delete(myCacheFolder);
   }
 
+  @NotNull
+  public File getExistingObject(@NotNull String path, @NotNull String version) throws VcsException {
+    final File object = getObject(path, version);
+    if (object == null) throw new VcsException("No object " + path + " found at revision " + version);
+    return object;
+  }
+
   @Nullable
   public File getObject(@NotNull String path, @NotNull String version) throws VcsException {
     final File cached = getCachedFile(path, version);
 
-    if (isFile(path)) {
-      if (cached.exists()) return cached;
+    if (cached.isFile()) {
+      return cached;
+    } else {
 
-      final Long fileVersion = getFileVersion(path, version);
-      if (fileVersion == null) return null;
-
-      getObject(path, fileVersion, false, cached);
-
-    } else if (isFolder(path)) {
       FileUtil.delete(cached);
 
-      final Long folderVersion = getFolderVersion(path, version);
-      if (folderVersion == null) return null;
+      if (isFile(path)) {
 
-      getObject(path, folderVersion, true, cached);
+        final Long fileVersion = getFileDisplayVersion(path, version);
 
-    } else {
-      getObject(getRepoParentPath(path), version);
+        if (fileVersion == null) {
+          getObject(getRepoParentPath(path), version);
+        } else {
+          getObject(path, fileVersion, false, cached);
+        }
+      } else if (isFolder(path)) {
+
+        final Long folderVersion = getFolderDisplayVersion(path, version);
+
+        if (folderVersion == null) {
+          getObject(getRepoParentPath(path), version);
+        } else {
+          getObject(path, folderVersion, true, cached);
+        }
+      } else {
+        getObject(getRepoParentPath(path), version);
+      }
     }
 
     return cached.exists() ? cached : null;
   }
 
-  private void getObject(@NotNull String path, long objectVersion, boolean recursive, @NotNull File dest) {
+  private void getObject(@NotNull String path, long objectVersion, boolean isFolder, @NotNull File dest) {
     FileUtil.createParentDirs(dest);
 
     final GetOptions getOptions = new GetOptions();
-    getOptions.Recursive = recursive;
+    getOptions.Recursive = isFolder;
     getOptions.SetFileTime = SetFileTimeType.Modification;
 
+    final File destPath = isFolder || isRoot(path) ? dest : dest.getParentFile();
+
     GetOperations.ProcessCommandGetVersionToLocationOutsideWorkingFolder(
-      ensureRepoPath(path), (int)objectVersion, getOptions, dest.getParentFile().getAbsolutePath()
+      ensureRepoPath(path), (int)objectVersion, getOptions, destPath.getAbsolutePath()
     );
+  }
+
+  private boolean isRoot(@NotNull String path) {
+    return VaultUtil.ROOT.equals(ensureRepoPath(path));
   }
 
   @NotNull
@@ -93,11 +113,11 @@ class VaultConnection1Impl implements VaultConnection1 {
     return new File(myCacheFolder, version + "/" + ensureFileSystemPath(path));
   }
 
-  public boolean objectExists(@NotNull String path) throws VcsException {
+  private boolean objectExists(@NotNull String path) {
     return RepositoryUtil.PathExists(ensureRepoPath(path));
   }
 
-  private boolean isFile(@NotNull String path) throws VcsException {
+  private boolean isFile(@NotNull String path) {
     if (objectExists(path)) {
       try {
         RepositoryUtil.FindVaultFileAtReposOrLocalPath(ensureRepoPath(path));
@@ -109,7 +129,7 @@ class VaultConnection1Impl implements VaultConnection1 {
     return false;
   }
 
-  private boolean isFolder(@NotNull String path) throws VcsException {
+  private boolean isFolder(@NotNull String path) {
     if (objectExists(path)) {
       try {
         RepositoryUtil.FindVaultFolderAtReposOrLocalPath(ensureRepoPath(path));
@@ -122,7 +142,7 @@ class VaultConnection1Impl implements VaultConnection1 {
   }
 
   @Nullable
-  private Long getFileVersion(@NotNull String path, @NotNull String version) {
+  private Long getFileDisplayVersion(@NotNull String path, @NotNull String version) {
     final long txId = Long.parseLong(version);
 
     final VaultHistoryItem[] historyItems =
@@ -137,7 +157,7 @@ class VaultConnection1Impl implements VaultConnection1 {
   }
 
   @Nullable
-  private Long getFolderVersion(@NotNull String path, @NotNull String version) {
+  public Long getFolderDisplayVersion(@NotNull String path, @NotNull String version) {
     final long txId = Long.parseLong(version);
 
     final VaultTxHistoryItem[] txHistoryItems =
@@ -149,6 +169,16 @@ class VaultConnection1Impl implements VaultConnection1 {
       }
     }
     return null;
+  }
+
+  public boolean objectExists(@NotNull String path, @Nullable String version) throws VcsException {
+    if (StringUtil.isEmpty(version)) {
+      return objectExists(path);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    final File object = getObject(path, version);
+    return object != null && object.exists();
   }
 
   @NotNull
@@ -167,23 +197,9 @@ class VaultConnection1Impl implements VaultConnection1 {
   }
 
   @NotNull
-  public String getCurrentVersion() throws VcsException {
-    try {
-      final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(ROOT, 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1);
-      return String.valueOf(txHistoryItems[0].get_TxID());
-    } catch (Throwable th) {
-      throw new VcsException(specifyMessage(th.getMessage()), th);
-    }
-  }
-
-  @Nullable
-  public String getDisplayVersion(@NotNull String version) throws VcsException {
-    try {
-      final Long folderVersion = getFolderVersion(ROOT, version);
-      return folderVersion == null ? null : String.valueOf(folderVersion);
-    } catch (Throwable th) {
-      throw new VcsException(specifyMessage(th.getMessage()), th);
-    }
+  public String getFolderVersion(@NotNull String path) {
+    final VaultTxHistoryItem[] txHistoryItems = ServerOperations.ProcessCommandVersionHistory(ensureRepoPath(path), 0, VaultDate.EmptyDate(), VaultDate.EmptyDate(), 1);
+    return String.valueOf(txHistoryItems[0].get_TxID());
   }
 
   public void login() throws VcsException {
@@ -229,7 +245,62 @@ class VaultConnection1Impl implements VaultConnection1 {
 
   @NotNull
   private String specifyMessage(@NotNull String message) {
-    return String.format("%s: Exception occurred while trying to connect to Vault server. See original message below:%s\n",
+    return String.format("%s: Exception occurred while trying to connect to Vault server. See original message below:\n%s",
                          myParameters.getStringRepresentation(), message);
+  }
+
+  public void labelFolder(@NotNull String path, @NotNull String version, @NotNull String label) throws VcsException {
+    final Long folderVersion = getFolderDisplayVersion(path, version);
+
+    if (folderVersion == null) return;
+
+    deleteLabel(path, label);
+    ServerOperations.ProcessCommandLabel(ensureRepoPath(path), label, folderVersion);
+  }
+
+  private void deleteLabel(@NotNull String path, @NotNull String label) throws VcsException {
+    try {
+      ServerOperations.ProcessCommandDeleteLabel(ensureRepoPath(path), label);
+    } catch (Exception e) {
+      if ((e.getMessage() != null) && e.getMessage().contains("Could not find label")) {
+        return;
+      }
+      throw new VcsException(e);
+    }
+  }
+
+  @NotNull
+  public List<RawChangeInfo> getFolderHistory(@NotNull String path, @NotNull String fromVersion, @NotNull String toVersion) {
+    final Long objectFromVersion = getFolderDisplayVersion(path, fromVersion);
+    final Long objectToVersion = getFolderDisplayVersion(path, toVersion);
+
+    if (objectFromVersion == null || objectToVersion == null || objectFromVersion >= objectToVersion) return Collections.emptyList();
+
+    final VaultHistoryItem[] vaultHistoryItems =
+      ServerOperations.ProcessCommandHistory(ensureRepoPath(path), true, DateSortOption.desc,
+        null, null/*"label,obliterate,pin,propertychange"*/,
+        null, null, null, null,
+        objectFromVersion + 1, objectToVersion, 1000);
+
+    return CollectionsUtil.convertAndFilterNulls(Arrays.asList(vaultHistoryItems), new Converter<RawChangeInfo, VaultHistoryItem>() {
+      public RawChangeInfo createFrom(@NotNull VaultHistoryItem source) {
+
+        final RawChangeInfo.RawChangeInfoType type = RawChangeInfo.RawChangeInfoType.getType(VaultHistoryType.GetHistoryTypeName(source.get_HistItemType()));
+
+        if (type == RawChangeInfo.RawChangeInfoType.NOT_CHANGED) return null;
+
+        final String name = source.get_Name();
+        final String miscInfo1 = source.get_MiscInfo1();
+        final String miscInfo2 = source.get_MiscInfo2();
+        final Long txId = source.get_TxID();
+        final VaultDateTime txDate = source.get_TxDate();
+        final Date date = new GregorianCalendar(txDate.get_Year(), txDate.get_Month() - 1, txDate.get_Day(), txDate.get_Hour(), txDate.get_Minute(), txDate.get_Second()).getTime();
+        final String user = source.get_UserLogin();
+        final String actionString = source.GetActionString();
+        final String comment = source.get_Comment();
+
+        return new RawChangeInfo(name, miscInfo1, miscInfo2, String.valueOf(txId), date, user, actionString, comment, type);
+      }
+    });
   }
 }

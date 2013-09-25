@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
@@ -30,6 +31,9 @@ public interface VaultConnection1 {
    */
   void resetCaches();
 
+  void login() throws VcsException;
+  void logout() throws VcsException;
+
   /**
    * Gets the specified version of a repo object (file or folder) and stores it in a temp folder
    * You may delete the file when it's no longer used
@@ -44,31 +48,63 @@ public interface VaultConnection1 {
   File getObject(@NotNull String path, @NotNull String version) throws VcsException ;
 
   /**
-   * Checks if object (file or folder) currently exists in repo
-   *
-   * @param path path to the object in repo
-   *
-   * @return true if the object currently exists, false otherwise
-   * @throws VcsException
+   * Same as previous method but throws exception if object not found
    */
-  boolean objectExists(@NotNull String path) throws VcsException;
+  @NotNull
+  File getExistingObject(@NotNull String path, @NotNull String version) throws VcsException;
 
   /**
-   * Returns repository head revision which is latest transaction id
+   * Checks if the specified repo obejct exists at the specified revision
+   *
+   * @param path path to the object in repo
+   * @param version VCS root revision or null for head revision
+   *
+   * @return true if the object exisits, false otherwise
+   * @throws VcsException
+   */
+  boolean objectExists(@NotNull String path, @Nullable String version) throws VcsException;
+
+  /**
+   * Returns head revision for the specified folder which is latest transaction id for the specified folder
+   * Path must exist
+   *
+   * @param path path to the fodler in repo
    *
    * @throws VcsException
    */
   @NotNull
-  String getCurrentVersion() throws VcsException;
+  String getFolderVersion(@NotNull String path) throws VcsException;
 
   /**
-   * Returns human readable repository head revision which is latest $ version
+   * Returns human readable revision of the specified folder or null if folder is not present at the specified version
+   *
+   * @param path path to the object in repo
+   * @param version VCS root revision
    *
    * @throws VcsException
    */
   @Nullable
-  String getDisplayVersion(@NotNull String version) throws VcsException;
+  Long getFolderDisplayVersion(@NotNull String path, @NotNull String version) throws VcsException;
 
-  void login() throws VcsException;
-  void logout() throws VcsException;
+  /**
+   * Labels the specified folder at specified revision with specified label,
+   * if another revision of the same folder is already labled with the same label, existing label is deleted
+   *
+   * @param path path to the object in repo
+   * @param version VCS root revision
+   * @param label non-empty lable text
+   *
+   * @throws VcsException
+   */
+  void labelFolder(@NotNull String path, @NotNull String version, @NotNull String label) throws VcsException;
+
+  /**
+   * Returns list of commit history items for the specified repo object
+   *
+   * @param path path to the object in repo
+   * @param fromVersion start VCS root revision
+   * @param toVersion end VCS root revision
+   */
+  @NotNull
+  List<RawChangeInfo> getFolderHistory(@NotNull String path, @NotNull String fromVersion, @NotNull String toVersion) throws VcsException;
 }

@@ -17,6 +17,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
@@ -37,30 +38,22 @@ public final class VaultPatchBuilder {
 
   public VaultPatchBuilder(@NotNull final VaultConnection1 connection,
                            @NotNull final PatchBuilder patchBuilder,
-                           @Nullable final String targetPath) {
+                           @Nullable final String targetPath) throws VcsException {
     myConnection = connection;
     myPatchBuilder = patchBuilder;
     myTargetPath = StringUtil.notNullize(targetPath);
   }
 
-  public void buildCleanPatch(@NotNull final String toVersion) throws VcsException {
-    VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
-      public void process() throws Throwable {
-        VcsSupportUtil.exportFilesFromDisk(myPatchBuilder, VaultConnection.getObject(myTargetPath, toVersion));
-      }
-    }, false);
+  public void buildCleanPatch(@NotNull final String toVersion) throws VcsException, IOException {
+    VcsSupportUtil.exportFilesFromDisk(myPatchBuilder, myConnection.getExistingObject(myTargetPath, toVersion));
   }
 
-  public void buildIncrementalPatch(@NotNull final String fromVersion, @NotNull final String toVersion) throws VcsException {
+  public void buildIncrementalPatch(@NotNull final String fromVersion, @NotNull final String toVersion) throws VcsException, IOException {
     final List<ChangeInfo> changes = new VaultChangeCollector(myConnection, fromVersion, toVersion, myTargetPath).collectChanges();
 
-    VaultConnection.doInConnection(myConnection.getParameters().asMap(), new VaultConnection.InConnectionProcessor() {
-      public void process() throws Throwable {
-        new ChangesPatchBuilder().buildPatch(myPatchBuilder, VaultUtil.toVcsChanges(changes), new ChangesPatchBuilder.FileContentProvider() {
-          public File getFile(@NotNull String path, @NotNull String version) throws VcsException {
-            return VaultConnection.getObject(VaultUtil.getFullPath(path, myTargetPath), version);
-          }
-        }, false);
+    new ChangesPatchBuilder().buildPatch(myPatchBuilder, VaultUtil.toVcsChanges(changes), new ChangesPatchBuilder.FileContentProvider() {
+      public File getFile(@NotNull String path, @NotNull String version) throws VcsException {
+        return myConnection.getExistingObject(VaultUtil.getFullPath(path, myTargetPath), version);
       }
     }, false);
   }

@@ -1,13 +1,14 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
+import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionFactory;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
@@ -15,18 +16,14 @@ import java.io.File;
 public class EternalVaultConnection1 implements VaultConnection1 {
   @NotNull
   private VaultConnection1 myConnection;
-  @NotNull
-  private final VaultConnectionFactory myConnectionFactory;
 
-  public EternalVaultConnection1(@NotNull final VaultConnection1 connection, @NotNull final VaultConnectionFactory connectionFactory) {
+  public EternalVaultConnection1(@NotNull final VaultConnection1 connection) {
     myConnection = connection;
-    myConnectionFactory = connectionFactory;
   }
 
   @NotNull
   private VaultConnection1 ensureActiveConnection() throws VcsException {
     if (!myConnection.isAlive()) {
-      myConnection = myConnectionFactory.getOrCreateConnection(getParameters());
       myConnection.login();
     }
     return myConnection;
@@ -58,17 +55,31 @@ public class EternalVaultConnection1 implements VaultConnection1 {
     return ensureActiveConnection().getObject(path, version);
   }
 
-  public boolean objectExists(@NotNull String path) throws VcsException {
-    return ensureActiveConnection().objectExists(path);
+  @NotNull
+  public File getExistingObject(@NotNull String path, @NotNull String version) throws VcsException {
+    return ensureActiveConnection().getExistingObject(path, version);
+  }
+
+  public boolean objectExists(@NotNull String path, @Nullable String version) throws VcsException {
+    return ensureActiveConnection().objectExists(path, version);
   }
 
   @NotNull
-  public String getCurrentVersion() throws VcsException {
-    return ensureActiveConnection().getCurrentVersion();
+  public String getFolderVersion(@NotNull String path) throws VcsException {
+    return ensureActiveConnection().getFolderVersion(path);
   }
 
   @Nullable
-  public String getDisplayVersion(@NotNull String version) throws VcsException {
-    return ensureActiveConnection().getDisplayVersion(version);
+  public Long getFolderDisplayVersion(@NotNull String path, @NotNull String version) throws VcsException {
+    return ensureActiveConnection().getFolderDisplayVersion(path, version);
+  }
+
+  public void labelFolder(@NotNull String path, @NotNull String version, @NotNull String label) throws VcsException {
+    ensureActiveConnection().labelFolder(path, version, label);
+  }
+
+  @NotNull
+  public List<RawChangeInfo> getFolderHistory(@NotNull String path, @NotNull String fromVersion, @NotNull String toVersion) throws VcsException {
+    return ensureActiveConnection().getFolderHistory(path, fromVersion, toVersion);
   }
 }

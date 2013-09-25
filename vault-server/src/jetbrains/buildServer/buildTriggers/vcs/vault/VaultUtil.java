@@ -141,17 +141,6 @@ public final class VaultUtil {
     }
   }
 
-  public static void checkIncludeRule(VaultConnectionParameters connectionParameters, final IncludeRule includeRule) throws VcsException {
-    VaultConnection.doInConnection(connectionParameters.asMap(), new VaultConnection.InConnectionProcessor() {
-      public void process() throws Throwable {
-        if (!VaultConnection.objectExists(getRepoPathFromPath(includeRule.getFrom()))) {
-          throw new VcsException("Invalid rule " + includeRule.toDescriptiveString()
-            + ", no such repository folder");
-        }
-      }
-    }, false);
-  }
-
   public static String getRepoParentPath(@NotNull String repoPath) {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf(SEPARATOR));
   }
@@ -166,7 +155,7 @@ public final class VaultUtil {
   }
 
   public static String getPathFromRepoPath(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? "" : repoPath.substring(2);
+    return ROOT.equals(repoPath) ? "" : (repoPath.startsWith(ROOT_PREFIX) ? repoPath.substring(2) : repoPath);
   }
 
   @NotNull

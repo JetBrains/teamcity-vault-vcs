@@ -1,7 +1,10 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.util.Date;
+
+import jetbrains.buildServer.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by Victory.Bedrosova on 8/20/13.
@@ -21,12 +24,18 @@ public class ModificationInfo {
   @NotNull
   private final Date myDate;
 
-  public ModificationInfo(@NotNull String version, @NotNull String displayVersion, @NotNull String user, @NotNull String comment, @NotNull Date date) {
+  public ModificationInfo(@NotNull String version, @NotNull String displayVersion, @NotNull String user, @Nullable String comment, @NotNull Date date) {
     myVersion = version;
     myDisplayVersion = displayVersion;
     myUser = user;
-    myComment = comment;
+    myComment = fixComment(comment);
     myDate = date;
+  }
+
+  @SuppressWarnings("ConstantConditions")
+  @NotNull
+  private String fixComment(@Nullable String comment) {
+    return StringUtil.isEmpty(comment) ? "No comment" : comment;
   }
 
   @NotNull

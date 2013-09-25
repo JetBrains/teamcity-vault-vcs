@@ -31,7 +31,7 @@ public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
   }
 
   @NotNull
-  public VaultConnection1 getOrCreateConnection(@NotNull final VaultConnectionParameters parameters) {
+  VaultConnection1 getOrCreateConnection(@NotNull final VaultConnectionParameters parameters, boolean wrap) {
     CONNECTIONS_LOCK.readLock().lock();
     try {
       if (myConnections.containsKey(parameters)) {
@@ -47,7 +47,7 @@ public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
         return myConnections.get(parameters);
       }
 
-      final VaultConnection1 connection1 = createConnection(parameters);
+      final VaultConnection1 connection1 = createConnection(parameters, wrap);
       myConnections.put(parameters, connection1);
       return connection1;
 
@@ -57,18 +57,29 @@ public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
   }
 
   @NotNull
-  private VaultConnection1 createConnection(@NotNull final VaultConnectionParameters parameters) {
-    return makeSyncronized(makeEternal(new VaultConnection1Impl(parameters, getConnectionCacheFolder(parameters))));
+  public VaultConnection1 getOrCreateConnection(@NotNull final VaultConnectionParameters parameters) {
+    return getOrCreateConnection(parameters, true);
   }
 
   @NotNull
-  private SynchronizedVaultConnection makeSyncronized(@NotNull VaultConnection1 connection) {
+  private VaultConnection1 createConnection(@NotNull final VaultConnectionParameters parameters, boolean wrap) {
+    final VaultConnection1 connection = makeExceptionAware(new VaultConnection1Impl(parameters, getConnectionCacheFolder(parameters)));
+    return wrap ? makeSynchronized(makeEternal(connection)) : connection;
+  }
+
+  @NotNull
+  private ExceptionAwareConnection1 makeExceptionAware(@NotNull VaultConnection1 connection) {
+    return new ExceptionAwareConnection1(connection);
+  }
+
+  @NotNull
+  private SynchronizedVaultConnection makeSynchronized(@NotNull VaultConnection1 connection) {
     return new SynchronizedVaultConnection(connection);
   }
 
   @NotNull
   private EternalVaultConnection1 makeEternal(@NotNull VaultConnection1 connection) {
-    return new EternalVaultConnection1(connection, this);
+    return new EternalVaultConnection1(connection);
   }
 
   @NotNull
