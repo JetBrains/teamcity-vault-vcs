@@ -17,10 +17,8 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.FileUtil;
@@ -36,9 +34,9 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class VaultUtil {
   public static final String ROOT = "$";
-  public static final String ROOT_PREFIX = "$/";
   public static final String SEPARATOR = "/";
-  public static final String CURRENT = ".";  
+  public static final String ROOT_PREFIX = ROOT + SEPARATOR;
+  public static final String CURRENT = ".";
 
   public static final File TEMP_DIR = new File(FileUtil.getTempDirectory(), "vault");
 
@@ -54,99 +52,8 @@ public final class VaultUtil {
 
   public static final String NO_API_FOUND_EXCEPTION = "Vault integration could not find some of Vault Java API jars.";
 
-//        public static final byte Added = 10;
-//        public static final byte BranchedFrom = 20;
-//        public static final byte BranchedFromItem = 30;
-//        public static final byte BranchedFromShare = 40;
-//        public static final byte BranchedFromShareItem = 50;
-//        public static final byte CheckIn = 60;
-//        public static final byte Created = 70;
-//        public static final byte Deleted = 80;
-//        public static final byte Label = 90;
-//        public static final byte MovedFrom = 120;
-//        public static final byte MovedTo = -126;
-//        public static final byte Obliterated = -116;
-//        public static final byte Pinned = -106;
-//        public static final byte PropertyChange = -96;
-//        public static final byte Renamed = -86;
-//        public static final byte RenamedItem = -76;
-//        public static final byte SharedTo = -66;
-//        public static final byte Snapshot = -56;
-//        public static final byte SnapshotFrom = -55;
-//        public static final byte SnapshotItem = -54;
-//        public static final byte Undeleted = -46;
-//        public static final byte UnPinned = -36;
-//        public static final byte Rollback = -26;
-
-  public static final Set<String> NOT_CHANGED_CHANGE_TYPES = new HashSet<String>();
-
-  static {
-    NOT_CHANGED_CHANGE_TYPES.add("Created");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Label");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Obliterated");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Pinned");
-    NOT_CHANGED_CHANGE_TYPES.add("UnPinned");
-
-    NOT_CHANGED_CHANGE_TYPES.add("PropertyChange");
-
-    NOT_CHANGED_CHANGE_TYPES.add("MovedFrom");
-
-    NOT_CHANGED_CHANGE_TYPES.add("Snapshot");
-    NOT_CHANGED_CHANGE_TYPES.add("SnapshotFrom");
-    NOT_CHANGED_CHANGE_TYPES.add("SnapshotItem");
-
-    NOT_CHANGED_CHANGE_TYPES.add("BranchedFrom");
-    NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShare");
-    NOT_CHANGED_CHANGE_TYPES.add("BranchedFromShareItem");
-  }
-
-  public static final Set<String> ADDED_CHANGE_TYPES =  new HashSet<String>();
-
-  static {
-    ADDED_CHANGE_TYPES.add("Added");
-
-    ADDED_CHANGE_TYPES.add("BranchedFromItem");
-
-    ADDED_CHANGE_TYPES.add("MovedTo");
-
-    ADDED_CHANGE_TYPES.add("Renamed");
-    ADDED_CHANGE_TYPES.add("RenamedItem");
-
-    ADDED_CHANGE_TYPES.add("SharedTo");
-
-    ADDED_CHANGE_TYPES.add("Undeleted");
-  }
-
-  public static final Set<String> CHANGED_CHANGE_TYPES =  new HashSet<String>();
-
-  static {
-    CHANGED_CHANGE_TYPES.add("CheckIn");
-    CHANGED_CHANGE_TYPES.add("Rollback");
-  }
-
-  public static final Set<String> REMOVED_CHANGE_TYPES =  new HashSet<String>();
-
-  static {
-    REMOVED_CHANGE_TYPES.add("Deleted");
-  }
-
-  public static long parseLong(@NotNull String num) throws VcsException {
-    try {
-      return Long.parseLong(num);
-    } catch (NumberFormatException e) {
-      throw new VcsException(e);
-    }
-  }
-
   public static String getRepoParentPath(@NotNull String repoPath) {
     return ROOT.equals(repoPath) ? "" : repoPath.substring(0, repoPath.lastIndexOf(SEPARATOR));
-  }
-
-  public static String getName(@NotNull String repoPath) {
-    return ROOT.equals(repoPath) ? ROOT : repoPath.substring(repoPath.lastIndexOf("/") + 1);
   }
 
   public static String getRepoPathFromPath(@NotNull String path) {
