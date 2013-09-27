@@ -19,17 +19,14 @@ import java.util.*;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-class VaultConnection1Impl implements VaultConnection1 {
-  private static final Logger LOG = Logger.getLogger(VaultConnection1.class);
+class VaultConnectionImpl implements VaultConnection {
+  private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
   @NotNull
   private final VaultConnectionParameters myParameters;
-  @NotNull
-  private final File myCacheFolder;
 
-  public VaultConnection1Impl(@NotNull final VaultConnectionParameters parameters, @NotNull final  File cacheFolder) {
+  public VaultConnectionImpl(@NotNull final VaultConnectionParameters parameters) {
     myParameters = parameters;
-    myCacheFolder = cacheFolder;
 
     resetCaches();
   }
@@ -44,7 +41,7 @@ class VaultConnection1Impl implements VaultConnection1 {
   }
 
   public void resetCaches() {
-    FileUtil.delete(myCacheFolder);
+    FileUtil.delete(myParameters.getConnectionCacheFolder());
   }
 
   @NotNull
@@ -110,7 +107,7 @@ class VaultConnection1Impl implements VaultConnection1 {
 
   @NotNull
   private File getCachedFile(@NotNull String path, @NotNull String version) {
-    return new File(myCacheFolder, version + "/" + ensureFileSystemPath(path));
+    return new File(myParameters.getConnectionCacheFolder(), version + "/" + ensureFileSystemPath(path));
   }
 
   private boolean objectExists(@NotNull String path) {

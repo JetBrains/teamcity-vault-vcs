@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.util.*;
 import jetbrains.buildServer.buildTriggers.vcs.AbstractVcsPropertiesProcessor;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
+import jetbrains.buildServer.serverSide.CachePaths;
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
-import jetbrains.buildServer.serverSide.ServerPaths;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
@@ -50,30 +50,16 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   private final VaultConnectionFactory myConnectionFactory;
+  @NotNull
+  private final VaultApiConnector myApiConnector;
+  @NotNull
+  private final File myCacheFolder;
 
-  public VaultVcsSupport(@NotNull ServerPaths serverPaths, @NotNull VaultConnectionFactory connectionFactory) {
-    myConnectionFactory = connectionFactory;
+  public VaultVcsSupport(@NotNull CachePaths cachePaths, @NotNull VaultConnectionFactory connectionFactory, @NotNull VaultApiConnector vaultApiConnector) {
     LOG.debug("Vault plugin is working");
-
-    setUpCache(serverPaths);
-
-    VaultUtil.createTempDir();
-
-    VaultApiDetector.setServerPaths(serverPaths);
-  }
-
-  private void setUpCache(ServerPaths serverPaths) {
-    final File cache = new File(serverPaths.getCachesDir(), "vault");
-    if (FileUtil.delete(cache)) {
-      LOG.debug("Vault plugin deleted it's cache under " + cache.getAbsolutePath());
-    }
-    if (System.getProperty("vault.enable.cache") != null) {
-      LOG.debug("Vault plugin will store cache under " + cache.getAbsolutePath());
-      VaultCache.enableCache(cache);
-    } else {
-      LOG.debug("Vault plugin will not use cache");
-      VaultCache.enableCache(null);
-    }
+    myCacheFolder = cachePaths.getCacheDirectory("vault");
+    myConnectionFactory = connectionFactory;
+    myApiConnector = vaultApiConnector;
   }
 
   //-------------------------------------------------------------------------------
@@ -92,7 +78,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
       @NotNull
       public byte[] getContent(@NotNull final String filePath, @NotNull VcsRoot versionedRoot, @NotNull final String version) throws VcsException {
-        final VaultConnection1 connection = getOrCreateConnection(versionedRoot);
+        final VaultConnection connection = getOrCreateConnection(versionedRoot);
 
         try {
           final File object = connection.getExistingObject(filePath, version);
@@ -141,10 +127,10 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
+    if (myApiConnector.detectApi()) {
+      return getOrCreateConnection(root).getFolderVersion(VaultUtil.ROOT);
     }
-    return getOrCreateConnection(root).getFolderVersion(VaultUtil.ROOT);
+    throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
   }
 
   public boolean sourcesUpdatePossibleIfChangesNotFound(@NotNull VcsRoot root) {
@@ -245,35 +231,34 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   public IncludeRuleChangeCollector getChangeCollector(@NotNull final VcsRoot root,
                                                        @NotNull final String fromVersion,
                                                        @Nullable final String currentVersion) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
-    }
+    if (myApiConnector.detectApi()) {
+      final VaultConnection connection = getOrCreateConnection(root);
 
-    final VaultConnection1 connection = getOrCreateConnection(root);
+      return new IncludeRuleChangeCollector() {
+        @NotNull
+        public List<ModificationData> collectChanges(@NotNull final IncludeRule includeRule) throws VcsException {
+          final String targetPath = includeRule.getFrom();
 
-    return new IncludeRuleChangeCollector() {
-      @NotNull
-      public List<ModificationData> collectChanges(@NotNull final IncludeRule includeRule) throws VcsException {
-        final String targetPath = includeRule.getFrom();
+          if (connection.objectExists(targetPath, null)) {
+            final String toVersion = currentVersion == null ? connection.getFolderVersion(targetPath) : currentVersion;
 
-        if (connection.objectExists(targetPath, null)) {
-          final String toVersion = currentVersion == null ? connection.getFolderVersion(targetPath) : currentVersion;
+            if (fromVersion.equals(toVersion)) {
+              return Collections.emptyList();
+            }
 
-          if (fromVersion.equals(toVersion)) {
-            return Collections.emptyList();
+            return VaultUtil.groupChanges(root, new VaultChangeCollector(connection, fromVersion, toVersion, targetPath).collectChanges());
           }
 
-          return VaultUtil.groupChanges(root, new VaultChangeCollector(connection, fromVersion, toVersion, targetPath).collectChanges());
+          return Collections.emptyList();
         }
 
-        return Collections.emptyList();
-      }
-
-      public void dispose() {
-//        try to preserve caches for patch building
-//        connection.resetCaches();
-      }
-    };
+        public void dispose() {
+  //        try to preserve caches for patch building
+  //        connection.resetCaches();
+        }
+      };
+    }
+    throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
   }
 
   // end from CollectChangesByIncludeRules
@@ -285,7 +270,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public IncludeRulePatchBuilder getPatchBuilder(@NotNull final VcsRoot root, @Nullable final String fromVersion, @NotNull final String toVersion) {
-    final VaultConnection1 connection = getOrCreateConnection(root);
+    final VaultConnection connection = getOrCreateConnection(root);
 
     return new IncludeRulePatchBuilder() {
       public void buildPatch(@NotNull final PatchBuilder builder, @NotNull final IncludeRule includeRule) throws VcsException, IOException {
@@ -321,11 +306,11 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from TestConnectionSupport
 
   public String testConnection(@NotNull VcsRoot vcsRoot) throws VcsException {
-    if (!VaultApiDetector.detectApi()) {
-      throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
+    if (myApiConnector.detectApi()) {
+      final VaultConnection connection = getOrCreateConnection(vcsRoot);
+      return "$ at revision " + connection.getFolderDisplayVersion(VaultUtil.ROOT, connection.getFolderVersion(VaultUtil.ROOT));
     }
-    final VaultConnection1 connection = getOrCreateConnection(vcsRoot);
-    return "$ at revision " + connection.getFolderDisplayVersion(VaultUtil.ROOT, connection.getFolderVersion(VaultUtil.ROOT));
+    throw new VcsException(VaultUtil.NO_API_FOUND_EXCEPTION);
   }
 
   // end from TestConnectionSupport
@@ -352,7 +337,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   //-------------------------------------------------------------------------------
 
   @NotNull
-  private VaultConnection1 getOrCreateConnection(@NotNull VcsRoot root) {
-    return myConnectionFactory.getOrCreateConnection(new VaultConnectionParameters(root));
+  private VaultConnection getOrCreateConnection(@NotNull VcsRoot root) {
+    return myConnectionFactory.getOrCreateConnection(new VaultConnectionParameters(root, myCacheFolder));
   }
 }

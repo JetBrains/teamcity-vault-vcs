@@ -39,7 +39,7 @@ import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 public final class VaultChangeCollector {
   private static final Logger LOG = Logger.getLogger(VaultChangeCollector.class);
 
-  @NotNull private final VaultConnection1 myConnection;
+  @NotNull private final VaultConnection myConnection;
   @NotNull private final String myFromVersion;
   @NotNull private final String myToVersion;
   @NotNull private final String myTargetPath;
@@ -50,7 +50,7 @@ public final class VaultChangeCollector {
 
   @NotNull private final List<String> mySharedPaths;
 
-  public VaultChangeCollector(@NotNull VaultConnection1 connection,
+  public VaultChangeCollector(@NotNull VaultConnection connection,
                               @NotNull String fromVersion,
                               @NotNull String toVersion,
                               @Nullable String targetPath) {

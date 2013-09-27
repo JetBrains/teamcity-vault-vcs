@@ -125,8 +125,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 //    Thread.sleep(2000);
 
     myCache = FileUtil.createTempDirectory("vault_cache", "");
-    VaultCache.enableCache(myCache);
-    VaultUtil.createTempDir();
 
     myTestData = FileUtil.createTempDirectory("vault_testData", "");
 
@@ -185,7 +183,9 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     final ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
 
-    final VaultPatchBuilder vaultPatchBuilder = new VaultPatchBuilder(new VaultConnectionFactoryImpl(myCache).getOrCreateConnection(new VaultConnectionParameters(root)), patchBuilder, null);
+    final VaultPatchBuilder vaultPatchBuilder =
+      new VaultPatchBuilder(new VaultConnectionFactoryImpl()
+        .getOrCreateConnection(new VaultConnectionParameters(root, myCache)), patchBuilder, null );
 
     final String fromVersionStr = fromVersion == null ? null : String.valueOf(myBeginTx + fromVersion);
     final String toVersionStr = String.valueOf(myBeginTx + toVersion);
@@ -520,24 +520,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testEditFileBuildPatchTwice() throws Exception {
-    final File workingFolder = createTempDir();
-
-    ServerOperations.Login();
-    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
-    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
-    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/file1"), true, true, new GetOptions());
-    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
-    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/file1"));
-    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
-    ServerOperations.Logout();
-    runTest(1, 2);
-    runTest(1, 2);
-  }
-
-  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testEditFileBuildPatchTwiceDisabledCache() throws Exception {
-    VaultCache.enableCache(null);
-
     final File workingFolder = createTempDir();
 
     ServerOperations.Login();

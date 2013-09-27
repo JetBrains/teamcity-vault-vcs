@@ -32,11 +32,11 @@ import org.jetbrains.annotations.Nullable;
  * Time: 13:33:39
  */
 public final class VaultPatchBuilder {
-  @NotNull private final VaultConnection1 myConnection;
+  @NotNull private final VaultConnection myConnection;
   @NotNull private final PatchBuilder myPatchBuilder;
   @NotNull private final String myTargetPath;
 
-  public VaultPatchBuilder(@NotNull final VaultConnection1 connection,
+  public VaultPatchBuilder(@NotNull final VaultConnection connection,
                            @NotNull final PatchBuilder patchBuilder,
                            @Nullable final String targetPath) throws VcsException {
     myConnection = connection;

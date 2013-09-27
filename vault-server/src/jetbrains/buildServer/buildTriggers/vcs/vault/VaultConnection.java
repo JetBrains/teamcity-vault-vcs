@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-public interface VaultConnection1 {
+public interface VaultConnection {
   /**
    * Returns parameters used to create this connection
    */

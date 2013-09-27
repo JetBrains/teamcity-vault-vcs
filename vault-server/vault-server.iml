@@ -20,6 +20,7 @@
     <orderEntry type="library" name="JDom" level="project" />
     <orderEntry type="library" name="Vault" level="project" />
     <orderEntry type="module" module-name="changes-patch-builder" />
+    <orderEntry type="library" name="TeamCity" level="project" />
   </component>
 </module>
 

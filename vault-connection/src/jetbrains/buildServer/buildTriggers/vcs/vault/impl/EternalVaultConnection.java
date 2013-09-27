@@ -1,7 +1,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection1;
+import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
@@ -13,16 +13,16 @@ import java.util.List;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-public class EternalVaultConnection1 implements VaultConnection1 {
+public class EternalVaultConnection implements VaultConnection {
   @NotNull
-  private VaultConnection1 myConnection;
+  private VaultConnection myConnection;
 
-  public EternalVaultConnection1(@NotNull final VaultConnection1 connection) {
+  public EternalVaultConnection(@NotNull final VaultConnection connection) {
     myConnection = connection;
   }
 
   @NotNull
-  private VaultConnection1 ensureActiveConnection() throws VcsException {
+  private VaultConnection ensureActiveConnection() throws VcsException {
     if (!myConnection.isAlive()) {
       myConnection.login();
     }

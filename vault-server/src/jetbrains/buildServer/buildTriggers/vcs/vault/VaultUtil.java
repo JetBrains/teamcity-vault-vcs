@@ -38,13 +38,6 @@ public final class VaultUtil {
   public static final String ROOT_PREFIX = ROOT + SEPARATOR;
   public static final String CURRENT = ".";
 
-  public static final File TEMP_DIR = new File(FileUtil.getTempDirectory(), "vault");
-
-  public static void createTempDir() {
-    FileUtil.delete(TEMP_DIR);
-    TEMP_DIR.mkdirs();
-  }
-
   public static final String SERVER = "vault.server";
   public static final String REPO = "vault.repo";
   public static final String USER = "vault.user";

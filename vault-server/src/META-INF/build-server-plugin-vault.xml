@@ -19,5 +19,6 @@
 
 <beans default-autowire="constructor">
   <bean id="vaultVcsSupport" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultVcsSupport" />
-  <bean id="vaultConnectionFactory" class="jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl" />
+  <bean id="vaultApiConnector" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultApiConnector" />
+  <bean id="vaultConnectionFactory" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionClassLoadingFactory" />
 </beans>
