@@ -299,6 +299,7 @@
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/patches-impl.jar!/" />
         <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/server.jar!/" />
         <root url="jar://$TeamCityDistribution$/buildAgent/lib/trove4j.jar!/" />
+        <root url="jar://$TeamCityDistribution$/webapps/ROOT/WEB-INF/lib/common-impl.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
