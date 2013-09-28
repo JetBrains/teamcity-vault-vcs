@@ -5,7 +5,7 @@
   <property file="vault.properties"/>
   <property name="javac2.home" value="${basedir}/lib-compile"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
-  <!--
+  <!-- 
   <property name="skip.tests" value="true"/>
    -->
   
@@ -35,9 +35,6 @@
     <exclude name="**/__pycache__/**"/>
     <exclude name="**/.bundle/**"/>
     <exclude name="**/*.rbc/**"/>
-    <exclude name="**/*.orig/**"/>
-    <exclude name="**/vssver.scc/**"/>
-    <exclude name="**/vssver2.scc/**"/>
   </patternset>
   <patternset id="library.patterns">
     <include name="*.war"/>
@@ -95,6 +92,7 @@
   
   <path id="library.teamcity.classpath">
     <pathelement location="${path.variable.teamcitydistribution}/buildAgent/lib/trove4j.jar"/>
+    <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/common-impl.jar"/>
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/patches-impl.jar"/>
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/server.jar"/>
   </path>
@@ -114,9 +112,6 @@
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/spring-webmvc.jar"/>
     <pathelement location="${path.variable.teamcitydistribution}/webapps/ROOT/WEB-INF/lib/spring.jar"/>
   </path>
-  
-  
-  <!-- Application Server Libraries -->
   <!-- Register Custom Compiler Taskdefs -->
   <property name="javac2.home" value="${idea.home}/lib"/>
   <path id="javac2.classpath">
@@ -244,10 +239,11 @@
   
   <path id="changes-patch-builder-test.runtime.production.module.classpath">
     <pathelement location="${changes-patch-builder-test.output.dir}"/>
-    <path refid="changes-patch-builder.runtime.production.module.classpath"/>
-    <path refid="library.junit.classpath"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.log4j.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
     <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.junit.classpath"/>
   </path>
   
   <path id="changes-patch-builder-test.module.classpath">
@@ -262,10 +258,12 @@
   <path id="changes-patch-builder-test.runtime.module.classpath">
     <pathelement location="${changes-patch-builder-test.testoutput.dir}"/>
     <pathelement location="${changes-patch-builder-test.output.dir}"/>
-    <path refid="changes-patch-builder.runtime.module.classpath"/>
-    <path refid="library.junit.classpath"/>
+    <pathelement location="${changes-patch-builder.testoutput.dir}"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.log4j.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
     <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.junit.classpath"/>
   </path>
   
   
@@ -335,6 +333,7 @@
     <path refid="library.jdom.classpath"/>
     <path refid="library.vault.classpath"/>
     <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
   </path>
   
   <path id="vault-server.runtime.production.module.classpath">
@@ -345,7 +344,8 @@
     <path refid="library.web.classpath"/>
     <path refid="library.jdom.classpath"/>
     <path refid="library.vault.classpath"/>
-    <path refid="changes-patch-builder.runtime.production.module.classpath"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
   </path>
   
   <path id="vault-server.module.classpath">
@@ -358,6 +358,7 @@
     <path refid="library.vault.classpath"/>
     <pathelement location="${changes-patch-builder.testoutput.dir}"/>
     <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
   </path>
   
   <path id="vault-server.runtime.module.classpath">
@@ -369,7 +370,9 @@
     <path refid="library.web.classpath"/>
     <path refid="library.jdom.classpath"/>
     <path refid="library.vault.classpath"/>
-    <path refid="changes-patch-builder.runtime.module.classpath"/>
+    <pathelement location="${changes-patch-builder.testoutput.dir}"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
   </path>
   
   
@@ -452,10 +455,14 @@
     <path refid="library.patch-testing.classpath"/>
     <path refid="library.testng.classpath"/>
     <path refid="library.teamcity.classpath"/>
-    <path refid="vault-server.runtime.production.module.classpath"/>
+    <pathelement location="${vault-server.output.dir}"/>
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
     <path refid="library.vault.classpath"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
     <path refid="library.junit.classpath"/>
   </path>
   
@@ -478,10 +485,16 @@
     <path refid="library.patch-testing.classpath"/>
     <path refid="library.testng.classpath"/>
     <path refid="library.teamcity.classpath"/>
-    <path refid="vault-server.runtime.module.classpath"/>
+    <pathelement location="${vault-server.testoutput.dir}"/>
+    <pathelement location="${vault-server.output.dir}"/>
     <path refid="library.teamcity-utils.classpath"/>
     <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
     <path refid="library.vault.classpath"/>
+    <pathelement location="${changes-patch-builder.testoutput.dir}"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
     <path refid="library.junit.classpath"/>
   </path>
   
@@ -553,10 +566,20 @@
   
   <path id="vault.runtime.production.module.classpath">
     <pathelement location="${vault.output.dir}"/>
-    <path refid="vault-server.runtime.production.module.classpath"/>
-    <path refid="vault-tests.runtime.production.module.classpath"/>
-    <path refid="changes-patch-builder.runtime.production.module.classpath"/>
-    <path refid="changes-patch-builder-test.runtime.production.module.classpath"/>
+    <pathelement location="${vault-server.output.dir}"/>
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
+    <path refid="library.vault.classpath"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
+    <pathelement location="${vault-tests.output.dir}"/>
+    <path refid="library.patch-testing.classpath"/>
+    <path refid="library.testng.classpath"/>
+    <path refid="library.junit.classpath"/>
+    <pathelement location="${changes-patch-builder-test.output.dir}"/>
   </path>
   
   <path id="vault.module.classpath">
@@ -574,10 +597,24 @@
   <path id="vault.runtime.module.classpath">
     <pathelement location="${vault.testoutput.dir}"/>
     <pathelement location="${vault.output.dir}"/>
-    <path refid="vault-server.runtime.module.classpath"/>
-    <path refid="vault-tests.runtime.module.classpath"/>
-    <path refid="changes-patch-builder.runtime.module.classpath"/>
-    <path refid="changes-patch-builder-test.runtime.module.classpath"/>
+    <pathelement location="${vault-server.testoutput.dir}"/>
+    <pathelement location="${vault-server.output.dir}"/>
+    <path refid="library.teamcity-utils.classpath"/>
+    <path refid="library.teamcity-openapi.classpath"/>
+    <path refid="library.log4j.classpath"/>
+    <path refid="library.web.classpath"/>
+    <path refid="library.jdom.classpath"/>
+    <path refid="library.vault.classpath"/>
+    <pathelement location="${changes-patch-builder.testoutput.dir}"/>
+    <pathelement location="${changes-patch-builder.output.dir}"/>
+    <path refid="library.teamcity.classpath"/>
+    <pathelement location="${vault-tests.testoutput.dir}"/>
+    <pathelement location="${vault-tests.output.dir}"/>
+    <path refid="library.patch-testing.classpath"/>
+    <path refid="library.testng.classpath"/>
+    <path refid="library.junit.classpath"/>
+    <pathelement location="${changes-patch-builder-test.testoutput.dir}"/>
+    <pathelement location="${changes-patch-builder-test.output.dir}"/>
   </path>
   
   
