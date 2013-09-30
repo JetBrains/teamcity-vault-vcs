@@ -1,0 +1,27 @@
+<component name="ArtifactManager">
+  <artifact name="plugin">
+    <output-path>$PROJECT_DIR$/out/artifacts/plugin</output-path>
+    <properties id="ant-postprocessing">
+      <options enabled="true">
+        <file>file://$PROJECT_DIR$/ant.build.xml</file>
+        <target>replace-tokens-in-teamcity-plugin-xml</target>
+      </options>
+    </properties>
+    <root id="root">
+      <element id="directory" name="server">
+        <element id="archive" name="vault-vcs.jar">
+          <element id="module-output" name="vault-server" />
+        </element>
+        <element id="archive" name="changes-patch-builder.jar">
+          <element id="module-output" name="changes-patch-builder" />
+        </element>
+      </element>
+      <element id="directory" name="standalone">
+        <element id="archive" name="vault-connection.jar">
+          <element id="module-output" name="vault-connection" />
+        </element>
+      </element>
+      <element id="file-copy" path="$PROJECT_DIR$/teamcity-plugin.xml" output-file-name="teamcity-plugin.xml" />
+    </root>
+  </artifact>
+</component>
