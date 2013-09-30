@@ -13,6 +13,7 @@
     <orderEntry type="module" module-name="patches" />
     <orderEntry type="module" module-name="changes-patch-builder-internal" />
     <orderEntry type="module" module-name="plugin-model-common" />
+    <orderEntry type="module" module-name="web-openapi" />
   </component>
 </module>
 

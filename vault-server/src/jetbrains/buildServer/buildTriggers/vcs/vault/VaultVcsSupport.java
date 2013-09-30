@@ -191,7 +191,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
 
   @NotNull
   public String getVcsSettingsJspFilePath() {
-    return "vaultSettings.jsp";
+    return "vaultSettings.html";
   }
 
   @NotNull

@@ -18,22 +18,18 @@ public class VaultApiConnector {
   private static final Logger LOG = Logger.getLogger(VaultApiConnector.class);
 
   @NotNull
-  private final File myVaultConnectionJar;
-  @Nullable
-  private final File myVaultApiFolder;
+  private final PluginManager myPluginManager;
+  @NotNull
+  private final PluginDescriptor myPluginDescriptor;
 
-  public VaultApiConnector(@NotNull PluginManager pluginManager, @NotNull PluginDescriptor pluginDescriptor) {
-    this(getVaultConnectionJar(pluginDescriptor), getVaultApiFolder(pluginManager));
-  }
-
-  public VaultApiConnector(@NotNull File vaultConnectionJar, @Nullable File vaultApiFolder) {
-    myVaultConnectionJar = vaultConnectionJar;
-    myVaultApiFolder = vaultApiFolder;
+  public VaultApiConnector(final @NotNull PluginManager pluginManager, final @NotNull PluginDescriptor pluginDescriptor) {
+    myPluginManager = pluginManager;
+    myPluginDescriptor = pluginDescriptor;
   }
 
   @NotNull
   private static File getVaultConnectionJar(@NotNull PluginDescriptor pluginDescriptor) {
-    return new File(pluginDescriptor.getPluginRoot(), "vault-connection");
+    return new File(pluginDescriptor.getPluginRoot(), "standalone/vault-connection.jar");
   }
 
   @Nullable
@@ -41,8 +37,8 @@ public class VaultApiConnector {
     for (PluginInfo pluginInfo : pluginManager.getDetectedPlugins()) {
       if ("VaultAPI".equals(pluginInfo.getPluginName())) {
         final File pluginRoot = pluginInfo.getPluginRoot();
-        final File bin = new File(pluginRoot, "bin");
-        return bin.isDirectory() ? bin : pluginRoot;
+        final File lib = new File(pluginRoot, "lib");
+        return lib.isDirectory() ? lib : pluginRoot;
       }
     }
     return null;
@@ -63,15 +59,15 @@ public class VaultApiConnector {
 
   @NotNull
   public synchronized ClassLoader getVaultApiClassLoader() {
-    return new VaultApiClassLoader(getClass().getClassLoader());
+    return new VaultApiClassLoader(getClass().getClassLoader(), getVaultConnectionJar(myPluginDescriptor), getVaultApiFolder(myPluginManager));
   }
 
-  private final class VaultApiClassLoader extends TeamCityClassLoader {
-    private VaultApiClassLoader(@NotNull final ClassLoader parent) {
+  private static final class VaultApiClassLoader extends TeamCityClassLoader {
+    private VaultApiClassLoader(@NotNull final ClassLoader parent, @NotNull File vaultConnectionJar, @Nullable File vaultApiFolder) {
       super(parent, false);
 
-      addJar(myVaultConnectionJar);
-      addJars(myVaultApiFolder);
+      addJar(vaultConnectionJar);
+      addJars(vaultApiFolder);
     }
 
     private void addJars(@Nullable final File vaultApiFolder) {
