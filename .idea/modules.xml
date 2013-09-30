@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/changes-patch-builder/changes-patch-builder.iml" filepath="$PROJECT_DIR$/changes-patch-builder/changes-patch-builder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/changes-patch-builder-test/changes-patch-builder-test.iml" filepath="$PROJECT_DIR$/changes-patch-builder-test/changes-patch-builder-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vault.iml" filepath="$PROJECT_DIR$/vault.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vault-connection/vault-connection.iml" filepath="$PROJECT_DIR$/vault-connection/vault-connection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vault-server/vault-server.iml" filepath="$PROJECT_DIR$/vault-server/vault-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vault-tests/vault-tests.iml" filepath="$PROJECT_DIR$/vault-tests/vault-tests.iml" />
+    </modules>
+  </component>
+</project>
+

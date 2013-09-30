@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="changes-patch-builder">
+    <output-path>$PROJECT_DIR$/out/artifacts/changes_patch_builder</output-path>
+    <root id="archive" name="changes_patch_builder.jar">
+      <element id="module-output" name="changes-patch-builder" />
+    </root>
+  </artifact>
+</component>

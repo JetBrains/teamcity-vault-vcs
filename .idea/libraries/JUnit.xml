@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="JUnit">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/changes-patch-builder-test/lib/junit-4.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
