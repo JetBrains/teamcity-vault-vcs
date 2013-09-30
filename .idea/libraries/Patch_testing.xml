@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="Patch-testing">
     <CLASSES>
-      <root url="jar://$teamcitydistribution$/devPackage/tests/patches-test.jar!/" />
-      <root url="jar://$teamcitydistribution$/devPackage/tests/tests-support.jar!/" />
+      <root url="jar://$TeamCityDistribution$/devPackage/tests/patches-test.jar!/" />
+      <root url="jar://$TeamCityDistribution$/devPackage/tests/tests-support.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
