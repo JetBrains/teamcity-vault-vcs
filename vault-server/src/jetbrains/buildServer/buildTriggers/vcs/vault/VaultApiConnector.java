@@ -75,7 +75,7 @@ public class VaultApiConnector {
 
       final File[] jars = vaultApiFolder.listFiles(new FilenameFilter() {
         public boolean accept(File dir, String name) {
-          return vaultApiFolder.equals(dir) && name.endsWith(".jar");
+          return vaultApiFolder.equals(dir) && name.endsWith(".jar") && !isLog4j(name);
         }
       });
 
@@ -84,6 +84,10 @@ public class VaultApiConnector {
       for (File jar : jars) {
         addJar(jar);
       }
+    }
+
+    private boolean isLog4j(@NotNull String fileName) {
+      return fileName.matches("log4j\\-.*\\.jar");
     }
   }
 }
