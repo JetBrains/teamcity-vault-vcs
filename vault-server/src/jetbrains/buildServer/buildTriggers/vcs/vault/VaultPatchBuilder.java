@@ -38,7 +38,7 @@ public final class VaultPatchBuilder {
 
   public VaultPatchBuilder(@NotNull final VaultConnection connection,
                            @NotNull final PatchBuilder patchBuilder,
-                           @Nullable final String targetPath) throws VcsException {
+                           @Nullable final String targetPath) {
     myConnection = connection;
     myPatchBuilder = patchBuilder;
     myTargetPath = StringUtil.notNullize(targetPath);
