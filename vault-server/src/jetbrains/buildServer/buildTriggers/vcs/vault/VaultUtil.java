@@ -16,12 +16,10 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
-import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
 import org.jetbrains.annotations.NotNull;
@@ -83,11 +81,23 @@ public final class VaultUtil {
   }
 
   @NotNull
-  public static String getFullRepoPath(@NotNull String path, @NotNull String targetPath) {
+  public static String getFullRepoPathWithCommonPart(@NotNull String path, @NotNull String targetPath) {
     if (path.startsWith(ROOT)) {
       return path;
     }
-    return ROOT_PREFIX + getFullPath(path, targetPath);
+    return ROOT_PREFIX + getFullPathWithCommonPart(path, targetPath);
+  }
+
+  @NotNull
+  public static String getFullPathWithCommonPart(@NotNull String path, @NotNull String targetPath) {
+    targetPath = targetPath.replace('\\', '/');
+    if (targetPath.endsWith("/")) {
+      targetPath = targetPath.substring(0, targetPath.length() - 1);
+    }
+    if (targetPath.contains("/")) {
+      targetPath = targetPath.substring(0, targetPath.lastIndexOf("/"));
+    }
+    return (targetPath.length() == 0 ? "" : targetPath + "/") + path;
   }
 
   @NotNull
@@ -96,12 +106,7 @@ public final class VaultUtil {
     if (targetPath.endsWith("/")) {
       targetPath = targetPath.substring(0, targetPath.length() - 1);
     }
-    if (targetPath.contains("/")) {
-      targetPath = targetPath.substring(0, targetPath.lastIndexOf("/") + 1);
-    } else {
-      targetPath = "";
-    }
-    return targetPath + path;
+    return (targetPath.length() == 0 ? "" : targetPath + "/") + path;
   }
 
   @Nullable

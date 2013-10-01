@@ -85,7 +85,7 @@ public final class VaultChangeCollector {
 
   private void processRawChangeInfo(@NotNull Stack<ChangeInfo> changes, @NotNull RawChangeInfo rawChangeInfo) throws VcsException {
 
-    final String repoPath = VaultUtil.getFullRepoPath(rawChangeInfo.getPath(), myTargetPath);
+    final String repoPath = VaultUtil.getFullRepoPathWithCommonPart(rawChangeInfo.getPath(), myTargetPath);
 
     if (isSharedPath(repoPath)) {
       LOG.debug("Skipping " + rawChangeInfo + ", " + repoPath + " is shared");
