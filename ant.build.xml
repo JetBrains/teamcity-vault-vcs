@@ -1,7 +1,7 @@
 <project name="build hooks" default="replace-tokens-in-teamcity-plugin-xml" basedir=".">
 
-
   <target name="replace-tokens-in-teamcity-plugin-xml">
+    <!--suppress AntResolveInspection -->
     <property name="home" value="${artifact.output.path}"/>
 
     <echo message="replacing tokens in teamcity-plugin.xml file under ${home}"/>
@@ -9,6 +9,7 @@
     <tstamp>
       <format property="current.time" pattern="yyyyMMddHHmm"/>
     </tstamp>
+
     <condition property="build.number" value="SNAPSHOT-${current.time}" else="${build.number}">
       <not>
         <isset property="build.number"/>
