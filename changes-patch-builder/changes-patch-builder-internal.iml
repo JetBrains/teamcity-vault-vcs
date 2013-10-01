@@ -9,7 +9,6 @@
     <orderEntry type="library" name="log4j-1.2.12" level="project" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module" module-name="patches" />
-    <orderEntry type="library" name="VaultAPI" level="project" />
   </component>
 </module>
 
