@@ -113,10 +113,13 @@ public class ChangesPatchBuilder {
             break;
 
           case DIRECTORY_ADDED:
-            if (!positive.containsAncestor(path) && negative.containsAncestor(path))
+            if (!positive.containsAncestor(path) && negative.containsAncestor(path)) {
               fail((new StringBuilder()).append("Parent directory has been deleted, can't create a directory ").append(path).append(" there").toString());
-            else
+            } else if (positive.containsNode(path) && !negative.containsNode(path)) {
+              fail((new StringBuilder()).append("Directory ").append(path).append(" already added").toString());
+            } else {
               positive.createDirectory(path);
+            }
             break;
 
           case DIRECTORY_REMOVED:
