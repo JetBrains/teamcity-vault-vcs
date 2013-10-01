@@ -19,7 +19,7 @@ import java.util.*;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-class VaultConnectionImpl implements VaultConnection {
+public class VaultConnectionImpl implements VaultConnection {
   private static final Logger LOG = Logger.getLogger(VaultConnection.class);
 
   @NotNull
