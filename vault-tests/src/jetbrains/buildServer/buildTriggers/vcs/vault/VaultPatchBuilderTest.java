@@ -168,8 +168,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     FileUtil.delete(myTestData);
   }
 
-
-
   private void runTest(@Nullable Integer fromVersion, @NotNull Integer toVersion) throws Exception {
     final VcsRootImpl root = new VcsRootImpl(-1, "vault");
     root.addProperty("vault.server", SERVER_URL);
