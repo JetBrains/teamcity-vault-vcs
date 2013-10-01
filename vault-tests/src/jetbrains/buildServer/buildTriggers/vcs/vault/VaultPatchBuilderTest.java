@@ -46,9 +46,9 @@ import org.testng.annotations.*;
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = System.getProperty("vault.test.server");
-  private static final String USER = System.getProperty("vault.test.login");
-  private static final String PASWORD = System.getProperty("vault.test.password");
+  private static final String SERVER_URL = System.getProperty("vault.test.server", "http://vault-server.labs.intellij.net/VaultService");
+  private static final String USER = System.getProperty("vault.test.login", "vault-admin");
+  private static final String PASWORD = System.getProperty("vault.test.password", "wuaEtESawETA");
 
   static {
     if (SERVER_URL == null) {
@@ -375,6 +375,14 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandAdd("$/fold1/fold2", toAdd("file1"));
     ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file2"));
     ServerOperations.ProcessCommandRename("$/fold1", "new_fold1");
+    ServerOperations.Logout();
+    runTest(0, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddFoldersWithFiles() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$", toAdd("fold3"));
     ServerOperations.Logout();
     runTest(0, 3);
   }
