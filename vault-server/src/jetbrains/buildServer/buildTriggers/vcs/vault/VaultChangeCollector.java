@@ -106,99 +106,113 @@ public final class VaultChangeCollector {
     switch (type) {
 
       case ADDED: {
-        final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(repoPath + "/" + misc1);
+        final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
-        pushChange(changes, changeName, mi, oldPath, type.getChangeInfoType(isFile(newPath, oldPath, version)));
+        pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
-        myIsFileCache.remove(newPath);
-        myPathHistory.delete(oldPath + "/" + misc1);
-        mySharedPaths.remove(newPath);
+        myPathHistory.delete(histPath);
+
+        myIsFileCache.remove(currPath);
+        mySharedPaths.remove(histPath);
 
         break;
       }
 
       case DELETED: {
-        final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
+        final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, mi.getPrevVersion());
 
-        pushChange(changes, changeName, mi, oldPath, type.getChangeInfoType(isFile(newPath, oldPath, mi.getPrevVersion())));
+        pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         break;
       }
 
       case RENAMED: {
-        final String oldRepoParentPath = getRepoParentPath(myPathHistory.getOldPath(repoPath));
+        final String histPath = myPathHistory.getOldPath(repoPath);
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
-        final String oldPath = oldRepoParentPath + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
-        final boolean isFile = isFile(newPath, oldPath, version);
+        final String histParentPath = getRepoParentPath(histPath);
 
         if (isFile) {
-          pushChange(changes, changeName, mi, oldPath, ADDED);
-          pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc2, REMOVED);
+          pushChange(changes, changeName, mi, histPath, ADDED);
+          pushChange(changes, changeName, mi, histParentPath + "/" + misc2, REMOVED);
         } else {
-          addFolderContent(oldPath, changes, changeName, mi);
-          pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
+          addFolderContent(histPath, changes, changeName, mi);
+          pushChange(changes, changeName, mi, histParentPath + "/" + misc2, DIRECTORY_REMOVED);
         }
 
-        myPathHistory.rename(oldRepoParentPath, misc2, misc1);
+        myPathHistory.rename(histParentPath, misc2, misc1);
+
+        myIsFileCache.remove(currPath);
+        mySharedPaths.remove(histPath);
 
         break;
       }
 
       case RENAMED_ITEM: {
-        final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
+        final String histParentPath = myPathHistory.getOldPath(repoPath);
 
-        final String oldPath = oldRepoParentPath + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
+        final String histPath = histParentPath + "/" + misc1;
+        final String currPath = myPathHistory.getNewPath(histPath);
 
-        if (changes.isEmpty() || !changes.peek().getRepoPath().equals(oldRepoParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
-          final boolean isFile = isFile(newPath, oldPath, version);
+        if (changes.isEmpty() || !changes.peek().getRepoPath().equals(histParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
+          final boolean isFile = isFile(currPath, histPath, version);
           if (isFile) {
-            pushChange(changes, changeName, mi, oldPath, ADDED);
-            pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc2, REMOVED);
+            pushChange(changes, changeName, mi, histPath, ADDED);
+            pushChange(changes, changeName, mi, histParentPath + "/" + misc2, REMOVED);
           } else {
-            addFolderContent(oldPath, changes, changeName, mi);
-            pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc2, DIRECTORY_REMOVED);
+            addFolderContent(histPath, changes, changeName, mi);
+            pushChange(changes, changeName, mi, histParentPath + "/" + misc2, DIRECTORY_REMOVED);
           }
-          myPathHistory.rename(oldRepoParentPath, misc2, misc1);
+
+          myPathHistory.rename(histParentPath, misc2, misc1);
+
+          myIsFileCache.remove(currPath);
+          mySharedPaths.remove(histPath);
         }
         break;
       }
 
       case MOVED_TO: {
-        final String oldRepoParentPath = myPathHistory.getOldPath(repoPath);
+        final String histParentPath = myPathHistory.getOldPath(repoPath);
 
-        final String oldPath = misc2;
-        final String newPath = myPathHistory.getNewPath(oldPath);
-        final boolean isFile = isFile(newPath, oldPath, version);
+        final String histPath = misc2;
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
         if (isFile) {
-          pushChange(changes, changeName, mi, oldPath, ADDED);
-          pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc1, REMOVED);
+          pushChange(changes, changeName, mi, histPath, ADDED);
+          pushChange(changes, changeName, mi, histParentPath + "/" + misc1, REMOVED);
         } else {
-          addFolderContent(oldPath, changes, changeName, mi);
-          pushChange(changes, changeName, mi, oldRepoParentPath + "/" + misc1, DIRECTORY_REMOVED);
+          addFolderContent(histPath, changes, changeName, mi);
+          pushChange(changes, changeName, mi, histParentPath + "/" + misc1, DIRECTORY_REMOVED);
         }
 
-        myPathHistory.move(oldRepoParentPath, getRepoParentPath(misc2), misc1);
+        myPathHistory.move(histParentPath, getRepoParentPath(misc2), misc1);
+
+        myIsFileCache.remove(currPath);
+        mySharedPaths.remove(histPath);
 
         break;
       }
 
       case SHARED_TO: {
-        final String oldPath = misc2;
-        final String newPath = myPathHistory.getNewPath(oldPath);
-        final boolean isFile = isFile(newPath, oldPath, version);
+        final String histPath = misc2;
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
         if (isFile) {
-          pushChange(changes, changeName, mi, oldPath, ADDED);
+          pushChange(changes, changeName, mi, histPath, ADDED);
         } else {
-          addFolderContent(oldPath, changes, changeName, mi);
+          addFolderContent(histPath, changes, changeName, mi);
         }
 
-        mySharedPaths.add(newPath);
+        myIsFileCache.remove(currPath);
+        mySharedPaths.add(currPath);
 
         break;
       }
@@ -209,19 +223,21 @@ public final class VaultChangeCollector {
       }
 
       case UNDELETED: {
-        final String oldPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
-        final String newPath = myPathHistory.getNewPath(oldPath);
+        final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
-        pushChange(changes, changeName, mi, oldPath, type.getChangeInfoType(isFile(newPath, oldPath, version)));
+        pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         break;
       }
 
       default:
-        final String oldPath = myPathHistory.getOldPath(repoPath);
-        final String newPath = myPathHistory.getNewPath(oldPath);
+        final String histPath = myPathHistory.getOldPath(repoPath);
+        final String currPath = myPathHistory.getNewPath(histPath);
+        final boolean isFile = isFile(currPath, histPath, version);
 
-        pushChange(changes, changeName, mi, oldPath, type.getChangeInfoType(isFile(newPath, oldPath, version)));
+        pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         break;
     }
