@@ -1,5 +1,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import jetbrains.buildServer.plugins.PluginManager;
 import jetbrains.buildServer.plugins.bean.PluginInfo;
 import jetbrains.buildServer.plugins.classLoaders.TeamCityClassLoader;
@@ -83,6 +85,21 @@ public class VaultApiConnector {
 
       for (File jar : jars) {
         addJar(jar);
+      }
+    }
+
+    //@Override since 8.1
+    @SuppressWarnings("override")
+    protected void addJar(@NotNull final File jar) {
+      addURL(toUrl(jar));
+    }
+
+    @NotNull
+    private static URL toUrl(final File file) {
+      try {
+        return file.toURI().toURL();
+      } catch (MalformedURLException e) {
+        throw new RuntimeException("Failed to create URL from file " + file, e);
       }
     }
 
