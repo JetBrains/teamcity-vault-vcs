@@ -66,7 +66,7 @@ import java.util.TreeMap;
  * @author Maxim Podkolzine (maxim.podkolzine@gmail.com)
  */
 public class MemoryFileSystemImpl {
-  private Node root = new Node();
+  private final Node root = new Node();
 
   /*************************************************************************************************
    * Public API.

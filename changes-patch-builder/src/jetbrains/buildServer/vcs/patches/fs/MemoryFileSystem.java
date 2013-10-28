@@ -97,5 +97,5 @@ public class MemoryFileSystem {
     return path.length() != 0 && !path.startsWith("/") && !path.endsWith("/") && !path.contains("//");
   }
 
-  private MemoryFileSystemImpl myImpl;
+  private final MemoryFileSystemImpl myImpl;
 }

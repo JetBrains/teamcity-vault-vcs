@@ -209,7 +209,7 @@ public class ChangesPatchBuilder {
   }
 
   private static final Logger LOG = Logger.getLogger(ChangesPatchBuilder.class);
-  private Map<String, String> myVersions;
+  private final Map<String, String> myVersions;
   private boolean myStrict;
 
 }

@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class EternalVaultConnection implements VaultConnection {
   @NotNull
-  private VaultConnection myConnection;
+  private final VaultConnection myConnection;
 
   public EternalVaultConnection(@NotNull final VaultConnection connection) {
     myConnection = connection;
