@@ -92,12 +92,10 @@ public final class VaultConnectionParameters {
 
     VaultConnectionParameters that = (VaultConnectionParameters) o;
 
-    if (!myPassword.equals(that.myPassword)) return false;
-    if (!myRepository.equals(that.myRepository)) return false;
-    if (!myURL.equals(that.myURL)) return false;
-    if (!myUser.equals(that.myUser)) return false;
-
-    return true;
+    return myPassword.equals(that.myPassword) &&
+           myRepository.equals(that.myRepository) &&
+           myURL.equals(that.myURL) &&
+           myUser.equals(that.myUser);
   }
 
   @Override
