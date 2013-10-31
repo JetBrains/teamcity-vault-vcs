@@ -18,7 +18,7 @@
 
   <property name="path.variable.vaultapi" value="${basedir}/vaultAPI"/>
   <property name="vault.java.clc.url"
-            value="http://download-us.sourcegear.com/VaultPro/6.1.0.30531/vaultproJavaCLC_6_1_0_30531.zip"/>
+            value="${vault.api.download.url}"/>
 
   <target name="prepare.vault.api" depends="check.vault.api.present, get.vault.api.if.necessary"/>
 
