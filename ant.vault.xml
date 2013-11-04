@@ -14,11 +14,23 @@
   ~ limitations under the License.
   -->
 
-<project name="download Vault API" default="prepare.vault.api" basedir=".">
+<project name="download Vault API" default="download.vault.api" basedir=".">
 
   <property name="path.variable.vaultapi" value="${basedir}/vaultAPI"/>
   <property name="vault.java.clc.url"
             value="${vault.api.download.url}"/>
+
+  <target name="download.vault.api">
+    <antcall target="prepare.vault.api">
+      <param name="path.variable.vaultapi" value="${basedir}/vaultAPI_6_1"/>
+      <param name="vault.java.clc.url" value="http://download-us.sourcegear.com/VaultPro/6.1.0.30531/vaultproJavaCLC_6_1_0_30531.zip"/>
+    </antcall>
+
+    <antcall target="prepare.vault.api">
+      <param name="path.variable.vaultapi" value="${basedir}/vaultAPI_7_0"/>
+      <param name="vault.java.clc.url" value="http://download-us.sourcegear.com/VaultPro/7.0.0.30548/VaultProClientAPI_7_0_0_30548.zip"/>
+    </antcall>
+  </target>
 
   <target name="prepare.vault.api" depends="check.vault.api.present, get.vault.api.if.necessary"/>
 
