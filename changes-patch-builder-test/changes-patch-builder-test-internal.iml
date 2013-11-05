@@ -9,7 +9,7 @@
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module" module-name="changes-patch-builder-internal" />
     <orderEntry type="module" module-name="patches" />
-    <orderEntry type="library" name="JUnit" level="project" />
+    <orderEntry type="library" name="JUnit4" level="project" />
   </component>
 </module>
 
