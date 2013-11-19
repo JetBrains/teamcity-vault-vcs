@@ -46,9 +46,9 @@ import org.testng.annotations.*;
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = System.getProperty("vault.test.server", "http://vault7-server.labs.intellij.net/VaultService");
-  private static final String USER = System.getProperty("vault.test.login", "vault-admin");
-  private static final String PASWORD = System.getProperty("vault.test.password", "wuaEtESawETA");
+  private static final String SERVER_URL = System.getProperty("vault.test.server");
+  private static final String USER = System.getProperty("vault.test.login");
+  private static final String PASWORD = System.getProperty("vault.test.password");
 
   static {
     if (SERVER_URL == null) {
