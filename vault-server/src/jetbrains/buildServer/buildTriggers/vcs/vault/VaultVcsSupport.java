@@ -24,6 +24,8 @@ import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.serverSide.CachePaths;
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
+import jetbrains.buildServer.util.CollectionsUtil;
+import jetbrains.buildServer.util.Converter;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.*;
@@ -41,7 +43,8 @@ import org.jetbrains.annotations.Nullable;
 public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules,
                                                                        BuildPatchByIncludeRules,
                                                                        TestConnectionSupport,
-                                                                       LabelingSupport {
+                                                                       LabelingSupport,
+                                                                       ListDirectChildrenPolicy {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
 
   private static final String HTTP_PEFIX = "http://";
@@ -111,6 +114,12 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   @Override
   @Nullable
   public LabelingSupport getLabelingSupport() {
+    return this;
+  }
+
+  @Nullable
+  @Override
+  public ListFilesPolicy getListFilesPolicy() {
     return this;
   }
 
@@ -334,6 +343,27 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   // end from LabelingSupport
+  //-------------------------------------------------------------------------------
+
+
+  //-------------------------------------------------------------------------------
+  // from ListDirectChildrenPolicy
+
+  @NotNull
+  public Collection<VcsFileData> listFiles(@NotNull final VcsRoot root, @NotNull final String directoryPath) throws VcsException {
+    final VaultConnection connection = getOrCreateConnection(root);
+    final File folder = connection.getExistingObject(directoryPath, connection.getFolderVersion(directoryPath));
+
+    final File[] files = folder.listFiles();
+
+    return files == null ? Collections.<VcsFileData>emptyList() : CollectionsUtil.convertCollection(Arrays.asList(files), new Converter<VcsFileData, File>() {
+      public VcsFileData createFrom(@NotNull final File source) {
+        return new VcsFileData(source.getName(), source.isDirectory());
+      }
+    });
+  }
+
+  // end from ListDirectChildrenPolicy
   //-------------------------------------------------------------------------------
 
   @NotNull
