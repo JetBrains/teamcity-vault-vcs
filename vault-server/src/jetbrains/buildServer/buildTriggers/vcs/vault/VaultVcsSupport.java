@@ -204,7 +204,7 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   }
 
   @NotNull
-  public String describeVcsRoot(VcsRoot vcsRoot) {
+  public String describeVcsRoot(@NotNull VcsRoot vcsRoot) {
     final String server = vcsRoot.getProperty(VaultUtil.SERVER); 
     return (server == null) ? "vault" : ("vault: " + server);
   }
