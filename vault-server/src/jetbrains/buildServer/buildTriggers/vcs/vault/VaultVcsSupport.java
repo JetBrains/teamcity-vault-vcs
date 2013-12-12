@@ -40,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
  * Date: 15.05.2009
  * Time: 18:22:17
  */
-public final class VaultVcsSupport extends ServerVcsSupport implements CollectChangesByIncludeRules,
+public final class VaultVcsSupport extends ServerVcsSupport implements CollectSingleStateChangesByIncludeRules,
                                                                        BuildPatchByIncludeRules,
                                                                        TestConnectionSupport,
                                                                        LabelingSupport,
@@ -135,6 +135,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectCh
   // from VcsSupportCore
 
   @NotNull
+  @Override
+  @SuppressWarnings("deprecation")
   public String getCurrentVersion(@NotNull VcsRoot root) throws VcsException {
     if (myApiConnector.detectApi()) {
       return getOrCreateConnection(root).getFolderVersion(VaultUtil.ROOT);
