@@ -71,12 +71,8 @@ public final class VaultConnectionParameters {
     return myStringRepresentation;
   }
 
-  /**
-   * For backward compatibility
-   */
-  @Deprecated
   @NotNull
-  public Map<String, String> asMap() {
+  Map<String, String> asMap() {
     final Map<String, String> map = new HashMap<String, String>();
     map.put(VaultUtil.SERVER, myURL);
     map.put(VaultUtil.REPO, myRepository);

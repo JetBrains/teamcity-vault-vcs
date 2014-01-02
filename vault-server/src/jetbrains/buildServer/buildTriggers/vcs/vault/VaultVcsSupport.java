@@ -229,7 +229,13 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
     return new VcsSupportUtil.IntVersionComparator();
   }
 
-//  boolean 	isAgentSideCheckoutAvailable(); default false
+  @NotNull
+  @Override
+  public Map<String, String> getCheckoutProperties(@NotNull final VcsRoot root) {
+    return new VaultConnectionParameters(root, myCacheFolder).asMap();
+  }
+
+  //  boolean 	isAgentSideCheckoutAvailable(); default false
 
   // end from VcsSupportConfig
   //-------------------------------------------------------------------------------
