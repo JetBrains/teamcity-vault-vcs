@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
  * 1/8/14.
  */
 @Test
-public class VaultApiClassloadersTest extends Assert {
+public class VaultConnectionTest extends Assert {
   private static final String SERVER_URL = System.getProperty("vault.test.server");
   private static final String USER = System.getProperty("vault.test.login");
   private static final String PASWORD = System.getProperty("vault.test.password");
@@ -58,7 +58,7 @@ public class VaultApiClassloadersTest extends Assert {
   }
 
   @Test
-  public void test() throws Throwable {
+  public void testApiClassLoaders() throws Throwable {
     final File apiFolder = getPluginFile("vaultAPI");
     final File connectionJar = getPluginFile("out/artifacts/plugin/standalone/vault-connection.jar");
 
