@@ -57,11 +57,11 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
   @NotNull
   private final VaultConnectionFactory myConnectionFactory;
   @NotNull
-  private final TeamCityVaultApiConnector myApiConnector;
+  private final VaultApiConnector myApiConnector;
   @NotNull
   private final File myCacheFolder;
 
-  public VaultVcsSupport(@NotNull CachePaths cachePaths, @NotNull VaultConnectionFactory connectionFactory, @NotNull TeamCityVaultApiConnector vaultApiConnector) {
+  public VaultVcsSupport(@NotNull CachePaths cachePaths, @NotNull VaultConnectionFactory connectionFactory, @NotNull VaultApiConnector vaultApiConnector) {
     LOG.debug("Vault plugin is working");
     myCacheFolder = cachePaths.getCacheDirectory("vault");
     myConnectionFactory = connectionFactory;

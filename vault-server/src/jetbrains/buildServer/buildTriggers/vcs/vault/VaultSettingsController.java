@@ -16,7 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
  */
 public class VaultSettingsController extends BaseController {
   @NotNull
-  private final TeamCityVaultApiConnector myApiConnector;
+  private final VaultApiConnector myApiConnector;
   @NotNull
   private final File myDataDirPath;
   @NotNull
@@ -25,7 +25,7 @@ public class VaultSettingsController extends BaseController {
   public VaultSettingsController(@NotNull PluginDescriptor descriptor,
                                  @NotNull WebControllerManager web,
                                  @NotNull ServerPaths serverPaths,
-                                 @NotNull TeamCityVaultApiConnector vaultApiConnector) {
+                                 @NotNull VaultApiConnector vaultApiConnector) {
     myApiConnector = vaultApiConnector;
     myDataDirPath = serverPaths.getDataDirectory();
     myJspPath = descriptor.getPluginResourcesPath("vaultSettings.jsp");

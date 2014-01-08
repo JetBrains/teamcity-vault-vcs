@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  * 1/8/14.
  */
 public abstract class VaultApiConnector {
-  private static final Logger LOG = Logger.getLogger(TeamCityVaultApiConnector.class);
+  private static final Logger LOG = Logger.getLogger(VaultApiConnector.class);
 
   @Nullable
   private final Integer myMaxClassLoaders;
