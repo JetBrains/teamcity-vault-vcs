@@ -18,7 +18,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans default-autowire="constructor">
-  <bean id="vaultApiConnector" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultApiConnector" />
+  <bean id="vaultApiConnector" class="jetbrains.buildServer.buildTriggers.vcs.vault.TeamCityVaultApiConnector" />
   <bean id="vaultConnectionFactory" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionClassLoadingFactory" />
   <bean id="vaultVcsSupport" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultVcsSupport" />
   <bean id="vaultSettingsController" class="jetbrains.buildServer.buildTriggers.vcs.vault.VaultSettingsController" />

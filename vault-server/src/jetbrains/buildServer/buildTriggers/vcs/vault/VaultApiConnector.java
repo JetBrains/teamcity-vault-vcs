@@ -1,54 +1,41 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
+import com.intellij.util.containers.HashMap;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import jetbrains.buildServer.plugins.PluginManager;
-import jetbrains.buildServer.plugins.bean.PluginInfo;
+import java.util.Map;
 import jetbrains.buildServer.plugins.classLoaders.TeamCityClassLoader;
-import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FilenameFilter;
-
 /**
- * Created by Victory.Bedrosova on 9/27/13.
+ * @User Victory.Bedrosova
+ * 1/8/14.
  */
-public class VaultApiConnector {
-  private static final Logger LOG = Logger.getLogger(VaultApiConnector.class);
-
-  @NotNull
-  private final PluginManager myPluginManager;
-  @NotNull
-  private final PluginDescriptor myPluginDescriptor;
-
-  public VaultApiConnector(final @NotNull PluginManager pluginManager, final @NotNull PluginDescriptor pluginDescriptor) {
-    myPluginManager = pluginManager;
-    myPluginDescriptor = pluginDescriptor;
-  }
-
-  @NotNull
-  private static File getVaultConnectionJar(@NotNull PluginDescriptor pluginDescriptor) {
-    return new File(pluginDescriptor.getPluginRoot(), "standalone/vault-connection.jar");
-  }
+public abstract class VaultApiConnector {
+  private static final Logger LOG = Logger.getLogger(TeamCityVaultApiConnector.class);
 
   @Nullable
-  private static File getVaultApiFolder(@NotNull PluginManager pluginManager) {
-    for (PluginInfo pluginInfo : pluginManager.getDetectedPlugins()) {
-      if ("VaultAPI".equals(pluginInfo.getPluginName())) {
-        final File pluginRoot = pluginInfo.getPluginRoot();
-        final File lib = new File(pluginRoot, "lib");
-        return lib.isDirectory() ? lib : pluginRoot;
-      }
-    }
-    return null;
+  private final Integer myMaxClassLoaders;
+  @NotNull
+  private final Map<VaultConnectionParameters, VaultApiClassLoader> myClassLoaders = new HashMap<VaultConnectionParameters, VaultApiClassLoader>();
+
+  public VaultApiConnector(final @Nullable Integer maxClassLoaders) {
+    myMaxClassLoaders = maxClassLoaders;
   }
+
+  @NotNull
+  protected abstract File getVaultConnectionJar();
+
+  @Nullable
+  protected abstract File getVaultApiFolder();
 
   public synchronized boolean detectApi() {
     try {
-      getVaultApiClassLoader().loadClass("VaultClientIntegrationLib.ServerOperations");
+      getVaultApiClassLoader(null).loadClass("VaultClientIntegrationLib.ServerOperations");
     } catch (ClassNotFoundException e) {
       LOG.debug(e.getMessage(), e);
       return false;
@@ -60,8 +47,15 @@ public class VaultApiConnector {
   }
 
   @NotNull
-  public synchronized ClassLoader getVaultApiClassLoader() {
-    return new VaultApiClassLoader(getClass().getClassLoader(), getVaultConnectionJar(myPluginDescriptor), getVaultApiFolder(myPluginManager));
+  public synchronized ClassLoader getVaultApiClassLoader(@Nullable VaultConnectionParameters parameters) {
+    VaultApiClassLoader classLoader = myClassLoaders.get(parameters);
+    if (classLoader == null) {
+      classLoader = new VaultApiClassLoader(getClass().getClassLoader(), getVaultConnectionJar(), getVaultApiFolder());
+      myClassLoaders.put(parameters, classLoader);
+
+      if (myMaxClassLoaders != null && myClassLoaders.size() > myMaxClassLoaders) throw new IllegalStateException("Only " + myMaxClassLoaders + " classloaders permitted");
+    }
+    return classLoader;
   }
 
   private static final class VaultApiClassLoader extends TeamCityClassLoader {

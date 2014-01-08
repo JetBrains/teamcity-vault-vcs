@@ -52,13 +52,13 @@ public class VaultConnectionClassLoadingFactory implements VaultConnectionFactor
 
   @NotNull
   private VaultConnection createConnection(@NotNull final VaultConnectionParameters parameters) {
-    return getFactory().getOrCreateConnection(parameters);
+    return getFactory(parameters).getOrCreateConnection(parameters);
   }
 
   @NotNull
-  private VaultConnectionFactory getFactory() {
+  private VaultConnectionFactory getFactory(@NotNull final VaultConnectionParameters parameters) {
     try {
-      return (VaultConnectionFactory) myVaultApiConnector.getVaultApiClassLoader().loadClass("jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl").newInstance();
+      return (VaultConnectionFactory) myVaultApiConnector.getVaultApiClassLoader(parameters).loadClass("jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl").newInstance();
     } catch (InstantiationException e) {
       LOG.warn(e.getMessage(), e);
     } catch (IllegalAccessException e) {

@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/changes-patch-builder-test/changes-patch-builder-test.iml" filepath="$PROJECT_DIR$/changes-patch-builder-test/changes-patch-builder-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/vault.iml" filepath="$PROJECT_DIR$/vault.iml" />
       <module fileurl="file://$PROJECT_DIR$/vault-connection/vault-connection.iml" filepath="$PROJECT_DIR$/vault-connection/vault-connection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vault-connection-tests/vault-connection-tests.iml" filepath="$PROJECT_DIR$/vault-connection-tests/vault-connection-tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/vault-server/vault-server.iml" filepath="$PROJECT_DIR$/vault-server/vault-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/vault-tests/vault-tests.iml" filepath="$PROJECT_DIR$/vault-tests/vault-tests.iml" />
     </modules>
