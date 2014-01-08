@@ -1,6 +1,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
+import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
@@ -73,5 +74,10 @@ public class SynchronizedVaultConnection implements VaultConnection {
   @NotNull
   public synchronized List<RawChangeInfo> getFolderHistory(@NotNull String path, @NotNull String fromVersion, @NotNull String toVersion) throws VcsException {
     return myConnection.getFolderHistory(path, fromVersion, toVersion);
+  }
+
+  @NotNull
+  public synchronized List<RepositoryInfo> getRepositories() throws VcsException {
+    return myConnection.getRepositories();
   }
 }

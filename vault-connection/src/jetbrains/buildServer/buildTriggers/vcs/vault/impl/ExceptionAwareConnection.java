@@ -1,6 +1,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
+import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
@@ -121,6 +122,15 @@ public class ExceptionAwareConnection implements VaultConnection {
   public List<RawChangeInfo> getFolderHistory(@NotNull String path, @NotNull String fromVersion, @NotNull String toVersion) throws VcsException {
     try {
       return myConnection.getFolderHistory(path, fromVersion, toVersion);
+    } catch (Throwable t) {
+      throw toVcsException(t);
+    }
+  }
+
+  @NotNull
+  public List<RepositoryInfo> getRepositories() throws VcsException {
+    try {
+      return myConnection.getRepositories();
     } catch (Throwable t) {
       throw toVcsException(t);
     }

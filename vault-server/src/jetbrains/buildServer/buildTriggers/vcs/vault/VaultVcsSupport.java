@@ -19,6 +19,8 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jetbrains.buildServer.buildTriggers.vcs.AbstractVcsPropertiesProcessor;
 import jetbrains.buildServer.parameters.ReferencesResolverUtil;
 import jetbrains.buildServer.serverSide.CachePaths;
@@ -44,7 +46,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
                                                                        BuildPatchByIncludeRules,
                                                                        TestConnectionSupport,
                                                                        LabelingSupport,
-                                                                       ListDirectChildrenPolicy {
+                                                                       ListDirectChildrenPolicy,
+                                                                       UrlSupport {
   private static final Logger LOG = Logger.getLogger(VaultVcsSupport.class);
 
   private static final String HTTP_PEFIX = "http://";
@@ -123,7 +126,13 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
     return this;
   }
 
-//  VcsSupportCore 	getCore(); default this
+  @Nullable
+  @Override
+  public UrlSupport getUrlSupport() {
+    return this;
+  }
+
+  //  VcsSupportCore 	getCore(); default this
 //  VcsPersonalSupport 	getPersonalSupport(); default null
 //  RootMerger 	getRootMerger(); default null
 
@@ -372,6 +381,73 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
   }
 
   // end from ListDirectChildrenPolicy
+  //-------------------------------------------------------------------------------
+
+  //-------------------------------------------------------------------------------
+  // from UrlSupport
+
+  @Nullable
+  public Map<String, String> convertToVcsRootProperties(@NotNull final VcsUrl vcsUrl) throws VcsException {
+    if (vcsUrl.getCredentials() == null) return null;
+
+    try {
+      final String url = vcsUrl.getUrl();
+      final String server = getServer(url);
+
+      if (StringUtil.isNotEmpty(server)) {
+
+        final String repoIdStr = getRepoId(url);
+        if (StringUtil.isNotEmpty(repoIdStr)) {
+
+          final int repoId = Integer.parseInt(repoIdStr);
+          final String username = vcsUrl.getCredentials().getUsername();
+          final String password = vcsUrl.getCredentials().getPassword();
+
+          final List<RepositoryInfo> repos = myConnectionFactory.getOrCreateConnection(
+            new VaultConnectionParameters(server,
+                                          StringUtil.EMPTY,
+                                          username,
+                                          password,
+                                          vcsUrl.toString(),
+                                          myCacheFolder)).getRepositories();
+          for (RepositoryInfo repo : repos) {
+            if (repo.getId() == repoId) {
+              final Map<String, String> res = new HashMap<String, String>(4);
+              res.put(VaultUtil.SERVER, server);
+              res.put(VaultUtil.REPO, repo.getName());
+              res.put(VaultUtil.USER, username);
+              res.put(VaultUtil.PASSWORD, password);
+              return res;
+            }
+          }
+        }
+      }
+    } catch (Throwable t) {
+      LOG.warn(t.getMessage(), t);
+      throw new VcsException(t.getMessage(), t);
+    }
+    return null;
+  }
+
+  @Nullable
+  private String getServer(@NotNull String url) {
+    final Matcher matcher = Pattern.compile("^((http://|https://)[^/]+/VaultService).+$").matcher(url);
+    if (matcher.matches()) {
+      return matcher.group(1);
+    }
+    return null;
+  }
+
+  @Nullable
+  private String getRepoId(@NotNull String url) {
+    final Matcher matcher = Pattern.compile(".+[?&]repid=(\\d+)(&.+)*+$").matcher(url);
+    if (matcher.matches()) {
+      return matcher.group(1);
+    }
+    return null;
+  }
+
+  // end from UrlSupport
   //-------------------------------------------------------------------------------
 
   @NotNull

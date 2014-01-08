@@ -300,4 +300,16 @@ public class VaultConnectionImpl implements VaultConnection {
       }
     });
   }
+
+  @NotNull
+  public List<RepositoryInfo> getRepositories() {
+    final VaultRepositoryInfo[] repos = ServerOperations.ProcessCommandListRepositories();
+    if (repos.length == 0) return Collections.emptyList();
+
+    final List<RepositoryInfo> res = new ArrayList<RepositoryInfo>(repos.length);
+    for (VaultLib.VaultRepositoryInfo info : repos) {
+      res.add(new RepositoryInfo(info.get_RepID(), info.get_RepName()));
+    }
+    return res;
+  }
 }

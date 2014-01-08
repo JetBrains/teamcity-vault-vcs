@@ -34,6 +34,14 @@ public interface VaultConnection {
   void login() throws VcsException;
   void logout() throws VcsException;
 
+
+  /**
+   * Gets list of available repositories
+   * @return see above
+   */
+  @NotNull
+  public List<RepositoryInfo> getRepositories() throws VcsException ;
+
   /**
    * Gets the specified version of a repo object (file or folder) and stores it in a temp folder
    * You may delete the file when it's no longer used
