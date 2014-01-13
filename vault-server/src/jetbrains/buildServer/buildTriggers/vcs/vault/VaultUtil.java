@@ -96,6 +96,8 @@ public final class VaultUtil {
     }
     if (targetPath.contains("/")) {
       targetPath = targetPath.substring(0, targetPath.lastIndexOf("/"));
+    } else {
+      targetPath = StringUtil.EMPTY;
     }
     return (targetPath.length() == 0 ? "" : targetPath + "/") + path;
   }
