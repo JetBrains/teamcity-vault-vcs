@@ -35,7 +35,7 @@
                       These files can be found at Vault Java Command Line Client under the <strong>vaultJavaCLC##</strong>${fileSeparator}lib
                       directory where <strong>##</strong> are digits corresponding to Vault version.
                       <br><br>
-                      To install these files, create the <strong>${teamCityDataDir}${fileSeparator}plugins${fileSeparator}VaultAPI</strong> directory
+                      To install these files, create the <strong>${teamCityDataDir}${fileSeparator}plugins${fileSeparator}VaultAPI/lib</strong> directory
                       and put all of the *.jar files from the Java Command Line Client under this directory. The server should be restarted afterwards.
                       <br><br>
                       If you have no Vault Java Command Line Client you can find the related information on the SourceGear Vault
