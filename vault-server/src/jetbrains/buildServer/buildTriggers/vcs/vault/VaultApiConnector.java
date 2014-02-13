@@ -92,6 +92,16 @@ public abstract class VaultApiConnector {
     private BaseVaultApiClassLoader(@NotNull final ClassLoader parent, @Nullable File vaultApiFolder) {
       super(parent, false);
       addJars(vaultApiFolder);
+      LOG.debug("Created new Vault API classloader with paths: " + getURLsAsString());
+    }
+
+    @NotNull
+    private String getURLsAsString() {
+      final StringBuilder sb = new StringBuilder();
+      for (URL url : getURLs()) {
+        sb.append(url).append("; ");
+      }
+      return sb.toString();
     }
 
     private void addJars(@Nullable final File vaultApiFolder) {
