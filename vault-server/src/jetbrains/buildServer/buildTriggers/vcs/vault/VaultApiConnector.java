@@ -86,7 +86,7 @@ public abstract class VaultApiConnector {
 
   // we load this "heavy" Vault libs only once to save PermGen
   private static final List<String> COMMON_VAULT_LIBS =
-    Arrays.asList("mscorlib.jar", "System.Web.jar", "System.Windows.Forms.jars", "System.jar", "System.Xml.jar", "System.Data.jar");
+    Arrays.asList("mscorlib.jar", "System.Web.jar", "System.Windows.Forms.jar", "System.jar", "System.Xml.jar", "System.Data.jar");
 
   private static abstract class BaseVaultApiClassLoader extends TeamCityClassLoader {
     private BaseVaultApiClassLoader(@NotNull final ClassLoader parent, @Nullable File vaultApiFolder) {
