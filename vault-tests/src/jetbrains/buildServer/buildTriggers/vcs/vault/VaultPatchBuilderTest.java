@@ -27,7 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionFactoryImpl;
+import jetbrains.buildServer.buildTriggers.vcs.vault.connection.VaultConnectionFactoryProxy;
+import jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionImpl;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.vcs.impl.VcsRootImpl;
 import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
@@ -179,7 +180,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     final PatchBuilderImpl patchBuilder = new PatchBuilderImpl(outputBuffer);
 
     final VaultPatchBuilder vaultPatchBuilder =
-      new VaultPatchBuilder(new VaultConnectionFactoryImpl().getOrCreateConnection(new VaultConnectionParameters(root, myCache)), patchBuilder, null );
+      new VaultPatchBuilder(VaultConnectionFactoryProxy.makeEternal(new VaultConnectionImpl(new VaultConnectionParameters(root, myCache))), patchBuilder, null);
 
     final String fromVersionStr = fromVersion == null ? null : String.valueOf(myBeginTx + fromVersion);
     final String toVersionStr = String.valueOf(myBeginTx + toVersion);

@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
+package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
-import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionFactory;
+import java.io.File;
+import java.util.List;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by Victory.Bedrosova on 9/25/13.
+ * @User Victory.Bedrosova
+ * 2/19/14.
  */
-@SuppressWarnings("UnusedDeclaration")
-public class VaultConnectionFactoryImpl implements VaultConnectionFactory {
+class FullClassLoadingVaultConnection extends ClassLoadingVaultConnection {
+  public FullClassLoadingVaultConnection(@NotNull final VaultConnectionParameters parameters, @NotNull final List<File> jars) {
+    super(parameters, getClassLoader(jars));
+  }
+
   @NotNull
-  public VaultConnection getOrCreateConnection(@NotNull VaultConnectionParameters parameters) {
-    return new VaultConnectionImpl(parameters);
+  private static ClassLoader getClassLoader(@NotNull final List<File> jars) {
+    return new VaultApiJarClassLoader(FullClassLoadingVaultConnection.class.getClassLoader(), jars);
   }
 }

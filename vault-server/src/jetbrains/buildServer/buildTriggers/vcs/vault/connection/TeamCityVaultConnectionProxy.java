@@ -14,47 +14,45 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.buildTriggers.vcs.vault;
+package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
-import jetbrains.buildServer.Used;
+import java.io.File;
 import jetbrains.buildServer.plugins.PluginManager;
 import jetbrains.buildServer.plugins.bean.PluginInfo;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-
 /**
- * Created by Victory.Bedrosova on 9/27/13.
+ * @User Victory.Bedrosova
+ * 2/20/14.
  */
-public class TeamCityVaultApiConnector extends VaultApiConnector {
+public class TeamCityVaultConnectionProxy extends VaultConnectionFactoryProxy {
   @NotNull
   private final PluginManager myPluginManager;
   @NotNull
   private final PluginDescriptor myPluginDescriptor;
 
-  @Used
-  public TeamCityVaultApiConnector(final @NotNull PluginManager pluginManager, final @NotNull PluginDescriptor pluginDescriptor) {
-    this(pluginManager, pluginDescriptor, null);
-  }
-
-  public TeamCityVaultApiConnector(final @NotNull PluginManager pluginManager, final @NotNull PluginDescriptor pluginDescriptor, final @Nullable Integer maxClassLoaders) {
-    super(maxClassLoaders);
+  public TeamCityVaultConnectionProxy(@NotNull final PluginManager pluginManager, @NotNull final PluginDescriptor pluginDescriptor) {
     myPluginManager = pluginManager;
     myPluginDescriptor = pluginDescriptor;
   }
 
-  @NotNull
   @Override
+  @NotNull
   protected File getVaultConnectionJar() {
     return new File(myPluginDescriptor.getPluginRoot(), "standalone/vault-connection.jar");
   }
 
-  @Nullable
   @Override
+  @Nullable
   protected File getVaultApiFolder() {
-    for (PluginInfo pluginInfo : myPluginManager.getDetectedPlugins()) {
+    return getVaultApiFolder(myPluginManager);
+  }
+
+  @Nullable
+  public static File getVaultApiFolder(@NotNull PluginManager pluginManager) {
+    for (PluginInfo pluginInfo : pluginManager.getDetectedPlugins()) {
       if ("VaultAPI".equals(pluginInfo.getPluginName())) {
         final File pluginRoot = pluginInfo.getPluginRoot();
         final File lib = new File(pluginRoot, "lib");
@@ -63,4 +61,5 @@ public class TeamCityVaultApiConnector extends VaultApiConnector {
     }
     return null;
   }
+
 }

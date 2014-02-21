@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
+package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Created by Victory.Bedrosova on 8/19/13.
  */
-public class SynchronizedVaultConnection implements VaultConnection {
+class SynchronizedVaultConnection implements VaultConnection {
   @NotNull
   private final VaultConnection myConnection;
 
@@ -39,7 +39,7 @@ public class SynchronizedVaultConnection implements VaultConnection {
   }
 
   @NotNull
-  public VaultConnectionParameters getParameters() {
+  public VaultConnectionParameters getParameters() throws VcsException {
     return myConnection.getParameters();
   }
 
@@ -47,7 +47,7 @@ public class SynchronizedVaultConnection implements VaultConnection {
     return myConnection.isAlive();
   }
 
-  public synchronized void resetCaches() {
+  public synchronized void resetCaches() throws VcsException {
     myConnection.resetCaches();
   }
 

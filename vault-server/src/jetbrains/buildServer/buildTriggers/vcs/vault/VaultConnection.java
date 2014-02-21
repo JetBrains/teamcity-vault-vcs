@@ -31,7 +31,7 @@ public interface VaultConnection {
    * Returns parameters used to create this connection
    */
   @NotNull
-  VaultConnectionParameters getParameters();
+  VaultConnectionParameters getParameters() throws VcsException;
 
   /**
    * Checks if this connection is alive, which means Vault API method
@@ -45,7 +45,7 @@ public interface VaultConnection {
   /**
    * Cleans temp folders
    */
-  void resetCaches();
+  void resetCaches() throws VcsException;
 
   void login() throws VcsException;
   void logout() throws VcsException;

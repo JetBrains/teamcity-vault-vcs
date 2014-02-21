@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
+package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Created by Victory.Bedrosova on 8/23/13.
  */
-public class ExceptionAwareConnection implements VaultConnection {
+class ExceptionAwareConnection implements VaultConnection {
   @NotNull
   private final VaultConnection myConnection;
 
@@ -44,13 +44,13 @@ public class ExceptionAwareConnection implements VaultConnection {
   }
 
   @NotNull
-  private String specifyMessage(@Nullable String message) {
+  private String specifyMessage(@Nullable String message) throws VcsException {
     return String.format("%s: Exception occurred while trying to connect to Vault server. See original message below:\n%s",
       getParameters().getStringRepresentation(), message);
   }
 
   @NotNull
-  public VaultConnectionParameters getParameters() {
+  public VaultConnectionParameters getParameters() throws VcsException {
     return myConnection.getParameters();
   }
 
@@ -62,7 +62,7 @@ public class ExceptionAwareConnection implements VaultConnection {
     }
   }
 
-  public void resetCaches() {
+  public void resetCaches() throws VcsException {
     myConnection.resetCaches();
   }
 

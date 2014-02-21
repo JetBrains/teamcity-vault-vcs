@@ -17,6 +17,7 @@
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
+import jetbrains.buildServer.buildTriggers.vcs.vault.connection.VaultConnectionFactoryProxy;
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.WaitFor;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +82,7 @@ public class VaultConnectionTest extends Assert {
     Assert.assertTrue(apiFolder.isDirectory());
     Assert.assertTrue(connectionJar.isFile());
 
-    final VaultConnectionClassLoadingFactory factory = new VaultConnectionClassLoadingFactory(new VaultApiConnector(1) {
+    final VaultConnectionFactoryProxy factory = new VaultConnectionFactoryProxy() {
       @NotNull
       @Override
       protected File getVaultConnectionJar() {
@@ -93,7 +94,7 @@ public class VaultConnectionTest extends Assert {
       protected File getVaultApiFolder() {
         return apiFolder;
       }
-    });
+    };
 
     for (int i = 0; i < THREADS_NUM; ++i) {
       new Thread(new Runnable() {
