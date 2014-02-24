@@ -532,16 +532,64 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     runTest(2, 3);
   }
 
-  //@Test(groups = {"all", "vault"}, dataProvider = "dp")
-  //public void testMoveSharedFile() throws Exception {
-  //  ServerOperations.Login();
-  //  ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
-  //  ServerOperations.ProcessCommandAdd("$/fold2", toAdd("file1"));
-  //  ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
-  //  ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold2");
-  //  ServerOperations.Logout();
-  //  runTest(0, 4);
-  //}
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveSharedFile() throws Exception {
+    //createAfterFolder("fold1");
+
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandCreateFolder("$/fold3");
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$/fold2");
+    ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold3");
+    ServerOperations.SetWorkingFolder("$/fold3/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold3/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold3/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(0, 7);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveSharedFolder() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandCreateFolder("$/fold3");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
+    ServerOperations.ProcessCommandMove("$/fold1", "$/fold3");
+    ServerOperations.SetWorkingFolder("$/fold2/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold2/fold1/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold2/fold1/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(0, 6);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveSharedFolderContent() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandCreateFolder("$/fold3");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
+    ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold3");
+    ServerOperations.SetWorkingFolder("$/fold3/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold3/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold3/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(0, 6);
+  }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testShareFolderWithContent() throws Exception {
