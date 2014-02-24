@@ -35,6 +35,7 @@ import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
 import jetbrains.buildServer.vcs.patches.PatchTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.testng.Assert;
 import org.testng.annotations.*;
 
 /**
@@ -47,9 +48,13 @@ import org.testng.annotations.*;
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = System.getProperty("vault.test.server");
-  private static final String USER = System.getProperty("vault.test.login");
-  private static final String PASWORD = System.getProperty("vault.test.password");
+  private static final String SERVER_URL = "http://vault7-server.labs.intellij.net/VaultService";
+  private static final String USER = "vault-admin";
+  private static final String PASWORD = "wuaEtESawETA";
+
+  //private static final String SERVER_URL = System.getProperty("vault.test.server");
+  //private static final String USER = System.getProperty("vault.test.login");
+  //private static final String PASWORD = System.getProperty("vault.test.password");
 
   static {
     if (SERVER_URL == null) {
@@ -70,6 +75,12 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   private File myRepoContent;
   private File myCache;
   private File myTestData;
+
+  @NotNull
+  private static File getVaultFile(@NotNull String path) {
+    final File file = new File("svnrepo/vault/" + path);
+    return file.exists() ? file : new File(path);
+  }
 
   @Override
   protected String getTestDataPath() {
@@ -448,6 +459,84 @@ public class VaultPatchBuilderTest extends PatchTestCase {
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddShareAndRenameFile() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.ProcessCommandRename("$/fold1/file1", "new_file1");
+    ServerOperations.Logout();
+    runTest(0, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareAndRenameFile() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.ProcessCommandRename("$/file1", "new_file1");
+    ServerOperations.Logout();
+    runTest(1, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testRenameSharedFile() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.ProcessCommandRename("$/fold1/file1", "new_file1");
+    ServerOperations.Logout();
+    runTest(2, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testAddShareAndEditFile() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(0, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareAndEditFile() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.SetWorkingFolder("$/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(1, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testEditSharedFile() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.SetWorkingFolder("$/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.Logout();
+    runTest(2, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testShareFolderWithContent() throws Exception {
     createBeforeFolder("fold2");
 
@@ -458,6 +547,29 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
     ServerOperations.Logout();
     runTest(3, 4);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareFolderWithContentEditRenameContent() throws Exception {
+    createBeforeFolder("fold2");
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1/fold3", toAdd("file2"));
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandCreateFolder("$/fold2");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/fold2");
+    ServerOperations.ProcessCommandRename("$/fold1/file1", "new_file1");
+
+    final File workingFolder = createTempDir();
+
+    ServerOperations.SetWorkingFolder("$/fold1/fold3/file2", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/fold3/file2"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file2"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/fold3/file2"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+
+    ServerOperations.Logout();
+    runTest(0, 6);
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")

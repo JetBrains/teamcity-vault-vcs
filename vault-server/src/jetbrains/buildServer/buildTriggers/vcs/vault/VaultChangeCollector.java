@@ -48,8 +48,6 @@ public final class VaultChangeCollector {
   @NotNull private final Map<String, Boolean> myIsFileCache;
   @NotNull private final Map<String, String> myDisplayVersionCache;
 
-  @NotNull private final List<String> mySharedPaths;
-
   public VaultChangeCollector(@NotNull VaultConnection connection,
                               @NotNull String fromVersion,
                               @NotNull String toVersion,
@@ -62,7 +60,6 @@ public final class VaultChangeCollector {
     myPathHistory = new VaultPathHistory();
     myIsFileCache = new HashMap<String, Boolean>();
     myDisplayVersionCache = new HashMap<String, String>();
-    mySharedPaths = new ArrayList<String>();
   }
 
   @NotNull
@@ -87,11 +84,6 @@ public final class VaultChangeCollector {
 
     final String repoPath = VaultUtil.getFullRepoPathWithCommonPart(rawChangeInfo.getPath(), myTargetPath);
 
-    if (isSharedPath(repoPath)) {
-      LOG.debug("Skipping " + rawChangeInfo + ", " + repoPath + " is shared");
-      return;
-    }
-
     LOG.debug(rawChangeInfo);
 
     final String misc1 = rawChangeInfo.getAdditionalPath1();
@@ -115,7 +107,6 @@ public final class VaultChangeCollector {
         myPathHistory.delete(histPath);
 
         myIsFileCache.remove(currPath);
-        mySharedPaths.remove(histPath);
 
         break;
       }
@@ -148,7 +139,6 @@ public final class VaultChangeCollector {
         myPathHistory.rename(histParentPath, misc2, misc1);
 
         myIsFileCache.remove(currPath);
-        mySharedPaths.remove(histPath);
 
         break;
       }
@@ -172,7 +162,6 @@ public final class VaultChangeCollector {
           myPathHistory.rename(histParentPath, misc2, misc1);
 
           myIsFileCache.remove(currPath);
-          mySharedPaths.remove(histPath);
         }
         break;
       }
@@ -195,7 +184,6 @@ public final class VaultChangeCollector {
         myPathHistory.move(histParentPath, getRepoParentPath(misc2), misc1);
 
         myIsFileCache.remove(currPath);
-        mySharedPaths.remove(histPath);
 
         break;
       }
@@ -212,7 +200,6 @@ public final class VaultChangeCollector {
         }
 
         myIsFileCache.remove(currPath);
-        mySharedPaths.add(currPath);
 
         break;
       }
@@ -254,24 +241,13 @@ public final class VaultChangeCollector {
   }
 
   private void pushChange(Stack<ChangeInfo> changes, String actionString, ModificationInfo mi, String path, VcsChangeInfo.Type type) {
-    if (ROOT.equals(path) || isSharedPath(path)) {
-      return;
-    }
+    if (ROOT.equals(path)) return;
 
     final String relativePath = VaultUtil.getRelativePath(path, myTargetPath);
     if (StringUtil.isNotEmpty(relativePath)) {
       //noinspection ConstantConditions
       changes.push(new ChangeInfo(actionString, path, relativePath, mi, type));
     }
-  }
-
-  private boolean isSharedPath(@NotNull String path) {
-    for (final String s : mySharedPaths) {
-      if (path.startsWith(s)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private boolean isFile(@NotNull String currentPath, @NotNull String historyPath, @NotNull String version) throws VcsException {
