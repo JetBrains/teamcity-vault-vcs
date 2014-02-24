@@ -48,13 +48,9 @@ import org.testng.annotations.*;
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = "http://vault7-server.labs.intellij.net/VaultService";
-  private static final String USER = "vault-admin";
-  private static final String PASWORD = "wuaEtESawETA";
-
-  //private static final String SERVER_URL = System.getProperty("vault.test.server");
-  //private static final String USER = System.getProperty("vault.test.login");
-  //private static final String PASWORD = System.getProperty("vault.test.password");
+  private static final String SERVER_URL = System.getProperty("vault.test.server");
+  private static final String USER = System.getProperty("vault.test.login");
+  private static final String PASWORD = System.getProperty("vault.test.password");
 
   static {
     if (SERVER_URL == null) {
@@ -534,6 +530,17 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
     ServerOperations.Logout();
     runTest(2, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testMoveSharedFile() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandAdd("$/fold2", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+    ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold2");
+    ServerOperations.Logout();
+    runTest(0, 4);
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
