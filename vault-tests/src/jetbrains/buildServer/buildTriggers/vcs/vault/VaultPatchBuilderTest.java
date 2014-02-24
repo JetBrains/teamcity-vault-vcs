@@ -532,16 +532,16 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     runTest(2, 3);
   }
 
-  @Test(groups = {"all", "vault"}, dataProvider = "dp")
-  public void testMoveSharedFile() throws Exception {
-    ServerOperations.Login();
-    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
-    ServerOperations.ProcessCommandAdd("$/fold2", toAdd("file1"));
-    ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
-    ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold2");
-    ServerOperations.Logout();
-    runTest(0, 4);
-  }
+  //@Test(groups = {"all", "vault"}, dataProvider = "dp")
+  //public void testMoveSharedFile() throws Exception {
+  //  ServerOperations.Login();
+  //  ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+  //  ServerOperations.ProcessCommandAdd("$/fold2", toAdd("file1"));
+  //  ServerOperations.ProcessCommandShare("$/fold1/file1", "$");
+  //  ServerOperations.ProcessCommandMove("$/fold1/file1", "$/fold2");
+  //  ServerOperations.Logout();
+  //  runTest(0, 4);
+  //}
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
   public void testShareFolderWithContent() throws Exception {
