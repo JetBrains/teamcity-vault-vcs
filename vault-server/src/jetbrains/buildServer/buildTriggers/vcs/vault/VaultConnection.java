@@ -49,6 +49,7 @@ public interface VaultConnection {
 
   void login() throws VcsException;
   void logout() throws VcsException;
+  void refresh() throws VcsException;
 
 
   /**

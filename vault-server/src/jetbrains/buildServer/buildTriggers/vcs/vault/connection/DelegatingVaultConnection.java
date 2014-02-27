@@ -53,6 +53,10 @@ abstract class DelegatingVaultConnection implements VaultConnection {
     getConnection().logout();
   }
 
+  public void refresh() throws VcsException {
+    getConnection().refresh();
+  }
+
   @NotNull
   public List<RepositoryInfo> getRepositories() throws VcsException {
     return getConnection().getRepositories();

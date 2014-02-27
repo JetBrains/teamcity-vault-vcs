@@ -256,6 +256,10 @@ public class VaultConnectionImpl implements VaultConnection {
     }
   }
 
+  public void refresh() throws VcsException {
+    VaultClientIntegrationLib.RepositoryUtil.Refresh();
+  }
+
   @NotNull
   private String specifyMessage(@NotNull String message) {
     return String.format("%s: Exception occurred while trying to connect to Vault server. See original message below:\n%s",

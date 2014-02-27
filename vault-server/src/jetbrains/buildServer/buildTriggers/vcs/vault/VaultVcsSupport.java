@@ -258,6 +258,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
       public List<ModificationData> collectChanges(@NotNull final IncludeRule includeRule) throws VcsException {
         final String targetPath = includeRule.getFrom();
 
+        connection.refresh();
+
         if (connection.objectExists(targetPath, null)) {
           final String toVersion = currentVersion == null ? connection.getFolderVersion(targetPath) : currentVersion;
 
@@ -292,6 +294,8 @@ public final class VaultVcsSupport extends ServerVcsSupport implements CollectSi
     return new IncludeRulePatchBuilder() {
       public void buildPatch(@NotNull final PatchBuilder builder, @NotNull final IncludeRule includeRule) throws VcsException, IOException {
         final String targetPath = includeRule.getFrom();
+
+        connection.refresh();
 
         if (connection.objectExists(targetPath, null)) {
           final VaultPatchBuilder patchBuilder = new VaultPatchBuilder(connection, builder, targetPath);

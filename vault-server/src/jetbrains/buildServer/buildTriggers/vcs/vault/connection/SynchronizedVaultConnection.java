@@ -73,6 +73,10 @@ class SynchronizedVaultConnection implements VaultConnection {
     myConnection.logout();
   }
 
+  public void refresh() throws VcsException {
+    myConnection.refresh();
+  }
+
   @NotNull
   public synchronized String getFolderVersion(@NotNull String path) throws VcsException {
     return myConnection.getFolderVersion(path);

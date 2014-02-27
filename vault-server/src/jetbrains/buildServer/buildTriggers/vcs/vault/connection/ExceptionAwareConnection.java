@@ -126,6 +126,14 @@ class ExceptionAwareConnection implements VaultConnection {
     }
   }
 
+  public void refresh() throws VcsException {
+    try {
+      myConnection.refresh();
+    } catch (Throwable t) {
+      throw toVcsException(t);
+    }
+  }
+
   public void labelFolder(@NotNull String path, @NotNull String version, @NotNull String label) throws VcsException {
     try {
       myConnection.labelFolder(path, version, label);

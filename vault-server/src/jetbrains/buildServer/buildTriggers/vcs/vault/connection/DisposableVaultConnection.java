@@ -59,6 +59,10 @@ class DisposableVaultConnection implements VaultConnection {
     myConnection.logout();
   }
 
+  public void refresh() throws VcsException {
+    myConnection.refresh();
+  }
+
   @NotNull
   public List<RepositoryInfo> getRepositories() throws VcsException {
     return doInLoginLogout(new VcsConnectionCallable<List<RepositoryInfo>>() {
