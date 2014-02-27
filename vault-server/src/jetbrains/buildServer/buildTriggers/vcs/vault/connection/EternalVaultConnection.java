@@ -64,7 +64,7 @@ class EternalVaultConnection implements VaultConnection {
   }
 
   public void refresh() throws VcsException {
-    myConnection.refresh();
+    ensureActiveConnection().refresh();
   }
 
   public void resetCaches() throws VcsException {
