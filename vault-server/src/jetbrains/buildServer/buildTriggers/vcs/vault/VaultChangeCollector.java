@@ -48,6 +48,8 @@ public final class VaultChangeCollector {
   @NotNull private final Map<String, Boolean> myIsFileCache;
   @NotNull private final Map<String, String> myDisplayVersionCache;
 
+  @NotNull private final List<String> myBranchedPaths;
+
   public VaultChangeCollector(@NotNull VaultConnection connection,
                               @NotNull String fromVersion,
                               @NotNull String toVersion,
@@ -60,6 +62,7 @@ public final class VaultChangeCollector {
     myPathHistory = new VaultPathHistory();
     myIsFileCache = new HashMap<String, Boolean>();
     myDisplayVersionCache = new HashMap<String, String>();
+    myBranchedPaths = new ArrayList<String>();
   }
 
   @NotNull
@@ -100,12 +103,12 @@ public final class VaultChangeCollector {
       case ADDED: {
         final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         myPathHistory.delete(histPath);
-
         myIsFileCache.remove(currPath);
 
         break;
@@ -114,6 +117,7 @@ public final class VaultChangeCollector {
       case DELETED: {
         final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, mi.getPrevVersion());
 
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
@@ -124,6 +128,7 @@ public final class VaultChangeCollector {
       case RENAMED: {
         final String histPath = myPathHistory.getOldPath(repoPath);
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         final String histParentPath = getRepoParentPath(histPath);
@@ -137,7 +142,6 @@ public final class VaultChangeCollector {
         }
 
         myPathHistory.rename(histParentPath, misc2, misc1);
-
         myIsFileCache.remove(currPath);
 
         break;
@@ -148,6 +152,7 @@ public final class VaultChangeCollector {
 
         final String histPath = histParentPath + "/" + misc1;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
 
         if (changes.isEmpty() || !changes.peek().getRepoPath().equals(histParentPath + "/" + misc2) || !(DIRECTORY_REMOVED.equals(changes.peek().getChangeType()))) {
           final boolean isFile = isFile(currPath, histPath, version);
@@ -160,7 +165,6 @@ public final class VaultChangeCollector {
           }
 
           myPathHistory.rename(histParentPath, misc2, misc1);
-
           myIsFileCache.remove(currPath);
         }
         break;
@@ -171,6 +175,7 @@ public final class VaultChangeCollector {
 
         final String histPath = misc2;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         if (isFile) {
@@ -182,7 +187,6 @@ public final class VaultChangeCollector {
         }
 
         myPathHistory.move(histParentPath, getRepoParentPath(misc2), misc1);
-
         myIsFileCache.remove(currPath);
 
         break;
@@ -191,6 +195,7 @@ public final class VaultChangeCollector {
       case SHARED_TO: {
         final String histPath = misc2;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         if (isFile) {
@@ -204,14 +209,32 @@ public final class VaultChangeCollector {
         break;
       }
 
+      case BRANCHED_FROM_ITEM: {
+        final String histPath = myPathHistory.getOldPath(repoPath);
+        final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
+        final boolean isFile = isFile(currPath, histPath, version);
+
+        pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
+
+        myIsFileCache.remove(currPath);
+        addBranchedPath(currPath);
+
+        break;
+      }
+
       case CHECK_IN: {
-        pushChange(changes, changeName, mi, myPathHistory.getOldPath(repoPath), CHANGED); // it's always a file
+        final String histPath = myPathHistory.getOldPath(repoPath);
+        final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
+        pushChange(changes, changeName, mi, histPath, CHANGED); // it's always a file
         break;
       }
 
       case UNDELETED: {
         final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
@@ -219,14 +242,16 @@ public final class VaultChangeCollector {
         break;
       }
 
-      default:
+      default: {
         final String histPath = myPathHistory.getOldPath(repoPath);
         final String currPath = myPathHistory.getNewPath(histPath);
+        if (skipBranchedPath(currPath, rawChangeInfo)) return;
         final boolean isFile = isFile(currPath, histPath, version);
 
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         break;
+      }
     }
   }
 
@@ -248,6 +273,29 @@ public final class VaultChangeCollector {
       //noinspection ConstantConditions
       changes.push(new ChangeInfo(actionString, path, relativePath, mi, type));
     }
+  }
+
+  private boolean skipBranchedPath(@NotNull String path, @NotNull RawChangeInfo changeInfo) {
+    if (isBranchedPath(path)) {
+      LOG.debug("Skipping " + changeInfo + ", " + path + " is branched");
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isBranchedPath(@NotNull String path) {
+    path = VaultUtil.getPathFromRepoPath(path);
+
+    for (final String s : myBranchedPaths) {
+      if (path.equals(s)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void addBranchedPath(@NotNull String currPath) {
+    myBranchedPaths.add(VaultUtil.getPathFromRepoPath(currPath));
   }
 
   private boolean isFile(@NotNull String currentPath, @NotNull String historyPath, @NotNull String version) throws VcsException {

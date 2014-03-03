@@ -48,9 +48,13 @@ import org.testng.annotations.*;
 public class VaultPatchBuilderTest extends PatchTestCase {
   private static final int CONNECTION_TRIES_NUMBER = 20;
 
-  private static final String SERVER_URL = System.getProperty("vault.test.server");
-  private static final String USER = System.getProperty("vault.test.login");
-  private static final String PASWORD = System.getProperty("vault.test.password");
+  private static final String SERVER_URL = "http://vault7-server.labs.intellij.net/VaultService";
+  private static final String USER = "vault-admin";
+  private static final String PASWORD = "wuaEtESawETA";
+
+  //private static final String SERVER_URL = System.getProperty("vault.test.server");
+  //private static final String USER = System.getProperty("vault.test.login");
+  //private static final String PASWORD = System.getProperty("vault.test.password");
 
   static {
     if (SERVER_URL == null) {
@@ -686,6 +690,92 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandBranch("$/fold1", "$/branch_fold");
     ServerOperations.Logout();
     runTest(2, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBranchFolderWithChangedContentRenameFolder() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.ProcessCommandBranch("$/fold1", "$/branch_fold");
+    ServerOperations.ProcessCommandRename("$/branch_fold", "new_branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 4);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBranchFolderWithChangedContent() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.ProcessCommandBranch("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 3);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testBranchChangedFolderWithContent() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandCreateFolder("$/fold");
+    ServerOperations.ProcessCommandRename("$/fold", "fold2");
+    ServerOperations.ProcessCommandRename("$/fold2", "fold1");
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandBranch("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 5);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareFolderWithChangedContent() throws Exception {
+    final File workingFolder = createTempDir();
+
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.SetWorkingFolder("$/fold1/file1", workingFolder.getAbsolutePath(), false);
+    ServerOperations.ProcessCommandCheckout(toArray("$/fold1/file1"), true, true, new GetOptions());
+    FileUtil.copy(new File(getObjectPathForRepo("edited_file")), new File(workingFolder, "file1"));
+    final ChangeSetItemColl cs = ServerOperations.ProcessCommandListChangeSet(toArray("$/fold1/file1"));
+    ServerOperations.ProcessCommandCommit(cs, UnchangedHandler.Checkin, false, LocalCopyType.Leave, false);
+    ServerOperations.ProcessCommandCreateFolder("$/branch_fold");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 4);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareChangedFolderWithContent() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandCreateFolder("$/fold");
+    ServerOperations.ProcessCommandRename("$/fold", "fold1");
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandCreateFolder("$/branch_fold");
+    ServerOperations.ProcessCommandShare("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 5);
+  }
+
+  @Test(groups = {"all", "vault"}, dataProvider = "dp")
+  public void testShareFolderWithContentToChangedFolder() throws Exception {
+    ServerOperations.Login();
+    ServerOperations.ProcessCommandCreateFolder("$/branch_fold1");
+    ServerOperations.ProcessCommandRename("$/branch_fold1", "branch_fold2");
+    ServerOperations.ProcessCommandRename("$/branch_fold2", "branch_fold");
+    ServerOperations.ProcessCommandAdd("$/fold1", toAdd("file1"));
+    ServerOperations.ProcessCommandShare("$/fold1", "$/branch_fold");
+    ServerOperations.Logout();
+    runTest(0, 7);
   }
 
   @Test(groups = {"all", "vault"}, dataProvider = "dp")
