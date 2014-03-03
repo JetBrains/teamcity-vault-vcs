@@ -77,7 +77,7 @@ public class VaultConnectionImpl implements VaultConnection {
 
       FileUtil.delete(cached);
 
-      if (isFile(path)) {
+      if (isExistingFile(path)) {
 
         final Long fileVersion = getFileDisplayVersion(path, version);
 
@@ -86,7 +86,7 @@ public class VaultConnectionImpl implements VaultConnection {
         } else {
           getObject(path, fileVersion, false, cached);
         }
-      } else if (isFolder(path)) {
+      } else if (isExistingFolder(path)) {
 
         final Long folderVersion = getFolderDisplayVersion(path, version);
 
@@ -130,7 +130,7 @@ public class VaultConnectionImpl implements VaultConnection {
     return RepositoryUtil.PathExists(ensureRepoPath(path));
   }
 
-  private boolean isFile(@NotNull String path) {
+  private boolean isExistingFile(@NotNull String path) {
     if (objectExists(path)) {
       try {
         RepositoryUtil.FindVaultFileAtReposOrLocalPath(ensureRepoPath(path));
@@ -142,7 +142,7 @@ public class VaultConnectionImpl implements VaultConnection {
     return false;
   }
 
-  private boolean isFolder(@NotNull String path) {
+  private boolean isExistingFolder(@NotNull String path) {
     if (objectExists(path)) {
       try {
         RepositoryUtil.FindVaultFolderAtReposOrLocalPath(ensureRepoPath(path));
