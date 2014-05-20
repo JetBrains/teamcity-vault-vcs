@@ -123,7 +123,12 @@ public class VaultConnectionImpl implements VaultConnection {
 
   @NotNull
   private File getCachedFile(@NotNull String path, @NotNull String version) {
-    return new File(myParameters.getConnectionCacheFolder(), version + "/" + ensureFileSystemPath(path));
+    return new File(myParameters.getConnectionCacheFolder(), version + "/" + shortenToHash(ensureFileSystemPath(path)));
+  }
+
+  @NotNull
+  private String shortenToHash(@NotNull String path) {
+    return String.valueOf(path.hashCode());
   }
 
   private boolean objectExists(@NotNull String path) {
