@@ -19,6 +19,7 @@ package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 import VaultClientIntegrationLib.*;
 import VaultClientOperationsLib.SetFileTimeType;
 import VaultLib.*;
+import java.io.FilenameFilter;
 import jetbrains.buildServer.buildTriggers.vcs.vault.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
@@ -82,25 +83,25 @@ public class VaultConnectionImpl implements VaultConnection {
         final Long fileVersion = getFileDisplayVersion(path, version);
 
         if (fileVersion == null) {
-          getObject(getRepoParentPath(path), version);
+          return getObjectFromParent(cached.getName(), getObject(getRepoParentPath(path), version));
         } else {
           getObject(path, fileVersion, false, cached);
+          return cached.exists() ? cached : null;
         }
       } else if (isExistingFolder(path)) {
 
         final Long folderVersion = getFolderDisplayVersion(path, version);
 
         if (folderVersion == null) {
-          getObject(getRepoParentPath(path), version);
+          return getObjectFromParent(cached.getName(), getObject(getRepoParentPath(path), version));
         } else {
           getObject(path, folderVersion, true, cached);
+          return cached.exists() ? cached : null;
         }
       } else {
-        getObject(getRepoParentPath(path), version);
+        return getObjectFromParent(cached.getName(), getObject(getRepoParentPath(path), version));
       }
     }
-
-    return cached.exists() ? cached : null;
   }
 
   private void getObject(@NotNull String path, long objectVersion, boolean isFolder, @NotNull File dest) {
@@ -117,14 +118,33 @@ public class VaultConnectionImpl implements VaultConnection {
     );
   }
 
+  @Nullable
+  private File getObjectFromParent(@NotNull final String name, @Nullable File parent) {
+    if (parent == null) return null;
+    final File[] files = parent.listFiles(new FilenameFilter() {
+      public boolean accept(final File d, final String n) {
+        return name.equals(n);
+      }
+    });
+    return files == null ||  files.length == 0 ? null : files[0];
+  }
+
   private boolean isRoot(@NotNull String path) {
     return VaultUtil.ROOT.equals(ensureRepoPath(path));
   }
 
   @NotNull
   private File getCachedFile(@NotNull String path, @NotNull String version) {
-    return new File(myParameters.getConnectionCacheFolder(), version + "/" + ensureFileSystemPath(path));
+    return new File(myParameters.getConnectionCacheFolder(), version + "/" + shortenParentPathToHash(ensureFileSystemPath(path)));
   }
+
+  @NotNull
+  private String shortenParentPathToHash(@NotNull String path) {
+    final File file = new File(path);
+    final String parent = file.getParent();
+    return (StringUtil.isEmptyOrSpaces(parent) ? StringUtil.EMPTY : String.valueOf(parent.hashCode()) + "/") + file.getName();
+  }
+
   private boolean objectExists(@NotNull String path) {
     return RepositoryUtil.PathExists(ensureRepoPath(path));
   }
