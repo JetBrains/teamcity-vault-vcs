@@ -18,7 +18,6 @@ package jetbrains.buildServer.buildTriggers.vcs.vault;
 
 import java.io.File;
 import java.util.*;
-
 import jetbrains.buildServer.util.FileUtil;
 import jetbrains.buildServer.util.StringUtil;
 import jetbrains.buildServer.vcs.VcsChangeInfo;
@@ -27,7 +26,8 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.*;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.ROOT;
+import static jetbrains.buildServer.buildTriggers.vcs.vault.VaultUtil.getRepoParentPath;
 import static jetbrains.buildServer.vcs.VcsChangeInfo.Type.*;
 
 
@@ -118,7 +118,7 @@ public final class VaultChangeCollector {
         final String histPath = myPathHistory.getOldPath(repoPath) + "/" + misc1;
         final String currPath = myPathHistory.getNewPath(histPath);
         if (skipBranchedPath(currPath, rawChangeInfo)) return;
-        final boolean isFile = isFile(currPath, histPath, mi.getPrevVersion());
+        boolean isFile = checkIfFileWasDeleted(histPath, currPath, mi.getPrevVersion());
 
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
@@ -251,6 +251,20 @@ public final class VaultChangeCollector {
         pushChange(changes, changeName, mi, histPath, type.getChangeInfoType(isFile));
 
         break;
+      }
+    }
+  }
+
+  private boolean checkIfFileWasDeleted(final String histPath, final String currPath, final String version) throws VcsException {
+    try {
+      return isFile(currPath, histPath, version);
+    } catch (VcsException e) {
+      if (e.getMessage().contains("FailObjPathInvalid")) {
+        LOG.info("Cannot get determine if the object was file: '" + currPath + "' '" + histPath + "' " + version, e);
+        return false;
+      }
+      else {
+        throw e;
       }
     }
   }
