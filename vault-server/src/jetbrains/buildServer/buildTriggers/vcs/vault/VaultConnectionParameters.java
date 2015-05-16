@@ -16,7 +16,7 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault;
 
-import com.intellij.util.containers.HashMap;
+import java.util.HashMap;
 
 import java.io.File;
 import java.util.Map;
