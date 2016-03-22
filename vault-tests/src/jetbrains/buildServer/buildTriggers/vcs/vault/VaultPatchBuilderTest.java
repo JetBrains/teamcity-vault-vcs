@@ -26,7 +26,6 @@ import VaultLib.VaultHistoryItem;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-
 import jetbrains.buildServer.buildTriggers.vcs.vault.connection.VaultConnectionFactoryProxy;
 import jetbrains.buildServer.buildTriggers.vcs.vault.impl.VaultConnectionImpl;
 import jetbrains.buildServer.util.FileUtil;
@@ -35,7 +34,6 @@ import jetbrains.buildServer.vcs.patches.PatchBuilderImpl;
 import jetbrains.buildServer.vcs.patches.PatchTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.testng.Assert;
 import org.testng.annotations.*;
 
 /**
@@ -821,10 +819,6 @@ public class VaultPatchBuilderTest extends PatchTestCase {
     ServerOperations.ProcessCommandLabel("$", "label_name", -1); // label latest version;
     ServerOperations.Logout();
     runTest(1, 2);
-  }
-
-  private File createTempDir() throws IOException {
-    return FileUtil.createTempDirectory("vault_test", "");
   }
 
   @NotNull
