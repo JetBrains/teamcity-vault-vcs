@@ -19,7 +19,9 @@ package jetbrains.buildServer.buildTriggers.vcs.vault.impl;
 import VaultClientIntegrationLib.*;
 import VaultClientOperationsLib.SetFileTimeType;
 import VaultLib.*;
+import java.io.File;
 import java.io.FilenameFilter;
+import java.util.*;
 import jetbrains.buildServer.buildTriggers.vcs.vault.*;
 import jetbrains.buildServer.util.CollectionsUtil;
 import jetbrains.buildServer.util.Converter;
@@ -29,9 +31,6 @@ import jetbrains.buildServer.vcs.VcsException;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.util.*;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
@@ -280,7 +279,7 @@ public class VaultConnectionImpl implements VaultConnection {
   }
 
   @NotNull
-  private String specifyMessage(@NotNull String message) {
+  private String specifyMessage(@Nullable String message) {
     return String.format("%s: Exception occurred while trying to connect to Vault server. See original message below:\n%s",
                          myParameters.getStringRepresentation(), message);
   }
