@@ -38,7 +38,7 @@ class SynchronizedVaultConnection implements VaultConnection {
   }
 
   @NotNull
-  public VaultConnectionParameters getParameters() throws VcsException {
+  public synchronized VaultConnectionParameters getParameters() throws VcsException {
     return myConnection.getParameters();
   }
 
