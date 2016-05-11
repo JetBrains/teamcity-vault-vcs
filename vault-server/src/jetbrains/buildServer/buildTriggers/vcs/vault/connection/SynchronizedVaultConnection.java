@@ -16,6 +16,8 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
+import java.io.File;
+import java.util.List;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
@@ -23,9 +25,6 @@ import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
@@ -73,7 +72,7 @@ class SynchronizedVaultConnection implements VaultConnection {
     myConnection.logout();
   }
 
-  public void refresh() throws VcsException {
+  public synchronized void refresh() throws VcsException {
     myConnection.refresh();
   }
 
