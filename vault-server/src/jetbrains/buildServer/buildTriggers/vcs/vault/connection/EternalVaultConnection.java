@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2016 JetBrains s.r.o.
+ * Copyright 2000-2017 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package jetbrains.buildServer.buildTriggers.vcs.vault.connection;
 
+import java.io.File;
+import java.util.List;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RawChangeInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.RepositoryInfo;
 import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnection;
@@ -23,9 +25,6 @@ import jetbrains.buildServer.buildTriggers.vcs.vault.VaultConnectionParameters;
 import jetbrains.buildServer.vcs.VcsException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * Created by Victory.Bedrosova on 8/19/13.
