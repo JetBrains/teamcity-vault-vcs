@@ -95,7 +95,7 @@ public class MemoryFileSystemImplTest extends TestCase {
     try {
       fs.add("foo/bar");  // 'foo' is a file, not a directory!
       fail();
-    } catch (AssertionFailedException e) {}
+    } catch (AssertionFailedException ignored) {}
   }
 
   /*************************************************************************************************
