@@ -29,7 +29,8 @@
         <c:if test="${not vaultApiPresent}">
             <tr>
                 <td colspan="2">
-                    <div class="icon_before icon16 attentionComment">
+                    <div class="attentionComment">
+                      <bs:buildStatusIcon type="red-sign" className="warningIcon"/>
                       <font color="red">SourceGear Vault integration could not find Vault Java API jars.</font>
                       <br><br>
                       These files can be found at Vault Java Command Line Client under the <strong>vaultJavaCLC##</strong>${fileSeparator}lib
