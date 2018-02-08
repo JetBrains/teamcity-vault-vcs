@@ -46,20 +46,20 @@
             </tr>
         </c:if>
         <tr>
-            <th><label for="vault.server">Vault server URL: <l:star/></label>
+            <th><label for="vault.server">Vault server URL:<l:star/></label>
             </th>
             <td><props:textProperty name="vault.server" className="longField"/>
                 <span class="error" id="error_vault.server"></span>
             </td>                
         </tr>
         <tr>
-            <th><label for="vault.repo">Repository name: <l:star/></label>
+            <th><label for="vault.repo">Repository name:<l:star/></label>
             </th>
             <td><props:textProperty name="vault.repo" className="longField"/>
                 <span class="error" id="error_vault.repo"></span></td>
         </tr>
         <tr>
-            <th><label for="vault.user">Username:  <l:star/></label>
+            <th><label for="vault.user">Username:<l:star/></label>
             </th>
             <td><props:textProperty name="vault.user" className="longField"/>
                 <span class="error" id="error_vault.user"></span></td>
