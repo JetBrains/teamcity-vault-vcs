@@ -31,7 +31,7 @@ public class TestUtil {
     if (file1.exists()) {
       return file1;
     }
-    final File file3 = new File("svnrepo" + File.separator
+    final File file3 = new File("bundled-plugins" + File.separator
                               + "vault" + File.separator
                               + "vault-tests" + File.separator + relativeFileName);
     if (file3.exists()) {

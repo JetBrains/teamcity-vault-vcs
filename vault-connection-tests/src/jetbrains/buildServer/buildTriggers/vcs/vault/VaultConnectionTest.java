@@ -124,7 +124,7 @@ public class VaultConnectionTest extends Assert {
 
   @NotNull
   private File getPluginFile(@NotNull String path) throws Exception {
-    final File file = new File("svnrepo/vault/" + path);
+    final File file = new File("bundled-plugins/vault/" + path);
     return file.exists() ? file : new File(path);
   }
 }

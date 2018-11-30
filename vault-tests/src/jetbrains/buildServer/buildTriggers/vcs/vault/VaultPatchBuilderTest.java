@@ -72,7 +72,7 @@ public class VaultPatchBuilderTest extends PatchTestCase {
 
   @NotNull
   private static File getVaultFile(@NotNull String path) {
-    final File file = new File("svnrepo/vault/" + path);
+    final File file = new File("bundled-plugins/vault/" + path);
     return file.exists() ? file : new File(path);
   }
 
