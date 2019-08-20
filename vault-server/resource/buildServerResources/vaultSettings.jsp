@@ -40,7 +40,7 @@
                       and put all of the *.jar files from the Java Command Line Client under this directory. The server should be restarted afterwards.
                       <br><br>
                       If you have no Vault Java Command Line Client you can find the related information on the SourceGear Vault
-                      <a showdiscardchangesmessage="false" target="_blank" href="http://sourcegear.com/vault">site</a>.
+                      <a showdiscardchangesmessage="false" target="_blank" rel="noopener noreferrer" href="http://sourcegear.com/vault">site</a>.
                     </div>
                 </td>
             </tr>
