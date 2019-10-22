@@ -4,6 +4,7 @@
     <name>vault-vcs</name>
     <display-name>VCS Support: SourceGear Vault</display-name>
     <version>@Plugin_Version@</version>
+    <description>Adds SourceGear Vault VCS support (was bundled with TeamCity versions from 5.1 to 2019.2)</description>
     <vendor>
       <name>JetBrains, s.r.o.</name>
       <url>http://www.jetbrains.com</url>
