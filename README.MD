@@ -1,3 +1,5 @@
+[![obsolete JetBrains project](https://jb.gg/badges/obsolete-flat-square.svg)](https://github.com/JetBrains#jetbrains-on-github)
+
 VCS Support: SourceGear Vault
 ___
 This repository was migrated from the svn http://svn.jetbrains.org/teamcity/plugins/vault. 
